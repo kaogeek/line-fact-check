@@ -33,7 +33,7 @@ rec {
           env = goEnvs;
           src = ./.;
           modRoot = "./foo";
-          vendorHash = ""; # Bad hash
+          vendorHash = "sha256-7zDTgVJ2yu6lkf6hwNdpAnC+VLEmL6iJGTKBOzPtlYM=";
           meta = {
             inherit homepage;
             description = "${description} - foo";

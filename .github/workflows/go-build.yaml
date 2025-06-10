@@ -52,7 +52,7 @@ jobs:
           echo 'Building foo'
           go build -o $ARTIFACT_BAR/bar-api ./cmd/api
 
-      - name: Upload Go test results
+      - name: Upload Go binaries
         uses: actions/upload-artifact@v4
         with:
           name: build_result-go${{ matrix.go-version }}_${{ matrix.os }}

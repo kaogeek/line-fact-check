@@ -25,7 +25,9 @@ func main() {
 		WriteTimeout: time.Second * 2,
 	}
 
-	slog.Info("listening on port 8080")
+	slog.Info("listening",
+		"addr", addr,
+	)
 	err := srv.ListenAndServe()
 	if err != nil {
 		panic(err)

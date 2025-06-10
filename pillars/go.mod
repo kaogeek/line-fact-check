@@ -1,3 +1,3 @@
 module github.com/kaogeek/line-fact-check/pillars
 
-go 1.24.4
+go 1.24.1

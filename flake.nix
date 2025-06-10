@@ -18,6 +18,11 @@ rec {
       forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f {
         pkgs = import nixpkgs { inherit system; };
       });
+
+      goEnvs = {
+        GOTOOLCHAIN = "auto";
+        GOWORK = "off";
+      };
     in
 
     {
@@ -25,9 +30,7 @@ rec {
         foo = pkgs.buildGoModule {
           inherit version;
           pname = "foo";
-          env = {
-            GOWORK = "off";
-          };
+          env = goEnvs;
           src = ./.;
           modRoot = "./foo";
           vendorHash = ""; # Bad hash
@@ -40,9 +43,7 @@ rec {
         bar = pkgs.buildGoModule {
           inherit version;
           pname = "bar";
-          env = {
-            GOWORK = "off";
-          };
+          env = goEnvs;
           src = ./.;
           modRoot = "./bar";
           vendorHash = ""; # Bad hash

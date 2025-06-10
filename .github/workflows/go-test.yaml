@@ -1,4 +1,4 @@
-name: test
+name: test go
 on:
   workflow_dispatch:
   pull_request:

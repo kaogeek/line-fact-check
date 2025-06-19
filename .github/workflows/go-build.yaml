@@ -1,0 +1,62 @@
+name: build go
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    name: Build go binaries without Nix
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+
+        go-version:
+          - stable
+          - "" # empty string = read version from go.mod
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      ARTIFACT_FOO: "foo-bin-go${{ matrix.go-version }}_${{ matrix.os }}"
+      ARTIFACT_BAR: "bar-bin-go${{ matrix.go-version }}_${{ matrix.os }}"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+        with:
+          fetch-depth: "0"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          go-version-file: "./foo/go.mod"
+          cache: false
+          check-latest: true
+
+      - name: Build foo API
+        run: |
+          cd foo;
+          echo "PWD: $pwd"
+          mkdir -p $ARTIFACT_FOO
+          echo 'Building foo'
+          go build -o $ARTIFACT_FOO/foo-api ./cmd/api
+
+      - name: Build bar API
+        run: |
+          cd bar;
+          echo "PWD: $pwd"
+          mkdir -p $ARTIFACT_BAR
+          echo 'Building foo'
+          go build -o $ARTIFACT_BAR/bar-api ./cmd/api
+
+      - name: Upload Go binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_result-go${{ matrix.go-version }}_${{ matrix.os }}
+          path: |
+            foo/${{ env.ARTIFACT_FOO }}
+            bar/${{ env.ARTIFACT_BAR }}
+

@@ -1,6 +1,5 @@
 name: update-flake-lock
 on:
-  push:
   workflow_dispatch: # allows manual triggering
     inputs:
       ref:

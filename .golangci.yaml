@@ -47,6 +47,7 @@ formatters:
       sections:
         - standard
         - default
+        - localmodule
   exclusions:
     generated: lax
     paths:

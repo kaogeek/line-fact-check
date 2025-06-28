@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
             gomod:
-              - foo
-              - bar
+              - factcheck
               - pillars
+              - foo
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

@@ -1,4 +1,4 @@
-module github.com/kaogeek/line-fact-check/bar
+module github.com/kaogeek/line-fact-check/factcheck
 
 go 1.24.4
 

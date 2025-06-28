@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/kaogeek/line-fact-check/pillars"
 )
 
@@ -14,17 +17,21 @@ func main() {
 		addr = ":8080"
 	)
 
-	mux := http.NewServeMux()
-	mux.Handle("/", pillars.HandlerEcho(name))
-	mux.Handle("/health", pillars.HandlerOk(name))
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Handle("/", pillars.HandlerEcho(name))
+	r.Handle("/health", pillars.HandlerOk(name))
 
 	srv := http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      r,
 		ReadTimeout:  time.Second * 5,
 		WriteTimeout: time.Second * 2,
 	}
-
 	slog.Info("listening",
 		"addr", addr,
 	)

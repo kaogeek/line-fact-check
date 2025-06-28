@@ -10,7 +10,7 @@ import (
 
 func main() {
 	const (
-		name = "bar-api"
+		name = "factcheck-api"
 		addr = ":8080"
 	)
 

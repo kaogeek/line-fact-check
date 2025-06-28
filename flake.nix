@@ -40,16 +40,16 @@ rec {
           };
         };
 
-        bar = pkgs.buildGoModule {
+        factcheck = pkgs.buildGoModule {
           inherit version;
-          pname = "bar";
+          pname = "factcheck";
           env = goEnvs;
           src = ./.;
-          modRoot = "./bar";
+          modRoot = "./factcheck";
           vendorHash = "sha256-7zDTgVJ2yu6lkf6hwNdpAnC+VLEmL6iJGTKBOzPtlYM=";
           meta = {
             inherit homepage;
-            description = "${description} - bar";
+            description = "${description} - factcheck";
           };
         };
       });

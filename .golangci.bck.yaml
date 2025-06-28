@@ -21,6 +21,7 @@ linters-settings:
     sections:
       - standard
       - default
+      - localmodule
 
   gomodguard:
     blocked:

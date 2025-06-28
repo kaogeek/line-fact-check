@@ -11,33 +11,37 @@ type (
 	TypeMessage       string
 )
 
-type shared struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
+const (
+	StatusTopicPending  StatusTopic = "TOPIC_PENDING"
+	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED"
+	TypeMessageText     TypeMessage = "TYPE_TEXT"
+)
 
 type Topic struct {
 	ID           string
 	Name         string
 	Status       StatusTopic
 	Result       string
-	ResultStatus StatusTopicResult
-	shared
+	ResultStatus StatusTopicResult // TODO: wat?
+	CreatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 type Message struct {
-	ID      string
-	TopicID string
-	Text    string
-	Type    TypeMessage
-	shared
+	ID        string
+	TopicID   string
+	Text      string
+	Type      TypeMessage
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 type UserMessage[T any] struct {
 	RepliedAt *time.Time
 	MessageID string
 	Metadata  T
-	shared
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 func Bar() {}

@@ -20,8 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
+      ARTIFACT_FACTCHECK: "factcheck-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
       ARTIFACT_FOO: "foo-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
-      ARTIFACT_BAR: "bar-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
     steps:
       - name: Checkout code
         uses: actions/checkout@master
@@ -32,9 +32,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-          go-version-file: "./foo/go.mod"
+          go-version-file: "./factcheck/go.mod"
           cache: false
           check-latest: true
+
+      - name: Test factcheck
+        run: |
+          cd factcheck;
+          echo "PWD: $pwd"
+          echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
+          go test -race -count=1 -json ./... > $ARTIFACT_FACTCHECK
 
       - name: Test foo
         run: |
@@ -43,18 +50,10 @@ jobs:
           echo "Testing foo and writing JSON report to $ARTIFACT_FOO"
           go test -race -count=1 -json ./... > $ARTIFACT_FOO
 
-      - name: Test bar
-        run: |
-          cd bar;
-          echo "PWD: $pwd"
-          echo Testing bar and writing JSON report to $ARTIFACT_BAR
-          go test -race -count=1 -json ./... > $ARTIFACT_BAR
-
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
           name: test_result-go${{ matrix.go-version }}_${{ matrix.os }}
           path: |
+            factcheck/${{ env.ARTIFACT_FACTCHECK }}
             foo/${{ env.ARTIFACT_FOO }}
-            bar/${{ env.ARTIFACT_BAR }}
-

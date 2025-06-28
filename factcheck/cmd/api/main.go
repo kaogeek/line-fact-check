@@ -48,12 +48,19 @@ func main() {
 		if err != nil {
 			contentTypeText(w.Header())
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, errWrite := w.Write([]byte(err.Error()))
+			if errWrite != nil {
+				slog.Error("error writing body after error", "err", err, "errWrite", errWrite)
+			}
 			return
 		}
+
 		contentTypeJSON(w.Header())
 		w.WriteHeader(200)
-		w.Write(j)
+		_, err = w.Write(j)
+		if err != nil {
+			slog.Error("error writing body after error", "err", err)
+		}
 	}))
 
 	srv := http.Server{

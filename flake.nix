@@ -46,7 +46,7 @@ rec {
           env = goEnvs;
           src = ./.;
           modRoot = "./factcheck";
-          vendorHash = "sha256-7zDTgVJ2yu6lkf6hwNdpAnC+VLEmL6iJGTKBOzPtlYM=";
+          vendorHash = "sha256-1yYphctAcEN0rCTke1tPlhvSvdQrQV+/dayht3clfkI=";
           meta = {
             inherit homepage;
             description = "${description} - factcheck";

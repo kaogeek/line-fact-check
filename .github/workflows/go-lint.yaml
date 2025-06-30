@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   golangci:
-    name: lint
+    name: lint with Nix
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,11 +21,13 @@ jobs:
               - foo
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
         with:
-          go-version: stable
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
-          working-directory: ${{ matrix.gomod }}
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: golangci-lint with Nix
+        run: |
+          cd ${{ matrix.gomod }}
+          nix run nixpkgs#golangci-lint -- run --timeout=5m

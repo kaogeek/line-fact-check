@@ -6,6 +6,19 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck"
 )
 
-func TestBar(t *testing.T) {
-	factcheck.Bar()
+func TestValidate(t *testing.T) {
+	shouldOk := []interface{ IsValid() bool }{
+		factcheck.StatusTopicPending,
+		factcheck.StatusTopicResolved,
+		factcheck.TypeMessageText,
+		factcheck.StatusTopicResultNone,
+		factcheck.StatusTopicResultAnswered,
+	}
+	for i := range shouldOk {
+		s := shouldOk[i]
+		if s.IsValid() {
+			continue
+		}
+		t.Fatalf("unexpected invalid value: %v", s)
+	}
 }

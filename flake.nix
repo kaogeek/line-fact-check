@@ -57,20 +57,23 @@ rec {
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
           packages = with pkgs; [
+            coreutils
+
+            # Basic LSPs
             nixd
             nixpkgs-fmt
-
             bash-language-server
             shellcheck
             shfmt
-
-            coreutils
             lowdown
 
+            # Development - server
             go
             gopls
             gotools
             go-tools
+            golangci-lint
+            sqlc
           ];
         };
       });

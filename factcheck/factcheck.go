@@ -12,9 +12,14 @@ type (
 )
 
 const (
-	StatusTopicPending  StatusTopic = "TOPIC_PENDING"
-	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED"
-	TypeMessageText     TypeMessage = "TYPE_TEXT"
+	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // topic automatically created, no answer yet
+	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // topic resolved by human admins
+
+	StatusTopicResultNone        StatusTopicResult = "TOPIC_RESULT_NONE"       // no prior answer
+	StatusTopicResultAnswered    StatusTopicResult = "TOPIC_RESULT_ANSWERED"   // answered at least once
+	StatusTopicResultChanllenged StatusTopicResult = "TOPIC_RESULT_CHALLENGED" // the last answer was challenged by the public
+
+	TypeMessageText TypeMessage = "TYPE_TEXT"
 )
 
 type Topic struct {
@@ -44,4 +49,37 @@ type UserMessage[T any] struct {
 	UpdatedAt *time.Time
 }
 
-func Bar() {}
+func (s StatusTopic) IsValid() bool {
+	switch s {
+	case "":
+		panic("got empty topic status")
+	case
+		StatusTopicPending,
+		StatusTopicResolved:
+		return true
+	}
+	return false
+}
+
+func (s StatusTopicResult) IsValid() bool {
+	switch s {
+	case "":
+		panic("got empty topic result status")
+	case
+		StatusTopicResultNone,
+		StatusTopicResultAnswered,
+		StatusTopicResultChanllenged:
+		return true
+	}
+	return false
+}
+
+func (t TypeMessage) IsValid() bool {
+	switch t {
+	case "":
+		panic("got empty message type")
+	case TypeMessageText:
+		return true
+	}
+	return false
+}

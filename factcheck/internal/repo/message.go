@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/postgres/sqlcgen"
 )
 
 // RepositoryMessage defines the interface for message data operations

@@ -3,10 +3,8 @@ package repo
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
-	postgres "github.com/kaogeek/line-fact-check/factcheck/models/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/models/postgres"
 )
 
 // RepositoryTopic defines the interface for topic data operations
@@ -31,49 +29,11 @@ func NewRepositoryTopic(queries *postgres.Queries) RepositoryTopic {
 	}
 }
 
-func (r *repositoryTopic) Create(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error) {
-	// Convert string ID to UUID
-	var topicID pgtype.UUID
-	if err := topicID.Scan(topic.ID); err != nil {
+// Create creates a new topic using the topic adapter
+func (r *repositoryTopic) Create(ctx context.Context, t factcheck.Topic) (factcheck.Topic, error) {
+	params, err := topic(t)
+	if err != nil {
 		return factcheck.Topic{}, err
-	}
-
-	// Convert timestamps
-	createdAt := pgtype.Timestamptz{}
-	if err := createdAt.Scan(topic.CreatedAt); err != nil {
-		return factcheck.Topic{}, err
-	}
-
-	var updatedAt pgtype.Timestamptz
-	if topic.UpdatedAt != nil {
-		if err := updatedAt.Scan(*topic.UpdatedAt); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	// Convert optional fields
-	var result pgtype.Text
-	if topic.Result != "" {
-		if err := result.Scan(topic.Result); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	var resultStatus pgtype.Text
-	if topic.ResultStatus != "" {
-		if err := resultStatus.Scan(string(topic.ResultStatus)); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	params := postgres.CreateTopicParams{
-		ID:           topicID,
-		Name:         topic.Name,
-		Status:       string(topic.Status),
-		Result:       result,
-		ResultStatus: resultStatus,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
 	}
 
 	dbTopic, err := r.queries.CreateTopic(ctx, params)
@@ -81,12 +41,13 @@ func (r *repositoryTopic) Create(ctx context.Context, topic factcheck.Topic) (fa
 		return factcheck.Topic{}, err
 	}
 
-	return r.convertToDomainTopic(dbTopic), nil
+	return topicDomain(dbTopic), nil
 }
 
+// GetByID retrieves a topic by ID using the topicDomain adapter
 func (r *repositoryTopic) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
-	var topicID pgtype.UUID
-	if err := topicID.Scan(id); err != nil {
+	topicID, err := stringToUUID(id)
+	if err != nil {
 		return factcheck.Topic{}, err
 	}
 
@@ -95,9 +56,10 @@ func (r *repositoryTopic) GetByID(ctx context.Context, id string) (factcheck.Top
 		return factcheck.Topic{}, err
 	}
 
-	return r.convertToDomainTopic(dbTopic), nil
+	return topicDomain(dbTopic), nil
 }
 
+// List retrieves all topics using the topicDomain adapter
 func (r *repositoryTopic) List(ctx context.Context) ([]factcheck.Topic, error) {
 	dbTopics, err := r.queries.ListTopics(ctx)
 	if err != nil {
@@ -106,12 +68,13 @@ func (r *repositoryTopic) List(ctx context.Context) ([]factcheck.Topic, error) {
 
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = r.convertToDomainTopic(dbTopic)
+		topics[i] = topicDomain(dbTopic)
 	}
 
 	return topics, nil
 }
 
+// ListByStatus retrieves topics by status using the topicDomain adapter
 func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error) {
 	dbTopics, err := r.queries.ListTopicsByStatus(ctx, string(status))
 	if err != nil {
@@ -120,49 +83,17 @@ func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.Sta
 
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = r.convertToDomainTopic(dbTopic)
+		topics[i] = topicDomain(dbTopic)
 	}
 
 	return topics, nil
 }
 
-func (r *repositoryTopic) Update(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error) {
-	// Convert string ID to UUID
-	var topicID pgtype.UUID
-	if err := topicID.Scan(topic.ID); err != nil {
+// Update updates a topic using the topicUpdate adapter
+func (r *repositoryTopic) Update(ctx context.Context, t factcheck.Topic) (factcheck.Topic, error) {
+	params, err := topicUpdate(t)
+	if err != nil {
 		return factcheck.Topic{}, err
-	}
-
-	// Convert timestamps
-	var updatedAt pgtype.Timestamptz
-	if topic.UpdatedAt != nil {
-		if err := updatedAt.Scan(*topic.UpdatedAt); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	// Convert optional fields
-	var result pgtype.Text
-	if topic.Result != "" {
-		if err := result.Scan(topic.Result); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	var resultStatus pgtype.Text
-	if topic.ResultStatus != "" {
-		if err := resultStatus.Scan(string(topic.ResultStatus)); err != nil {
-			return factcheck.Topic{}, err
-		}
-	}
-
-	params := postgres.UpdateTopicParams{
-		ID:           topicID,
-		Name:         topic.Name,
-		Status:       string(topic.Status),
-		Result:       result,
-		ResultStatus: resultStatus,
-		UpdatedAt:    updatedAt,
 	}
 
 	dbTopic, err := r.queries.UpdateTopic(ctx, params)
@@ -170,48 +101,15 @@ func (r *repositoryTopic) Update(ctx context.Context, topic factcheck.Topic) (fa
 		return factcheck.Topic{}, err
 	}
 
-	return r.convertToDomainTopic(dbTopic), nil
+	return topicDomain(dbTopic), nil
 }
 
+// Delete deletes a topic by ID using the stringToUUID adapter
 func (r *repositoryTopic) Delete(ctx context.Context, id string) error {
-	var topicID pgtype.UUID
-	if err := topicID.Scan(id); err != nil {
+	topicID, err := stringToUUID(id)
+	if err != nil {
 		return err
 	}
 
 	return r.queries.DeleteTopic(ctx, topicID)
-}
-
-// convertToDomainTopic converts a database topic to domain topic
-func (r *repositoryTopic) convertToDomainTopic(dbTopic postgres.Topic) factcheck.Topic {
-	topic := factcheck.Topic{
-		Name:   dbTopic.Name,
-		Status: factcheck.StatusTopic(dbTopic.Status),
-	}
-
-	// Convert UUID to string - using a simpler approach
-	if dbTopic.ID.Valid {
-		// Try to get the string representation directly
-		topic.ID = dbTopic.ID.String()
-	}
-
-	// Convert optional text fields
-	if dbTopic.Result.Valid {
-		topic.Result = dbTopic.Result.String
-	}
-
-	if dbTopic.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(dbTopic.ResultStatus.String)
-	}
-
-	// Convert timestamps
-	if dbTopic.CreatedAt.Valid {
-		topic.CreatedAt = dbTopic.CreatedAt.Time
-	}
-
-	if dbTopic.UpdatedAt.Valid {
-		topic.UpdatedAt = &dbTopic.UpdatedAt.Time
-	}
-
-	return topic
 }

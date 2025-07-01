@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/postgres/sqlcgen"
 )
 
 // RepositoryUserMessage defines the interface for user message data operations

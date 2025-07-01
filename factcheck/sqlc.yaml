@@ -1,15 +1,15 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "postgres/query.sql"
-    schema: "postgres/schema.sql"
+    queries: "models/query.sql"
+    schema: "models/schema.sql"
     # Providing database URI will enable sqlc metadata analysis and improves performance for Postgres
     # database:
     #   uri: "postgres://postgres:${PG_PASSWORD}@localhost:5432/postgres"
     gen:
       go:
         package: "postgres"
-        out: "postgres/sqlcgen"
+        out: "models/postgres"
         sql_package: "pgx/v5"
         emit_json_tags: true
         emit_prepared_queries: false

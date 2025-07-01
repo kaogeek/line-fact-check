@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/postgres/sqlcgen"
+	postgres "github.com/kaogeek/line-fact-check/factcheck/models/postgres"
 )
 
 // RepositoryTopic defines the interface for topic data operations

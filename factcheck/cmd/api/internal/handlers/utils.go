@@ -25,7 +25,7 @@ func create[T any](
 		errInternalError(w, err.Error())
 		return
 	}
-	replyJson(w, created, http.StatusCreated)
+	sendJSON(w, created, http.StatusCreated)
 }
 
 func list[T any](
@@ -40,7 +40,7 @@ func list[T any](
 		errInternalError(w, err.Error())
 		return
 	}
-	replyJson(w, l, http.StatusOK)
+	sendJSON(w, l, http.StatusOK)
 }
 
 func decode[T any](r *http.Request) (T, error) {
@@ -66,17 +66,17 @@ func body(r *http.Request) ([]byte, error) {
 	return b, nil
 }
 
-// replyJson calls replyJsonError, and on non-nil error, writes 500 response
-func replyJson(w http.ResponseWriter, data any, status int) {
-	err := replyJsonError(w, data, status)
+// sendJSON calls replyJsonError, and on non-nil error, writes 500 response
+func sendJSON(w http.ResponseWriter, data any, status int) {
+	err := replyJSON(w, data, status)
 	if err != nil {
 		errInternalError(w, err.Error())
 	}
 }
 
-// replyJsonError marshals data into JSON string before writing response.
+// replyJSON marshals data into JSON string before writing response.
 // If marshaling failed, the response is left untouched and the error is returned.
-func replyJsonError(w http.ResponseWriter, data any, status int) error {
+func replyJSON(w http.ResponseWriter, data any, status int) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return err

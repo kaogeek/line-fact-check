@@ -12,9 +12,9 @@ type Config struct {
 	Postgres Postgres `mapstructure:"postgres"`
 }
 
-func New() (*Config, error) {
+func New() (Config, error) {
 	// return hard-coded config for now
-	return &Config{
+	return Config{
 		Postgres: Postgres{
 			Host:     "localhost",
 			Port:     5432,

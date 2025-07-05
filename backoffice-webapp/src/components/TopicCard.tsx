@@ -1,8 +1,8 @@
 import { Card, CardContent } from './ui/card';
 import { TYH3, TYMuted, TYSmall } from './Typography';
-import type { TopicStatus } from '@/pages/topic/TopicPage';
 import { Badge } from './ui/badge';
-import { formatDate } from '@/formatter/DateFormatter';
+import { formatDate } from '@/formatter/date-formatter';
+import type { TopicStatus } from '@/constants/topic';
 
 interface TopicCardProps {
   code: string;

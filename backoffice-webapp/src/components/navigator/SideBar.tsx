@@ -1,8 +1,8 @@
-import avatar from '../assets/feast.avif';
-import { NavLink } from 'react-router';
+import avatar from '../../assets/feast.avif';
 import { X } from 'lucide-react';
-import { Button } from './ui/button';
-import UserAvatar from './UserAvatar';
+import { Button } from '../ui/button';
+import UserAvatar from '../UserAvatar';
+import SideBarMenuBtn from './SideBarMenuBtn';
 
 interface SideBarProps {
   brand: string;
@@ -11,7 +11,7 @@ interface SideBarProps {
   setIsOpen: (open: boolean) => void;
 }
 
-type SideBarMenu =
+export type SideBarMenu =
   | {
       label: string;
       link: string;
@@ -32,29 +32,10 @@ export default function SideBar({ brand, menuList, isOpen, setIsOpen }: SideBarP
         <UserAvatar avatarUrl={avatar} name="Username" />
       </section>
 
-      <nav className="flex-1 flex flex-col">
-        {menuList.map((menu, idx) =>
-          menu.link ? (
-            <NavLink
-              key={idx}
-              to={menu.link}
-              className={({ isActive }) =>
-                ['p-4 block', 'transition duration-300', 'hover:bg-gray-200', isActive ? 'bg-gray-300' : ''].join(' ')
-              }
-              onClick={() => setIsOpen(false)}
-            >
-              {menu.label}
-            </NavLink>
-          ) : (
-            <button
-              key={idx}
-              onClick={menu.onClick}
-              className="p-4 text-left block transition duration-300 hover:bg-gray-200 w-full"
-            >
-              {menu.label}
-            </button>
-          )
-        )}
+      <nav className="flex-1 flex flex-col p-4 gap-4">
+        {menuList.map((menu, idx) => (
+          <SideBarMenuBtn key={idx} menu={menu} />
+        ))}
       </nav>
 
       <footer className="p-4 text-sm text-center text-gray-500">Version 1.0.0</footer>

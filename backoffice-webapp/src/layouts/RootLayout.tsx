@@ -1,5 +1,5 @@
-import NavigatorBar from '@/components/NavigatorBar';
-import SideBar from '@/components/SideBar';
+import NavigatorBar from '@/components/navigator/NavigatorBar';
+import SideBar from '@/components/navigator/SideBar';
 import { APP_NAME } from '@/constants/app';
 import { useState } from 'react';
 import { Outlet } from 'react-router';

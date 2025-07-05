@@ -11,8 +11,8 @@ type Repository struct {
 	UserMessage RepositoryUserMessage
 }
 
-// NewRepository creates a new repository with all implementations
-func NewRepository(queries *postgres.Queries) *Repository {
+// New creates a new repository with all implementations
+func New(queries *postgres.Queries) *Repository {
 	return &Repository{
 		Topic:       NewRepositoryTopic(queries),
 		Message:     NewRepositoryMessage(queries),

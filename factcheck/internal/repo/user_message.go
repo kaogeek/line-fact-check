@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/models/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
 // RepositoryUserMessage defines the interface for user message data operations

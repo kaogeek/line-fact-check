@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/models/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
 // RepositoryMessage defines the interface for message data operations

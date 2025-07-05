@@ -220,7 +220,7 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Message{}
+	var items []Message
 	for rows.Next() {
 		var i Message
 		if err := rows.Scan(
@@ -251,7 +251,7 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Topic{}
+	var items []Topic
 	for rows.Next() {
 		var i Topic
 		if err := rows.Scan(
@@ -283,7 +283,7 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, status string) ([]Topi
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Topic{}
+	var items []Topic
 	for rows.Next() {
 		var i Topic
 		if err := rows.Scan(
@@ -315,7 +315,7 @@ func (q *Queries) ListUserMessagesByMessage(ctx context.Context, messageID pgtyp
 		return nil, err
 	}
 	defer rows.Close()
-	items := []UserMessage{}
+	var items []UserMessage
 	for rows.Next() {
 		var i UserMessage
 		if err := rows.Scan(

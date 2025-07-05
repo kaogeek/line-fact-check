@@ -9,8 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "prepare": "husky"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

@@ -6,8 +6,19 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
+type Handler interface {
+	CreateTopic(http.ResponseWriter, *http.Request)
+	ListTopics(http.ResponseWriter, *http.Request)
+}
+
 type handler struct {
 	topics repo.RepositoryTopic
+}
+
+func New(repo *repo.Repository) Handler {
+	return &handler{
+		topics: repo.Topic,
+	}
 }
 
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {

@@ -1,8 +1,8 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "models/query.sql"
-    schema: "models/schema.sql"
+    queries: "models/postgres/query.sql"
+    schema: "models/postgres/schema.sql"
     # Providing database URI will enable sqlc metadata analysis and improves performance for Postgres
     # database:
     #   uri: "postgres://postgres:${PG_PASSWORD}@localhost:5432/postgres"
@@ -15,4 +15,3 @@ sql:
         emit_prepared_queries: false
         emit_interface: true
         emit_exact_table_names: false
-        emit_empty_slices: true

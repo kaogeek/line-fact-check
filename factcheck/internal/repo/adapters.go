@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/models/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
 // topic converts a factcheck.Topic to postgres.CreateTopicParams

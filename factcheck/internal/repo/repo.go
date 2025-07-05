@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"github.com/kaogeek/line-fact-check/factcheck/models/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
 // Repository combines all repository interfaces

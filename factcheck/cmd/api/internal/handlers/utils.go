@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func create[T any](
@@ -41,6 +45,30 @@ func list[T any](
 		return
 	}
 	sendJSON(w, l, http.StatusOK)
+}
+
+func getByID[T any](
+	w http.ResponseWriter,
+	r *http.Request,
+	repo interface {
+		GetByID(context.Context, string) (T, error)
+	},
+) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		errBadRequest(w, "empty id")
+		return
+	}
+	data, err := repo.GetByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errNotFound(w, id)
+			return
+		}
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, data, http.StatusOK)
 }
 
 func decode[T any](r *http.Request) (T, error) {
@@ -85,6 +113,12 @@ func replyJSON(w http.ResponseWriter, data any, status int) error {
 	w.WriteHeader(status)
 	w.Write(j)
 	return nil
+}
+
+func errNotFound(w http.ResponseWriter, id string) {
+	contentTypeText(w.Header())
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprintf(w, "not found: %s", id)
 }
 
 func errInternalError(w http.ResponseWriter, err string) {

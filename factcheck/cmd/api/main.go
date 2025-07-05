@@ -8,6 +8,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kaogeek/line-fact-check/pillars"
+
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
 )
 
 func main() {
@@ -15,6 +17,15 @@ func main() {
 		name = "factcheck-api"
 		addr = ":8080"
 	)
+
+	container, err := di.InitializeContainer()
+	if err != nil {
+		panic(err)
+	}
+
+	topics := chi.NewMux()
+	topics.Get("/", container.Handler.ListTopics)
+	topics.Post("/", container.Handler.CreateTopic)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -24,6 +35,7 @@ func main() {
 
 	r.Handle("/", pillars.HandlerEcho(name))
 	r.Handle("/health", pillars.HandlerOk(name))
+	r.Mount("/topics", topics)
 
 	srv := http.Server{
 		Addr:         addr,
@@ -31,10 +43,9 @@ func main() {
 		ReadTimeout:  time.Second * 5,
 		WriteTimeout: time.Second * 2,
 	}
-	slog.Info("listening",
-		"addr", addr,
-	)
-	err := srv.ListenAndServe()
+
+	slog.Info("listening", "addr", addr)
+	err = srv.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}

@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import RootLayout from './layouts/RootLayout.tsx';
 import DashboardPage from './pages/dashboard/DashboardPage.tsx';
 import HomePage from './pages/home/HomePage.tsx';
+import TopicPage from './pages/topic/TopicPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        path: '/topic',
+        element: <TopicPage />,
       },
       {
         path: '/dashboard',

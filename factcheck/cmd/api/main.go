@@ -35,7 +35,7 @@ func main() {
 
 	r.Handle("/", pillars.HandlerEcho(name))
 	r.Handle("/health", pillars.HandlerOk(name))
-	r.Mount("/topics", topics)
+	r.Mount("/topics", topics) // TODO: get by id
 
 	srv := http.Server{
 		Addr:         addr,

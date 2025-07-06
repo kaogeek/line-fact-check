@@ -46,7 +46,7 @@ func (r *repositoryUserMessage) Create(ctx context.Context, um factcheck.UserMes
 
 // GetByID retrieves a user message by ID using the userMessageDomain adapter
 func (r *repositoryUserMessage) GetByID(ctx context.Context, id string) (factcheck.UserMessage[json.RawMessage], error) {
-	uuid, err := stringToUUID(id)
+	uuid, err := uuid(id)
 	if err != nil {
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
@@ -58,7 +58,7 @@ func (r *repositoryUserMessage) GetByID(ctx context.Context, id string) (factche
 }
 
 func (r *repositoryUserMessage) ListByMessage(ctx context.Context, messageID string) ([]factcheck.UserMessage[json.RawMessage], error) {
-	uuid, err := stringToUUID(messageID)
+	uuid, err := uuid(messageID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (r *repositoryUserMessage) Update(ctx context.Context, um factcheck.UserMes
 
 // Delete deletes a user message by ID using the stringToUUID adapter
 func (r *repositoryUserMessage) Delete(ctx context.Context, id string) error {
-	uuid, err := stringToUUID(id)
+	uuid, err := uuid(id)
 	if err != nil {
 		return err
 	}

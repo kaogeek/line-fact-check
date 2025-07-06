@@ -23,13 +23,13 @@ const (
 )
 
 type Topic struct {
-	ID           string
-	Name         string
-	Status       StatusTopic
-	Result       string
-	ResultStatus StatusTopicResult // TODO: wat?
-	CreatedAt    time.Time
-	UpdatedAt    *time.Time
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	Status       StatusTopic       `json:"status"`
+	Result       string            `json:"result"`
+	ResultStatus StatusTopicResult `json:"result_status"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    *time.Time        `json:"updated_at"`
 }
 
 type Message struct {

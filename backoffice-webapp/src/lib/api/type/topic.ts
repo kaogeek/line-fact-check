@@ -38,10 +38,25 @@ export interface Stat {
 }
 
 export interface Topic {
+  id: string;
   code: string;
   status: TopicStatus;
   description: string;
   createDate: Date;
   countOfMessageGroup: number;
   countOfTotalMessage: number;
+}
+
+export interface CountTopicCriteria {
+  keyword?: string;
+}
+
+export interface CountTopic {
+  total: number;
+  pending: number;
+  answered: number;
+}
+
+export interface GetTopicCriteria extends CountTopicCriteria {
+  statusIn?: string[];
 }

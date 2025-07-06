@@ -1,31 +1,23 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import type { GetTopicCriteria } from '@/lib/api/service/topic';
-import type { TopicPageTab } from './TopicPage';
+import type { TopicPageTab } from '../pages/topic/TopicPage';
 
-interface TopicTabProps {
-  activeTab: string;
-  setActiveTab: (activeTab: string) => void;
-  criteria: GetTopicCriteria;
-  setCriteria: (criteria: GetTopicCriteria) => void;
+interface TabIndexProps {
   tabs: TopicPageTab[];
   counts: number[];
+  activeTab: number;
+  setActiveTab: (activeTab: number) => void;
 }
 
-export default function TopicTab({ activeTab, setActiveTab, criteria, setCriteria, tabs, counts }: TopicTabProps) {
+export default function TabIndex({ activeTab, setActiveTab, tabs, counts }: TabIndexProps) {
   const handleTabChange = (currentTab: string) => {
-    setActiveTab(currentTab);
     const tabIdx = Number(currentTab);
-    const tab = tabs[tabIdx];
 
-    setCriteria({
-      ...criteria,
-      statusIn: tab.statusIn,
-    });
+    setActiveTab(tabIdx);
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
+    <Tabs value={activeTab.toString()} onValueChange={handleTabChange}>
       <TabsList>
         {tabs.map((stat, idx) => (
           <TabsTrigger key={idx} value={idx.toString()}>

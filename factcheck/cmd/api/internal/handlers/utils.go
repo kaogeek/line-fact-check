@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+//nolint:unused
 func create[T any](
 	w http.ResponseWriter,
 	r *http.Request,
@@ -73,7 +74,7 @@ func getByID[T any](
 
 func decode[T any](r *http.Request) (T, error) {
 	var zero T
-	b, err := body(r)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return zero, err
 	}
@@ -83,15 +84,6 @@ func decode[T any](r *http.Request) (T, error) {
 		return zero, err
 	}
 	return t, nil
-}
-
-func body(r *http.Request) ([]byte, error) {
-	var b []byte
-	_, err := io.ReadFull(r.Body, b)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy body request into buffer: %w", err)
-	}
-	return b, nil
 }
 
 // sendJSON calls replyJsonError, and on non-nil error, writes 500 response

@@ -19,6 +19,10 @@ type Handler interface {
 	ListTopics(http.ResponseWriter, *http.Request)
 	GetTopicByID(http.ResponseWriter, *http.Request)
 	DeleteTopicByID(http.ResponseWriter, *http.Request)
+
+	CreateMessage(http.ResponseWriter, *http.Request)
+	ListMessagesByTopicID(http.ResponseWriter, *http.Request)
+	DeleteMessageByID(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {

@@ -32,7 +32,7 @@ export default function SideBar({ brand, menuList, isOpen, setIsOpen }: SideBarP
         <UserAvatar avatarUrl={avatar} name="Username" />
       </section>
 
-      <nav className="flex-1 flex flex-col p-4 gap-4">
+      <nav className="flex-1 flex flex-col p-4 gap-2">
         {menuList.map((menu, idx) => (
           <SideBarMenuBtn key={idx} menu={menu} />
         ))}

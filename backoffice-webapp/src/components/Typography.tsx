@@ -41,3 +41,7 @@ export function TYSmall({ children, className }: TYProps) {
 export function TYMuted({ children, className }: TYProps) {
   return <p className={clsx('text-muted-foreground text-sm', className)}>{children}</p>;
 }
+
+export function TYLink({ children, className }: TYProps) {
+  return <p className={clsx('text-primary font-medium underline text-sm', className)}>{children}</p>;
+}

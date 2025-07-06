@@ -5,24 +5,21 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import RootLayout from './layouts/RootLayout.tsx';
 import DashboardPage from './pages/dashboard/DashboardPage.tsx';
 import HomePage from './pages/home/HomePage.tsx';
-import TopicPage from './pages/topic/TopicPage.tsx';
+import { topicRouter } from './pages/topic/topicRouter.ts';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <RootLayout />,
+    Component: RootLayout,
     children: [
       {
         index: true,
-        element: <HomePage />,
+        Component: HomePage,
       },
-      {
-        path: '/topic',
-        element: <TopicPage />,
-      },
+      ...topicRouter,
       {
         path: '/dashboard',
-        element: <DashboardPage />,
+        Component: DashboardPage,
       },
     ],
   },

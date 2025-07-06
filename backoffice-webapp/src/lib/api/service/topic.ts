@@ -1,4 +1,10 @@
-import { TopicStatus, type Topic } from '../type/topic';
+import {
+  TopicStatus,
+  type CountTopic,
+  type CountTopicCriteria,
+  type GetTopicCriteria,
+  type Topic,
+} from '../type/topic';
 
 function isInKeyword(data: Topic, keyword: string): boolean {
   return data.description.toLowerCase().includes(keyword.toLowerCase());
@@ -23,6 +29,10 @@ export function getTopics(criteria: GetTopicCriteria): Topic[] {
   return dataList.filter((data) => conditions.every((condition) => condition(data)));
 }
 
+export function getTopicById(id: string): Topic | undefined {
+  return dataList.find((data) => data.id === id);
+}
+
 function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicCriteria): number {
   const { keyword } = criteria;
   const conditions: ((data: Topic) => boolean)[] = [];
@@ -44,22 +54,9 @@ export function countTopics(criteria: CountTopicCriteria): CountTopic {
   };
 }
 
-export interface CountTopicCriteria {
-  keyword?: string;
-}
-
-export interface CountTopic {
-  total: number;
-  pending: number;
-  answered: number;
-}
-
-export interface GetTopicCriteria extends CountTopicCriteria {
-  statusIn?: string[];
-}
-
 export const dataList: Topic[] = [
   {
+    id: '1',
     code: 'T001',
     status: TopicStatus.PENDING,
     description: 'This is the first topic.',
@@ -68,6 +65,7 @@ export const dataList: Topic[] = [
     countOfTotalMessage: 12,
   },
   {
+    id: '2',
     code: 'T002',
     status: TopicStatus.ANSWERED,
     description: 'This is the second topic.',
@@ -76,6 +74,7 @@ export const dataList: Topic[] = [
     countOfTotalMessage: 20,
   },
   {
+    id: '3',
     code: 'T003',
     status: TopicStatus.REJECTED,
     description: 'This is the third topic.',
@@ -84,6 +83,7 @@ export const dataList: Topic[] = [
     countOfTotalMessage: 5,
   },
   {
+    id: '4',
     code: 'T004',
     status: TopicStatus.APPROVED,
     description: 'This is the fourth topic.',

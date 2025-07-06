@@ -4,9 +4,8 @@ import TopicPagination from './components/TopicPagination';
 import TopicData from './components/TopicData';
 import { useCountTopics, useGetTopics } from '@/hooks/api/useTopic';
 import { useEffect, useState } from 'react';
-import type { GetTopicCriteria } from '@/lib/api/service/topic';
 import TabIndex from '../../components/TabIndex';
-import { TopicStatus } from '@/lib/api/type/topic';
+import { TopicStatus, type GetTopicCriteria, type Topic } from '@/lib/api/type/topic';
 import { TYH3 } from '@/components/Typography';
 
 export default function TopicPage() {
@@ -43,6 +42,11 @@ export default function TopicPage() {
     });
   };
 
+  const handleReject = (topic: Topic, idx: number) => {
+    console.log(topic);
+    console.log(idx);
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4 h-full">
       <TYH3>Topic</TYH3>
@@ -59,7 +63,7 @@ export default function TopicPage() {
 const tabs = [
   {
     label: 'Total',
-    statusIn: [TopicStatus.PENDING, TopicStatus.APPROVED],
+    statusIn: [TopicStatus.PENDING, TopicStatus.ANSWERED],
   },
   {
     label: 'Pending',

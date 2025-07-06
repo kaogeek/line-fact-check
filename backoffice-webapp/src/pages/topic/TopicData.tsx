@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Topic } from '@/lib/api/type/topic';
 import { formatDate } from '@/formatter/date-formatter';
+import TopicStatusBadge from './TopicStatusBadge';
 
 interface TopicDataProps {
   dataList: Topic[];
@@ -31,7 +32,7 @@ export default function TopicData({ dataList }: TopicDataProps) {
               <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
               <TableCell>{formatDate(data.createDate)}</TableCell>
               <TableCell>
-                <Badge variant="secondary">{data.status}</Badge>
+                <TopicStatusBadge status={data.status}></TopicStatusBadge>
               </TableCell>
             </TableRow>
           ))}

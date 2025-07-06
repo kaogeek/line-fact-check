@@ -24,7 +24,7 @@ export default function TabIndex({ activeTab, setActiveTab, tabs, counts }: TabI
             <div className="flex gap-2">
               <span>{stat.label}</span>
               {counts[idx] > 0 && (
-                <Badge variant="secondary" className="rounded-full">
+                <Badge variant="strongWarning" className="rounded-full">
                   {counts[idx]}
                 </Badge>
               )}

@@ -39,6 +39,36 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Custom */
+  --color-gray: var(--gray);
+  --color-gray-foreground: var(--gray-foreground);
+  --color-gray-soft: var(--gray-soft);
+  --color-gray-soft-foreground: var(--gray-soft-foreground);
+  --color-blue: var(--blue);
+  --color-blue-foreground: var(--blue-foreground);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-soft-foreground: var(--blue-soft-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-orange: var(--orange);
+  --color-orange-foreground: var(--orange-foreground);
+  --color-orange-soft: var(--orange-soft);
+  --color-orange-soft-foreground: var(--orange-soft-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-foreground: var(--danger-soft-foreground);
+  --color-purple: var(--purple);
+  --color-purple-foreground: var(--purple-foreground);
+  --color-purple-soft: var(--purple-soft);
+  --color-purple-soft-foreground: var(--purple-soft-foreground);
 }
 
 :root {
@@ -74,6 +104,36 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Custom */
+  --gray: #d1d5db;
+  --gray-foreground: #111827;
+  --gray-soft: #f3f4f6;
+  --gray-soft-foreground: #4b5563;
+  --blue: #3b82f6;
+  --blue-foreground: #ffffff;
+  --blue-soft: #dbeafe;
+  --blue-soft-foreground: #2563eb;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --success-soft: #dcfce7;
+  --successsuccess-soft-foreground: #16a34a;
+  --warning: #facc15;
+  --warning-foreground: #78350f;
+  --warning-soft: #fef9c3;
+  --warning-soft-foreground: #ca8a04;
+  --orange: #f97316;
+  --orange-foreground: #ffffff;
+  --orange-soft: #fef3c7;
+  --orange-soft-foreground: #ea580c;
+  --danger: #ef4444;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fee2e2;
+  --danger-soft-foreground: #b91c1c;
+  --purple: #8b5cf6;
+  --purple-foreground: #ffffff;
+  --purple-soft: #ede9fe;
+  --purple-soft-foreground: #7c3aed;
 }
 
 .dark {

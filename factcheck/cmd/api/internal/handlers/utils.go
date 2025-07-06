@@ -119,7 +119,7 @@ func getBy[T any, F any](
 	data, err := f(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			errNotFound(w, fmt.Sprintf("not found for filter %+v: %w", filter, err))
+			errNotFound(w, fmt.Sprintf("not found for filter %+v: %s", filter, err.Error()))
 			return
 		}
 		errInternalError(w, err.Error())

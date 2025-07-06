@@ -1,7 +1,7 @@
-import TopicSearchBar from './TopicSearchBar';
-import TopicPagination from './TopicPagination';
+import TopicSearchBar from './components/TopicSearchBar';
+import TopicPagination from './components/TopicPagination';
 
-import TopicData from './TopicData';
+import TopicData from './components/TopicData';
 import { useCountTopics, useGetTopics } from '@/hooks/api/useTopic';
 import { useEffect, useState } from 'react';
 import type { GetTopicCriteria } from '@/lib/api/service/topic';

@@ -45,7 +45,7 @@ func (r *repositoryMessage) Create(ctx context.Context, msg factcheck.Message) (
 
 // GetByID retrieves a message by ID using the messageDomain adapter
 func (r *repositoryMessage) GetByID(ctx context.Context, id string) (factcheck.Message, error) {
-	messageID, err := stringToUUID(id)
+	messageID, err := uuid(id)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -60,7 +60,7 @@ func (r *repositoryMessage) GetByID(ctx context.Context, id string) (factcheck.M
 
 // ListByTopic retrieves messages by topic ID using the messageDomain adapter
 func (r *repositoryMessage) ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error) {
-	topicUUID, err := stringToUUID(topicID)
+	topicUUID, err := uuid(topicID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (r *repositoryMessage) Update(ctx context.Context, msg factcheck.Message) (
 
 // Delete deletes a message by ID using the stringToUUID adapter
 func (r *repositoryMessage) Delete(ctx context.Context, id string) error {
-	messageID, err := stringToUUID(id)
+	messageID, err := uuid(id)
 	if err != nil {
 		return err
 	}

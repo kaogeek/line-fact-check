@@ -46,7 +46,7 @@ func (r *repositoryTopic) Create(ctx context.Context, t factcheck.Topic) (factch
 
 // GetByID retrieves a topic by ID using the topicDomain adapter
 func (r *repositoryTopic) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
-	topicID, err := stringToUUID(id)
+	topicID, err := uuid(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -106,7 +106,7 @@ func (r *repositoryTopic) Update(ctx context.Context, t factcheck.Topic) (factch
 
 // Delete deletes a topic by ID using the stringToUUID adapter
 func (r *repositoryTopic) Delete(ctx context.Context, id string) error {
-	topicID, err := stringToUUID(id)
+	topicID, err := uuid(id)
 	if err != nil {
 		return err
 	}

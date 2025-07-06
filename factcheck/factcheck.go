@@ -51,8 +51,6 @@ type UserMessage[T any] struct {
 
 func (s StatusTopic) IsValid() bool {
 	switch s {
-	case "":
-		panic("got empty topic status")
 	case
 		StatusTopicPending,
 		StatusTopicResolved:
@@ -63,8 +61,6 @@ func (s StatusTopic) IsValid() bool {
 
 func (s StatusTopicResult) IsValid() bool {
 	switch s {
-	case "":
-		panic("got empty topic result status")
 	case
 		StatusTopicResultNone,
 		StatusTopicResultAnswered,
@@ -75,11 +71,5 @@ func (s StatusTopicResult) IsValid() bool {
 }
 
 func (t TypeMessage) IsValid() bool {
-	switch t {
-	case "":
-		panic("got empty message type")
-	case TypeMessageText:
-		return true
-	}
-	return false
+	return t == TypeMessageText
 }

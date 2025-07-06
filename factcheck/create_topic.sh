@@ -5,9 +5,6 @@
 
 API_URL="http://localhost:8080/topics"
 
-# Generate a UUID for the topic ID
-TOPIC_ID=$(uuidgen)
-
 # Current timestamp for created_at
 CREATED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -16,12 +13,7 @@ echo "Creating a new topic..."
 # Create the JSON payload
 JSON_PAYLOAD=$(cat << EOF
 {
-  "id": "$TOPIC_ID",
-  "name": "Test Fact-Check Topic",
-  "result": "",
-  "result_status": "TOPIC_RESULT_NONE",
-  "created_at": "$CREATED_AT",
-  "updated_at": null
+  "name": "Test Fact-Check Topic"
 }
 EOF
 )

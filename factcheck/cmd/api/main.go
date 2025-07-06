@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -18,7 +22,7 @@ func main() {
 		addr = ":8080"
 	)
 
-	container, err := di.InitializeContainer()
+	container, cleanup, err := di.InitializeContainer()
 	if err != nil {
 		panic(err)
 	}
@@ -46,9 +50,26 @@ func main() {
 		WriteTimeout: time.Second * 2,
 	}
 
-	slog.Info("listening", "addr", addr)
-	err = srv.ListenAndServe()
-	if err != nil {
-		panic(err)
+	go func() {
+		slog.Info("starting server", "addr", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("server error", "error", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	slog.Info("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		slog.Error("server forced to shutdown", "error", err)
 	}
+
+	cleanup()
+	slog.Info("server exited")
 }

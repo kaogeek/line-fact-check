@@ -5,13 +5,14 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 )
 
-func NewConn(c config.Config) (*pgx.Conn, error) {
+func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 	conn, err := pgx.Connect(
 		context.Background(),
 		fmt.Sprintf(
@@ -20,7 +21,18 @@ func NewConn(c config.Config) (*pgx.Conn, error) {
 		),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return conn, nil
+
+	cleanup := func() {
+		if conn == nil {
+			return
+		}
+		err := conn.Close(context.Background())
+		if err != nil {
+			slog.Error("error closing postgres conn", "error", err)
+		}
+	}
+
+	return conn, cleanup, nil
 }

@@ -33,12 +33,12 @@ type Topic struct {
 }
 
 type Message struct {
-	ID        string
-	TopicID   string
-	Text      string
-	Type      TypeMessage
-	CreatedAt time.Time
-	UpdatedAt *time.Time
+	ID        string      `json:"id"`
+	TopicID   string      `json:"topic_id"`
+	Text      string      `json:"text"`
+	Type      TypeMessage `json:"type"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt *time.Time  `json:"updated_at"`
 }
 
 type UserMessage[T any] struct {

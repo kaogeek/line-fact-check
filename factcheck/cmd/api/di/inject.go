@@ -5,7 +5,7 @@ package di
 
 import "github.com/google/wire"
 
-func InitializeContainer() (Container, error) {
+func InitializeContainer() (Container, func(), error) {
 	wire.Build(ProviderSetMain)
-	return Container{}, nil
+	return Container{}, nil, nil
 }

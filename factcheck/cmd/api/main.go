@@ -25,7 +25,9 @@ func main() {
 
 	topics := chi.NewMux()
 	topics.Get("/", container.Handler.ListTopics)
+	topics.Get("/{id}", container.Handler.GetTopicByID)
 	topics.Post("/", container.Handler.CreateTopic)
+	topics.Delete("/{id}", container.Handler.DeleteTopicByID)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -35,7 +37,7 @@ func main() {
 
 	r.Handle("/", pillars.HandlerEcho(name))
 	r.Handle("/health", pillars.HandlerOk(name))
-	r.Mount("/topics", topics) // TODO: get by id
+	r.Mount("/topics", topics)
 
 	srv := http.Server{
 		Addr:         addr,

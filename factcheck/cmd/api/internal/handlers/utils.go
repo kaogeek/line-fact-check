@@ -20,15 +20,22 @@ type optionsCreate[T any] struct {
 
 type optionCreate[T any] func(*optionsCreate[T])
 
+// createCheck allows f to inspect unmarshaled request body.
 func createCheck[T any](f func(context.Context, T) error) optionCreate[T] {
 	return func(c *optionsCreate[T]) { c.check = f }
 }
+
+// createModify allows f to inject values into data to be created.
+// Common use case is assigning a new UUID and created_at.
 func createModify[T any](f func(context.Context, T) T) optionCreate[T] {
 	return func(c *optionsCreate[T]) { c.modify = f }
 }
 
 // create defines centralized behavior for creating an entry in the database.
 // It allows fine-grained control via [optionsCreate].
+//
+// If you are implementing a more complex use case, e.g. request body differs from T,
+// write your own handler to keep this function simple and stupid.
 func create[T any](
 	w http.ResponseWriter,
 	r *http.Request,
@@ -95,6 +102,24 @@ func getByID[T any](
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			errNotFound(w, id)
+			return
+		}
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, data, http.StatusOK)
+}
+
+func getBy[T any, F any](
+	w http.ResponseWriter,
+	r *http.Request,
+	filter F,
+	f func(context.Context, F) (T, error),
+) {
+	data, err := f(r.Context(), filter)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			errNotFound(w, fmt.Sprintf("not found for filter %+v: %w", filter, err))
 			return
 		}
 		errInternalError(w, err.Error())

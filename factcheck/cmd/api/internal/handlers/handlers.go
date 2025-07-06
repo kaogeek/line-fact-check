@@ -53,6 +53,10 @@ func (h *handler) DeleteMessageByID(w http.ResponseWriter, r *http.Request) {
 	deleteByID[factcheck.Message](w, r, h.messages)
 }
 
+func (h *handler) ListMessagesByTopicID(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, paramID(r), h.messages.ListByTopic)
+}
+
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	create(
 		w, r, h.topics,

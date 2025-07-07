@@ -69,7 +69,7 @@ rec {
         docker-postgres-integration-test = pkgs.dockerTools.buildImage {
           name = "postgres-integration-test";
           tag = version;
-          copyToRoot = [ pkgs.bash pkgs.coreutils pkgs.postgresql_16 pkgs.shadow ];
+          copyToRoot = [ pkgs.bash pkgs.coreutils pkgs.postgresql_16 pkgs.su ];
           config = {
             Env = [
               "POSTGRES_USER=postgres"

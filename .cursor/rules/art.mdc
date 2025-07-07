@@ -1,0 +1,27 @@
+---
+description: Helper for Go
+globs: factcheck/**,.github/workflows/**
+alwaysApply: true
+---
+
+# Iron rules
+- Always use Context7
+- Always run tests after edits
+- Never remove tests
+- Always explain you thoughts, step-by-step, before suggesting edits
+- Ask us first when you need to make edits in unopened files
+- Ask us very explicitly that you are installing new tools
+- Keep changes localized and minimum
+- Keep variable names short, DO NOT name something like fooDataUpdaterAdapter
+
+# About this project
+line-fact-check is an app for submitting and flagging fake news.
+It is a monorepo, and each directory at root can be treated as separate projects.
+For example, @/factcheck/ is Go monolith HTTP API server, while @/backoffice-webapp is the web frontend.
+
+# Nix use
+The monorepo is also a Nix flake. This is done to ensure stuff builds at all times.
+
+# CICD
+The Git repository is hosted on GitHub and we use GitHub Actions for CICD.
+We try to use Nix everywhere when we could, for example, in @.github/workflows/release.yaml.

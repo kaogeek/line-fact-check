@@ -89,6 +89,10 @@ rec {
             };
             Entrypoint = [ "${pkgs.bash}/bin/bash" ];
             Cmd = [ "-c" ''
+              # Set up root user in passwd database (required for sudo)
+              echo "root:x:0:0:root:/root:/bin/bash" >> /etc/passwd
+              echo "root:x:0:root" >> /etc/group
+              
               # Create postgres user (UID 999, same as official postgres image)
               groupadd -g 999 postgres
               useradd -u 999 -g postgres -s /bin/bash -m postgres

@@ -72,8 +72,10 @@ jobs:
         run: |
           nix build .#docker-postgres-integration-test
           docker load < result
-          # Get the version tag and use it
-          VERSION=$(nix eval .#docker-postgres-integration-test.tag --raw)
+          # The image is loaded with the version tag (e.g., 20250707)
+          # We can see from the output that it's loaded as postgres-integration-test:20250707
+          # So we can extract the tag from docker images output
+          VERSION=$(docker images postgres-integration-test --format "{{.Tag}}" | head -1)
           echo "Using PostgreSQL Docker image version: $VERSION"
           docker run -d \
             --name postgres-integration-test \

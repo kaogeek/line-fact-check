@@ -71,7 +71,7 @@ rec {
           tag = version;
           fromImage = pkgs.dockerTools.pullImage {
             imageName = "postgres";
-            imageTag = "16";
+            tag = "16";
             sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
             imageDigest = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           };

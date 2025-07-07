@@ -6,7 +6,8 @@ interface SideBarMenuProps {
   menu: SideBarMenu;
 }
 
-const btnStyle = 'px-4 py-2 block rounded-lg transition duration-300 hover:text-muted-foreground hover:bg-muted w-full';
+const btnStyle =
+  'px-4 py-2 block rounded-lg transition duration-300 hover:text-secondary-foreground hover:bg-secondary-light hover:text-secondary-light-foreground w-full';
 const activeBtnStyle = 'bg-primary text-primary-foreground';
 
 export default function SideBarMenuBtn({ menu }: SideBarMenuProps) {

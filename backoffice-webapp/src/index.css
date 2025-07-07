@@ -1,6 +1,27 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@font-face {
+  font-family: 'Aanakotmai';
+  src: url('assets/fonts/anakotmai-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aanakotmai';
+  src: url('assets/fonts/anakotmai-medium.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aanakotmai';
+  src: url('assets/fonts/anakotmai-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -41,6 +62,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Custom */
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-dark-foreground: var(--primary-dark-foreground);
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-light-foreground: var(--secondary-light-foreground);
   --color-gray: var(--gray);
   --color-gray-foreground: var(--gray-foreground);
   --color-gray-soft: var(--gray-soft);
@@ -79,10 +104,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: #ff6a00;
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: #0f172a;
+  --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -106,6 +131,10 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Custom */
+  --primary-dark: #262027;
+  --primary-dark-foreground: #ff6a00;
+  --secondary-light: #414141;
+  --secondary-light-foreground: oklch(0.985 0 0);
   --gray: #d1d5db;
   --gray-foreground: #111827;
   --gray-soft: #f3f4f6;

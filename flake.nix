@@ -56,7 +56,7 @@ rec {
           # Check that wire-generated code is pristine
           preBuild = ''
             echo "Checking wire code generation..."
-            cd factcheck/cmd/api/di
+            cd cmd/api/di
             wire
             cd ../../../
             

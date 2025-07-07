@@ -89,6 +89,10 @@ rec {
             };
             Entrypoint = [ "${pkgs.bash}/bin/bash" ];
             Cmd = [ "-c" ''
+              # Get current username
+              CURRENT_USER=$(whoami)
+              echo "Current user: $CURRENT_USER"
+              
               # Create postgres user (UID 999, same as official postgres image)
               groupadd -g 999 postgres
               useradd -u 999 -g postgres -s /bin/bash -m postgres

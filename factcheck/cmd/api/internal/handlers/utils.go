@@ -14,8 +14,8 @@ import (
 )
 
 type optionsCreate[T any] struct {
-	check  func(context.Context, T) error
-	modify func(context.Context, T) T
+	check  func(context.Context, T) error // check checks if T is valid
+	modify func(context.Context, T) T     // modify returns T to be created
 }
 
 type optionCreate[T any] func(*optionsCreate[T])

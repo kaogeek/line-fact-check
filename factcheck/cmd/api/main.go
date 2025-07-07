@@ -23,7 +23,7 @@ func main() {
 		addr = ":8080"
 	)
 
-	container, cleanup, err := di.InitializeContainer()
+	handlers, cleanup, err := di.InitializeHandlers()
 	if err != nil {
 		panic(err)
 	}
@@ -34,13 +34,13 @@ func main() {
 	}()
 
 	topics, messages := chi.NewMux(), chi.NewMux()
-	topics.Get("/", container.Handler.ListTopics)
-	topics.Get("/{id}", container.Handler.GetTopicByID)
-	topics.Post("/", container.Handler.CreateTopic)
-	topics.Delete("/{id}", container.Handler.DeleteTopicByID)
-	messages.Get("/{id}", container.Handler.ListMessagesByTopicID)
-	messages.Post("/", container.Handler.CreateMessage)
-	messages.Delete("/", container.Handler.DeleteMessageByID)
+	topics.Get("/", handlers.ListTopics)
+	topics.Get("/{id}", handlers.GetTopicByID)
+	topics.Post("/", handlers.CreateTopic)
+	topics.Delete("/{id}", handlers.DeleteTopicByID)
+	messages.Get("/by-topic/{id}", handlers.ListMessagesByTopicID)
+	messages.Post("/", handlers.CreateMessage)
+	messages.Delete("/", handlers.DeleteMessageByID)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

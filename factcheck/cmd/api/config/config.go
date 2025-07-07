@@ -24,3 +24,16 @@ func New() (Config, error) {
 		},
 	}, nil
 }
+
+func NewTest() (Config, error) {
+	// config for debugging/tests
+	return Config{
+		Postgres: Postgres{
+			Host:     "localhost",
+			Port:     5432,
+			User:     "postgres",
+			Password: "postgres",
+			DBName:   "factcheck",
+		},
+	}, nil
+}

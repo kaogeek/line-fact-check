@@ -82,6 +82,12 @@ jobs:
             -p 5432:5432 \
             postgres-integration-test:$VERSION
           
+          # Check container status and logs
+          echo "Container status:"
+          docker ps -a
+          echo "Container logs:"
+          docker logs postgres-integration-test
+          
           # Wait for PostgreSQL to be ready (90 seconds timeout)
           timeout 90 bash -c 'until docker exec postgres-integration-test pg_isready -U postgres; do sleep 1; done'
 

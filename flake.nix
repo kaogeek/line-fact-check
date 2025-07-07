@@ -76,12 +76,27 @@ rec {
               "POSTGRES_PASSWORD=postgres"
               "POSTGRES_DB=factcheck"
               "POSTGRES_HOST_AUTH_METHOD=trust"
+              "PGDATA=/var/lib/postgresql/data"
             ];
             ExposedPorts = {
               "5432/tcp" = {};
             };
-            Entrypoint = [ "${pkgs.postgresql_16}/bin/postgres" ];
-            Cmd = [ "-D" "/var/lib/postgresql/data" "-c" "listen_addresses=*" ];
+            Entrypoint = [ "${pkgs.bash}/bin/bash" ];
+            Cmd = [ "-c" ''
+              # Create postgres user and data directory
+              mkdir -p /var/lib/postgresql/data
+              chown -R 999:999 /var/lib/postgresql/data
+              
+              # Initialize database if not already done
+              if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+                echo "Initializing PostgreSQL database..."
+                ${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres
+              fi
+              
+              # Start PostgreSQL
+              echo "Starting PostgreSQL..."
+              exec ${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'
+            '' ];
             Volumes = {
               "/var/lib/postgresql/data" = {};
             };

@@ -138,6 +138,7 @@ rec {
             # Utilities
             coreutils
             bash
+            lsof
           ];
 
           # Set up Postgres environment and startup
@@ -160,24 +161,38 @@ rec {
               echo "host all all ::1/128 trust" >> "$PGDATA/pg_hba.conf"
             fi
             
+            # Check if port 5432 is already in use
+            echo "Checking if port 5432 is available..."
+            if lsof -i :5432 > /dev/null 2>&1; then
+              echo "Warning: Port 5432 is already in use:"
+              lsof -i :5432
+              echo "Trying to use a different port..."
+              export PGPORT=5433
+              echo "Using port $PGPORT instead"
+            fi
+            
             # Start Postgres
             echo "Starting Postgres..."
             pg_ctl -D "$PGDATA" -l postgres.log start
             
             # Wait for Postgres to be ready with timeout (1:30 minutes)
-            echo "Waiting for Postgres to be ready..."
-            timeout 90 bash -c '
-              until pg_isready -h localhost -p 5432; do
-                echo "Waiting for Postgres..."
+            echo "Waiting for Postgres to be ready on port $PGPORT..."
+            timeout 90 bash -c "
+              until pg_isready -h localhost -p $PGPORT; do
+                echo \"Waiting for Postgres on port $PGPORT...\"
                 sleep 2
               done
-              echo "Postgres is ready!"
-            '
+              echo \"Postgres is ready on port $PGPORT!\"
+            "
             
             if [ $? -ne 0 ]; then
               echo "Error: Postgres failed to start within 90 seconds"
               echo "Postgres log:"
               cat postgres.log
+              echo "Process status:"
+              ps aux | grep postgres
+              echo "Port status:"
+              lsof -i :$PGPORT || echo "No process using port $PGPORT"
               exit 1
             fi
             

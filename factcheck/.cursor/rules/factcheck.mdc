@@ -1,0 +1,18 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# About factcheck
+
+factcheck is the monolith HTTP backend for "fact-checking app".
+HTTP server routing is composed with go-chi to keep dependencies to minimum.
+
+# Code generation
+
+> Because we use Go workspace, sometimes `go generate` might complain if we omit `-mod-mod` flag.
+
+The following code generation tools are used:
+- sqlc for database interactions, see @/sqlc.yaml and @/data
+- wire for dependency injection, lives inside @/internal/di

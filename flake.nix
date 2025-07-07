@@ -54,6 +54,22 @@ rec {
         };
       });
 
+      # To build and load the image:
+      # nix build .#dockerImages.factcheck && docker load < result
+      dockerImages = forAllSystems ({ pkgs }: {
+        factcheck = pkgs.dockerTools.buildImage {
+          name = "factcheck";
+          tag = version;
+          copyToRoot = [ pkgs.bash pkgs.coreutils ];
+          config = {
+            Entrypoint = [ "${self.packages.${pkgs.system}.factcheck}/bin/api" ];
+            ExposedPorts = {
+              "8080/tcp" = {};
+            };
+          };
+        };
+      });
+
       devShells = forAllSystems ({ pkgs }: {
         default = pkgs.mkShell {
           packages = with pkgs; [

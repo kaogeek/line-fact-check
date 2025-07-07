@@ -74,6 +74,7 @@ rec {
             go-tools
             golangci-lint
             sqlc
+            wire
           ];
         };
       });

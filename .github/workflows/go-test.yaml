@@ -28,27 +28,45 @@ jobs:
         with:
           fetch-depth: "0"
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-          go-version-file: "./factcheck/go.mod"
-          cache: false
-          check-latest: true
+      - name: Setup Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Check wire code generation
+        run: |
+          nix develop --command bash -c "
+            echo 'Generating wire code for factcheck...'
+            cd factcheck/cmd/api/di
+            wire
+            echo 'Wire generation complete'
+            
+            echo 'Checking for wire-generated code differences...'
+            cd ../../../
+            if [ -n \"$(git status --porcelain)\" ]; then
+              echo 'Error: Generated code differs from repository state'
+              git diff
+              exit 1
+            else
+              echo 'Generated code matches repository state'
+            fi
+          "
 
       - name: Test factcheck
         run: |
-          cd factcheck;
-          echo "PWD: $pwd"
-          echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
-          go test -race -count=1 -json ./... > $ARTIFACT_FACTCHECK
+          nix develop --command bash -c "
+            cd factcheck
+            echo 'PWD: $PWD'
+            echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
+            go test -race -count=1 -json ./... > $ARTIFACT_FACTCHECK
+          "
 
       - name: Test foo
         run: |
-          cd foo;
-          echo "PWD: $pwd"
-          echo "Testing foo and writing JSON report to $ARTIFACT_FOO"
-          go test -race -count=1 -json ./... > $ARTIFACT_FOO
+          nix develop --command bash -c "
+            cd foo
+            echo 'PWD: $PWD'
+            echo 'Testing foo and writing JSON report to $ARTIFACT_FOO'
+            go test -race -count=1 -json ./... > $ARTIFACT_FOO
+          "
 
       - name: Upload Go test results
         uses: actions/upload-artifact@v4

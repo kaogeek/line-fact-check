@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from '../ui/button';
 import UserAvatar from '../UserAvatar';
 import SideBarMenuBtn from './SideBarMenuBtn';
+import { TYMuted } from '../Typography';
 
 interface SideBarProps {
   brand: string;
@@ -25,20 +26,22 @@ export type SideBarMenu =
 
 export default function SideBar({ brand, menuList, isOpen, setIsOpen }: SideBarProps) {
   const SidebarContent = (
-    <aside className="flex flex-col h-full shadow-lg w-[238px] bg-white">
-      <header className="p-4 text-lg font-bold text-center">{brand}</header>
-
+    <aside className="flex flex-col h-full shadow-lg w-[238px] bg-secondary text-secondary-foreground">
+      <header className="p-4 text-lg font-bold text-center text-primary">{brand}</header>
+      <hr className="border-t border-secondary-light" />
       <section className="p-4">
         <UserAvatar avatarUrl={avatar} name="Username" />
       </section>
-
+      <hr className="border-t border-secondary-light" />
       <nav className="flex-1 flex flex-col p-4 gap-2">
         {menuList.map((menu, idx) => (
           <SideBarMenuBtn key={idx} menu={menu} />
         ))}
       </nav>
-
-      <footer className="p-4 text-sm text-center text-gray-500">Version 1.0.0</footer>
+      <hr className="border-t border-secondary-light" />
+      <footer className="p-4 text-center">
+        <TYMuted>Version 1.0.0</TYMuted>
+      </footer>
     </aside>
   );
 

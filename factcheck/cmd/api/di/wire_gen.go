@@ -15,6 +15,26 @@ import (
 
 // Injectors from inject.go:
 
+// InitializeHandlers returns our API handler.
+func InitializeHandlers() (handlers.Handler, func(), error) {
+	configConfig, err := config.New()
+	if err != nil {
+		return nil, nil, err
+	}
+	conn, cleanup, err := postgres.NewConn(configConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	queries := postgres.New(conn)
+	repository := repo.New(queries)
+	handler := handlers.New(repository)
+	return handler, func() {
+		cleanup()
+	}, nil
+}
+
+// InitializeContainer returns all components of interest,
+// perfect for integration test or debugging
 func InitializeContainer() (Container, func(), error) {
 	configConfig, err := config.New()
 	if err != nil {

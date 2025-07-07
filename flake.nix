@@ -83,19 +83,23 @@ rec {
             };
             Entrypoint = [ "${pkgs.bash}/bin/bash" ];
             Cmd = [ "-c" ''
-              # Create postgres user and data directory
+              # Create postgres user (UID 999, same as official postgres image)
+              groupadd -g 999 postgres
+              useradd -u 999 -g postgres -s /bin/bash -m postgres
+              
+              # Create data directory with proper ownership
               mkdir -p /var/lib/postgresql/data
-              chown -R 999:999 /var/lib/postgresql/data
+              chown -R postgres:postgres /var/lib/postgresql/data
               
               # Initialize database if not already done
               if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
                 echo "Initializing PostgreSQL database..."
-                ${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres
+                su postgres -c "${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres"
               fi
               
-              # Start PostgreSQL
+              # Start PostgreSQL as postgres user
               echo "Starting PostgreSQL..."
-              exec ${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'
+              exec su postgres -c "${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'"
             '' ];
             Volumes = {
               "/var/lib/postgresql/data" = {};

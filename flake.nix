@@ -71,7 +71,7 @@ rec {
           tag = version;
           copyToRoot = with pkgs; [
             bash
-            su
+            sudo
             shadow
             coreutils
             postgresql_16
@@ -89,10 +89,6 @@ rec {
             };
             Entrypoint = [ "${pkgs.bash}/bin/bash" ];
             Cmd = [ "-c" ''
-              # Get current username
-              CURRENT_USER=$(whoami)
-              echo "Current user: $CURRENT_USER"
-              
               # Create postgres user (UID 999, same as official postgres image)
               groupadd -g 999 postgres
               useradd -u 999 -g postgres -s /bin/bash -m postgres
@@ -104,12 +100,12 @@ rec {
               # Initialize database if not already done
               if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
                 echo "Initializing PostgreSQL database..."
-                su postgres -c "${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres"
+                sudo -u postgres ${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres
               fi
               
               # Start PostgreSQL as postgres user
               echo "Starting PostgreSQL..."
-              exec su postgres -c "${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'"
+              exec sudo -u postgres ${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'
             '' ];
             Volumes = {
               "/var/lib/postgresql/data" = {};

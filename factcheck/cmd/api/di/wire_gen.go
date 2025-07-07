@@ -47,7 +47,7 @@ func InitializeContainer() (Container, func(), error) {
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handler := handlers.New(repository)
-	container := New(conn, queries, handler)
+	container := New(conn, queries, repository, handler)
 	return container, func() {
 		cleanup()
 	}, nil

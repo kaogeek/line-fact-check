@@ -30,7 +30,7 @@ type handler struct {
 	messages repo.RepositoryMessage
 }
 
-func New(repo *repo.Repository) Handler {
+func New(repo repo.Repository) Handler {
 	return &handler{
 		topics:   repo.Topic,
 		messages: repo.Message,

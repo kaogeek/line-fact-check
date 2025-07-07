@@ -70,14 +70,11 @@ jobs:
 
       - name: Start PostgreSQL for integration tests
         run: |
-          nix build .#dockerImages.postgres-integration-test
+          nix build .#docker-postgres-integration-test
           docker load < result
           docker run -d \
             --name postgres-integration-test \
             -p 5432:5432 \
-            -e POSTGRES_USER=postgres \
-            -e POSTGRES_PASSWORD=postgres \
-            -e POSTGRES_DB=factcheck \
             postgres-integration-test:latest
           
           # Wait for PostgreSQL to be ready (90 seconds timeout)

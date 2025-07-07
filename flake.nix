@@ -52,12 +52,9 @@ rec {
             description = "${description} - factcheck";
           };
         };
-      });
 
-      # To build and load the image:
-      # nix build .#dockerImages.factcheck && docker load < result
-      dockerImages = forAllSystems ({ pkgs }: {
-        factcheck = pkgs.dockerTools.buildImage {
+        # Docker images
+        docker-factcheck = pkgs.dockerTools.buildImage {
           name = "factcheck";
           tag = version;
           copyToRoot = [ pkgs.bash pkgs.coreutils ];
@@ -69,7 +66,7 @@ rec {
           };
         };
 
-        postgres-integration-test = pkgs.dockerTools.buildImage {
+        docker-postgres-integration-test = pkgs.dockerTools.buildImage {
           name = "postgres-integration-test";
           tag = version;
           copyToRoot = [ pkgs.bash pkgs.coreutils pkgs.postgresql_16 ];

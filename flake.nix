@@ -47,6 +47,29 @@ rec {
           src = ./.;
           modRoot = "./factcheck";
           vendorHash = "sha256-1+dsaRdpIh9lNHkKQa7FflzeveXv10JaxXr4VRpPil8=";
+          
+          buildInputs = with pkgs; [
+            wire
+            git
+          ];
+          
+          # Check that wire-generated code is pristine
+          preBuild = ''
+            echo "Checking wire code generation..."
+            cd factcheck/cmd/api/di
+            wire
+            cd ../../../
+            
+            # Check if any files were modified
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "Error: Wire-generated code differs from repository state"
+              git diff
+              exit 1
+            else
+              echo "Wire-generated code is pristine"
+            fi
+          '';
+          
           meta = {
             inherit homepage;
             description = "${description} - factcheck";

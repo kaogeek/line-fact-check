@@ -141,12 +141,22 @@ rec {
             echo "Starting Postgres..."
             pg_ctl -D "$PGDATA" -l postgres.log start
             
-            # Wait for Postgres to be ready
+            # Wait for Postgres to be ready with timeout (1:30 minutes)
             echo "Waiting for Postgres to be ready..."
-            until pg_isready -h localhost -p 5432; do
-              sleep 1
-            done
-            echo "Postgres is ready!"
+            timeout 90 bash -c '
+              until pg_isready -h localhost -p 5432; do
+                echo "Waiting for Postgres..."
+                sleep 2
+              done
+              echo "Postgres is ready!"
+            '
+            
+            if [ $? -ne 0 ]; then
+              echo "Error: Postgres failed to start within 90 seconds"
+              echo "Postgres log:"
+              cat postgres.log
+              exit 1
+            fi
             
             # Set up database schema if it exists
             if [ -f "factcheck/data/postgres/schema.sql" ]; then

@@ -73,6 +73,7 @@ rec {
             imageName = "postgres";
             imageTag = "16";
             sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+            imageDigest = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           };
           config = {
             Env = [

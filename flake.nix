@@ -68,6 +68,28 @@ rec {
             };
           };
         };
+
+        postgres-integration-test = pkgs.dockerTools.buildImage {
+          name = "postgres-integration-test";
+          tag = version;
+          copyToRoot = [ pkgs.bash pkgs.coreutils pkgs.postgresql_16 ];
+          config = {
+            Env = [
+              "POSTGRES_USER=postgres"
+              "POSTGRES_PASSWORD=postgres"
+              "POSTGRES_DB=factcheck"
+              "POSTGRES_HOST_AUTH_METHOD=trust"
+            ];
+            ExposedPorts = {
+              "5432/tcp" = {};
+            };
+            Entrypoint = [ "${pkgs.postgresql_16}/bin/postgres" ];
+            Cmd = [ "-D" "/var/lib/postgresql/data" "-c" "listen_addresses=*" ];
+            Volumes = {
+              "/var/lib/postgresql/data" = {};
+            };
+          };
+        };
       });
 
       devShells = forAllSystems ({ pkgs }: {

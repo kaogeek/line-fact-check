@@ -68,10 +68,42 @@ jobs:
             go test -race -count=1 -json ./... > $ARTIFACT_FOO
           "
 
+      - name: Start PostgreSQL for integration tests
+        run: |
+          nix build .#dockerImages.postgres-integration-test
+          docker load < result
+          docker run -d \
+            --name postgres-integration-test \
+            -p 5432:5432 \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=factcheck \
+            postgres-integration-test:latest
+          
+          # Wait for PostgreSQL to be ready (90 seconds timeout)
+          timeout 90 bash -c 'until docker exec postgres-integration-test pg_isready -U postgres; do sleep 1; done'
+
+      - name: Test factcheck (integration tests)
+        run: |
+          nix develop --command bash -c "
+            cd factcheck
+            echo 'Running integration tests with PostgreSQL...'
+            go test -race -count=1 -tags=integration_test -json ./... > integration_test_result.json
+          "
+        env:
+          CI: ""  # Unset CI to allow integration tests to run
+
+      - name: Cleanup PostgreSQL container
+        if: always()
+        run: |
+          docker stop postgres-integration-test || true
+          docker rm postgres-integration-test || true
+
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
           name: test_result-go${{ matrix.go-version }}_${{ matrix.os }}
           path: |
             factcheck/${{ env.ARTIFACT_FACTCHECK }}
+            factcheck/integration_test_result.json
             foo/${{ env.ARTIFACT_FOO }}

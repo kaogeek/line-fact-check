@@ -72,10 +72,13 @@ jobs:
         run: |
           nix build .#docker-postgres-integration-test
           docker load < result
+          # Get the version tag and use it
+          VERSION=$(nix eval .#docker-postgres-integration-test.tag --raw)
+          echo "Using PostgreSQL Docker image version: $VERSION"
           docker run -d \
             --name postgres-integration-test \
             -p 5432:5432 \
-            postgres-integration-test:latest
+            postgres-integration-test:$VERSION
           
           # Wait for PostgreSQL to be ready (90 seconds timeout)
           timeout 90 bash -c 'until docker exec postgres-integration-test pg_isready -U postgres; do sleep 1; done'

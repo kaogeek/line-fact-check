@@ -69,50 +69,20 @@ rec {
         docker-postgres-integration-test = pkgs.dockerTools.buildImage {
           name = "postgres-integration-test";
           tag = version;
-          copyToRoot = with pkgs; [
-            bash
-            sudo
-            shadow
-            coreutils
-            postgresql_16
-          ];
+          fromImage = pkgs.dockerTools.pullImage {
+            imageName = "postgres";
+            imageTag = "16";
+            sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+          };
           config = {
             Env = [
               "POSTGRES_USER=postgres"
               "POSTGRES_PASSWORD=postgres"
               "POSTGRES_DB=factcheck"
               "POSTGRES_HOST_AUTH_METHOD=trust"
-              "PGDATA=/var/lib/postgresql/data"
             ];
             ExposedPorts = {
               "5432/tcp" = {};
-            };
-            Entrypoint = [ "${pkgs.bash}/bin/bash" ];
-            Cmd = [ "-c" ''
-              # Set up root user in passwd database (required for sudo)
-              echo "root:x:0:0:root:/root:/bin/bash" >> /etc/passwd
-              echo "root:x:0:root" >> /etc/group
-              
-              # Create postgres user (UID 999, same as official postgres image)
-              groupadd -g 999 postgres
-              useradd -u 999 -g postgres -s /bin/bash -m postgres
-              
-              # Create data directory with proper ownership
-              mkdir -p /var/lib/postgresql/data
-              chown -R postgres:postgres /var/lib/postgresql/data
-              
-              # Initialize database if not already done
-              if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
-                echo "Initializing PostgreSQL database..."
-                sudo -u postgres ${pkgs.postgresql_16}/bin/initdb -D /var/lib/postgresql/data -U postgres
-              fi
-              
-              # Start PostgreSQL as postgres user
-              echo "Starting PostgreSQL..."
-              exec sudo -u postgres ${pkgs.postgresql_16}/bin/postgres -D /var/lib/postgresql/data -c listen_addresses='*'
-            '' ];
-            Volumes = {
-              "/var/lib/postgresql/data" = {};
             };
           };
         };

@@ -91,7 +91,79 @@ rec {
             golangci-lint
             sqlc
             wire
+
+            # Database for integration tests
+            postgresql_16
           ];
+        };
+
+        # Integration test environment with Postgres setup
+        test-integration = pkgs.mkShell {
+          packages = with pkgs; [
+            # Go tools
+            go
+            gopls
+            gotools
+            go-tools
+            golangci-lint
+            sqlc
+            wire
+
+            # Database
+            postgresql_16
+
+            # Utilities
+            coreutils
+            bash
+          ];
+
+          # Set up Postgres environment and startup
+          shellHook = ''
+            # Set up Postgres environment
+            export PGDATA="$PWD/.postgres"
+            export PGHOST="localhost"
+            export PGPORT=5432
+            export PGUSER="postgres"
+            export PGPASSWORD="postgres"
+            export PGDATABASE="factcheck"
+            
+            echo "Setting up Postgres test environment..."
+            
+            # Initialize Postgres if not already done
+            if [ ! -d "$PGDATA" ]; then
+              echo "Initializing Postgres database..."
+              initdb -D "$PGDATA" --auth=trust
+              echo "host all all 127.0.0.1/32 trust" >> "$PGDATA/pg_hba.conf"
+              echo "host all all ::1/128 trust" >> "$PGDATA/pg_hba.conf"
+            fi
+            
+            # Start Postgres
+            echo "Starting Postgres..."
+            pg_ctl -D "$PGDATA" -l postgres.log start
+            
+            # Wait for Postgres to be ready
+            echo "Waiting for Postgres to be ready..."
+            until pg_isready -h localhost -p 5432; do
+              sleep 1
+            done
+            echo "Postgres is ready!"
+            
+            # Set up database schema if it exists
+            if [ -f "factcheck/data/postgres/schema.sql" ]; then
+              echo "Setting up database schema..."
+              psql -d factcheck -f factcheck/data/postgres/schema.sql
+            fi
+            
+            echo "Test environment ready! Run your integration tests now."
+            echo "Postgres will be stopped when you exit this shell."
+          '';
+          
+          # Clean up Postgres when shell exits
+          shellExitHook = ''
+            echo "Stopping Postgres..."
+            pg_ctl -D "$PGDATA" stop
+            echo "Postgres stopped."
+          '';
         };
       });
     };

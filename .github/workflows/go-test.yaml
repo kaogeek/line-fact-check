@@ -50,13 +50,13 @@ jobs:
             fi
           "
 
-      - name: Test factcheck
+      - name: Test factcheck (unit tests only)
         run: |
           nix develop --command bash -c "
             cd factcheck
             echo 'PWD: $PWD'
-            echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
-            go test -race -count=1 -json ./... > $ARTIFACT_FACTCHECK
+            echo Testing factcheck unit tests and writing JSON report to $ARTIFACT_FACTCHECK
+            go test -race -count=1 -json -tags=!integration_test ./... > $ARTIFACT_FACTCHECK
           "
 
       - name: Test foo
@@ -66,6 +66,15 @@ jobs:
             echo 'PWD: $PWD'
             echo 'Testing foo and writing JSON report to $ARTIFACT_FOO'
             go test -race -count=1 -json ./... > $ARTIFACT_FOO
+          "
+
+      - name: Run integration tests
+        run: |
+          nix develop .#test-integration --command bash -c "
+            cd factcheck
+            echo 'Running integration tests...'
+            go test -race -count=1 -json -tags=integration_test ./... > $ARTIFACT_FACTCHECK
+            echo 'Integration tests completed'
           "
 
       - name: Upload Go test results

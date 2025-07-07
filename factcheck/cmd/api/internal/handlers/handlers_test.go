@@ -1,3 +1,6 @@
+//go:build integration_test
+// +build integration_test
+
 package handlers_test
 
 import (

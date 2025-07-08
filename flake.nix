@@ -64,7 +64,18 @@ rec {
             ExposedPorts = {
               "8080/tcp" = {};
             };
-          }
+          };
+        };
+
+        # PostgreSQL Docker image for integration tests
+        # nix build .#docker-postgres-it-test && docker load < result
+        docker-postgres-it-test = pkgs.dockerTools.pullImage {
+          imageName = "postgres";
+          imageTag = "16";
+          imageDigest = "sha256:7c0cbc894163c3c4c6f919fe3c4d3c3c4c6f919fe3c4d3c3c4c6f919fe3c4d3";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+          finalImageName = "postgres";
+          finalImageTag = "16";
         };
       });
 

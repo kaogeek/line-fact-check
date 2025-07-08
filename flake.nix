@@ -71,7 +71,7 @@ rec {
         # nix build .#docker-postgres-it-test && docker load < result
         docker-postgres-it-test = pkgs.dockerTools.pullImage {
           imageName = "postgres";
-          imageDigest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+          imageDigest = "sha256:c0aab7962b283cf24a0defa5d0d59777f5045a7be59905f21ba81a20b1a110c9";
           sha256 = pkgs.lib.fakeSha256;
           finalImageName = "postgres";
           finalImageTag = "16";

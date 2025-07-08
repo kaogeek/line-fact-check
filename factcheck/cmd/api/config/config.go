@@ -38,6 +38,8 @@ func NewTest() (Config, error) {
 	}, nil
 }
 
+// TODO: this is done to evade GitGuardian
+// Remove this once we configure our config system
 func hack() string {
 	return string([]byte{'p', 'o', 's', 't', 'g', 'r', 'e', 's'})
 }

@@ -52,12 +52,10 @@ rec {
             description = "${description} - factcheck";
           };
         };
-      });
 
-      # To build and load the image:
-      # nix build .#dockerImages.factcheck && docker load < result
-      dockerImages = forAllSystems ({ pkgs }: {
-        factcheck = pkgs.dockerTools.buildImage {
+        # To build and load the image:
+        # nix build .#docker-factcheck && docker load < result
+        docker-factcheck = pkgs.dockerTools.buildImage {
           name = "factcheck";
           tag = version;
           copyToRoot = [ pkgs.bash pkgs.coreutils ];
@@ -66,7 +64,7 @@ rec {
             ExposedPorts = {
               "8080/tcp" = {};
             };
-          };
+          }
         };
       });
 

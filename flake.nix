@@ -119,6 +119,9 @@ rec {
             bash
           ];
           shellHook = ''
+            echo "Loading PostgreSQL image from Nix..."
+            docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}
+            
             echo "Starting PostgreSQL container for integration tests..."
             docker run -d \
               --name postgres-it-test \

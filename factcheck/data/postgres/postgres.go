@@ -13,6 +13,12 @@ import (
 )
 
 func NewConn(c config.Config) (*pgx.Conn, func(), error) {
+	slog.Info("connecting to postgres",
+		"host", c.Postgres.Host,
+		"port", c.Postgres.Port,
+		"user", c.Postgres.User,
+		"dbname", c.Postgres.DBName,
+	)
 	conn, err := pgx.Connect(
 		context.Background(),
 		fmt.Sprintf(
@@ -23,6 +29,12 @@ func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	slog.Info("postgres connected",
+		"host", c.Postgres.Host,
+		"port", c.Postgres.Port,
+		"user", c.Postgres.User,
+		"dbname", c.Postgres.DBName,
+	)
 
 	cleanup := func() {
 		if conn == nil {

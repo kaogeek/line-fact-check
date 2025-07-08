@@ -52,12 +52,10 @@ rec {
             description = "${description} - factcheck";
           };
         };
-      });
 
-      # To build and load the image:
-      # nix build .#dockerImages.factcheck && docker load < result
-      dockerImages = forAllSystems ({ pkgs }: {
-        factcheck = pkgs.dockerTools.buildImage {
+        # To build and load the image:
+        # nix build .#docker-factcheck && docker load < result
+        docker-factcheck = pkgs.dockerTools.buildImage {
           name = "factcheck";
           tag = version;
           copyToRoot = [ pkgs.bash pkgs.coreutils ];
@@ -68,30 +66,97 @@ rec {
             };
           };
         };
+
+        # PostgreSQL Docker image for integration tests
+        # nix build .#docker-postgres-it-test && docker load < result
+        docker-postgres-it-test = pkgs.dockerTools.pullImage {
+          imageName = "postgres";
+          imageDigest = "sha256:c0aab7962b283cf24a0defa5d0d59777f5045a7be59905f21ba81a20b1a110c9";
+          sha256 = if pkgs.system == "x86_64-darwin" then
+            "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          else if pkgs.system == "aarch64-darwin" then
+            "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
+          else
+            "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";
+          finalImageName = "postgres";
+          finalImageTag = "16";
+        };
       });
 
-      devShells = forAllSystems ({ pkgs }: {
+      devShells = forAllSystems ({ pkgs }: let
+        packagesDevelop = with pkgs; [
+          # Development - server
+          go
+          gopls
+          gotools
+          go-tools
+          golangci-lint
+          sqlc
+          wire
+        ];
+        packagesItTest = with pkgs; [
+          docker
+          docker-compose
+          coreutils
+          bash
+        ];
+        packagesExtra = with pkgs; [
+          # Basic LSPs
+          nixd
+          nixpkgs-fmt
+          bash-language-server
+          shellcheck
+          shfmt
+          lowdown
+        ];
+
+        in {
         default = pkgs.mkShell {
-          packages = with pkgs; [
-            coreutils
+          packages = packagesDevelop ++ packagesExtra ++ packagesItTest;
+        };
 
-            # Basic LSPs
-            nixd
-            nixpkgs-fmt
-            bash-language-server
-            shellcheck
-            shfmt
-            lowdown
-
-            # Development - server
-            go
-            gopls
-            gotools
-            go-tools
-            golangci-lint
-            sqlc
-            wire
-          ];
+        # Shell for running integration tests with PostgreSQL
+        shell-it-test = pkgs.mkShell {
+          packages = packagesDevelop ++ packagesItTest;
+          shellHook = ''
+            echo "Loading PostgreSQL image from Nix..."
+            docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}
+            
+            echo "Starting PostgreSQL container for integration tests..."
+            docker run -d \
+              --name postgres-it-test \
+              -e POSTGRES_PASSWORD=postgres \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_DB=factcheck \
+              -p 5432:5432 \
+              postgres:16
+            echo "PostgreSQL container started on localhost:5432"
+            
+            echo "Waiting for PostgreSQL to be ready..."
+            timeout=90
+            counter=0
+            while [ $counter -lt $timeout ]; do
+              if docker exec postgres-it-test pg_isready -U postgres -d factcheck > /dev/null 2>&1; then
+                echo "PostgreSQL is ready!"
+                break
+              fi
+              echo "Waiting for PostgreSQL... ($counter/$timeout seconds)"
+              sleep 2
+              counter=$((counter + 2))
+            done
+            
+            if [ $counter -ge $timeout ]; then
+              echo "Error: PostgreSQL did not become ready within $timeout seconds"
+              docker logs postgres-it-test
+              exit 1
+            fi
+            
+            echo "Running database migration..."
+            docker exec -i postgres-it-test psql -U postgres -d factcheck < ${./factcheck/data/postgres/schema.sql}
+            echo "Database migration completed"
+            
+            echo "Use 'docker stop postgres-it-test && docker rm postgres-it-test' to clean up"
+          '';
         };
       });
     };

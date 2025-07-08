@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
@@ -33,10 +32,6 @@ func reqBodyJSON(data any) io.Reader {
 }
 
 func TestHandlerTopic(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("skipping integration test")
-	}
-
 	const timeout = time.Millisecond * 200
 	const url = "localhost:8778/"
 

@@ -25,3 +25,6 @@ The monorepo is also a Nix flake. This is done to ensure stuff builds at all tim
 # CICD
 The Git repository is hosted on GitHub and we use GitHub Actions for CICD.
 We try to use Nix everywhere when we could, for example, in @.github/workflows/release.yaml.
+
+# Jargons (in code and chat)
+- A Go integration test is called "it-test"

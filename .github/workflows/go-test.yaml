@@ -1,4 +1,4 @@
-name: test go
+name: test go (Linux)
 on:
   workflow_dispatch:
   pull_request:
@@ -6,12 +6,12 @@ on:
 
 jobs:
   test:
-    name: Test code
+    name: Test code (Linux)
     strategy:
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
+          - macos-latest
 
         go-version:
           - stable
@@ -22,6 +22,7 @@ jobs:
     env:
       ARTIFACT_FACTCHECK: "factcheck-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
       ARTIFACT_FOO: "foo-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
+      ARTIFACT_FACTCHECK_IT: "factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
     steps:
       - name: Checkout code
         uses: actions/checkout@master
@@ -34,13 +35,13 @@ jobs:
       - name: Check wire code generation
         run: |
           nix develop --command bash -c "
+            cd factcheck
             echo 'Generating wire code for factcheck...'
-            cd factcheck/cmd/api/di
-            wire
+            wire ./...
             echo 'Wire generation complete'
             
             echo 'Checking for wire-generated code differences...'
-            cd ../../../
+            cd ..
             if [ -n \"$(git status --porcelain)\" ]; then
               echo 'Error: Generated code differs from repository state'
               git diff
@@ -68,6 +69,45 @@ jobs:
             go test -race -count=1 -json ./... > $ARTIFACT_FOO
           "
 
+      - name: Test build with Docker
+        run: |
+          nix build .#docker-factcheck
+          nix build .#docker-postgres-it-test
+
+      - name: Test factcheck (integration test)
+        if: matrix.os != 'macos-latest'
+        run: |
+          nix develop .#shell-it-test --command bash -c "
+            echo 'Waiting for PostgreSQL to be ready...'
+            
+            # Wait for PostgreSQL to be ready with timeout
+            timeout=90
+            counter=0
+            while [ \$counter -lt \$timeout ]; do
+              if docker exec postgres-it-test pg_isready -U postgres -d factcheck > /dev/null 2>&1; then
+                echo 'PostgreSQL is ready!'
+                break
+              fi
+              echo 'Waiting for PostgreSQL... (\$counter/\$timeout seconds)'
+              sleep 2
+              counter=\$((counter + 2))
+            done
+            
+            if [ \$counter -ge \$timeout ]; then
+              echo 'Error: PostgreSQL did not become ready within \$timeout seconds'
+              docker logs postgres-it-test
+              exit 1
+            fi
+            
+            cd factcheck
+            echo 'PWD: $PWD'
+            echo 'Running integration tests for factcheck...'
+            go test -tags=integration_test -race -count=1 -json ./... > factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json
+            
+            echo 'Integration tests completed'
+            docker stop postgres-it-test && docker rm postgres-it-test
+          "
+
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
@@ -75,3 +115,4 @@ jobs:
           path: |
             factcheck/${{ env.ARTIFACT_FACTCHECK }}
             foo/${{ env.ARTIFACT_FOO }}
+            factcheck/${{ env.ARTIFACT_FACTCHECK_IT }}

@@ -83,46 +83,41 @@ rec {
         };
       });
 
-      devShells = forAllSystems ({ pkgs }: {
+      devShells = forAllSystems ({ pkgs }: let
+        packagesDevelop = with pkgs; [
+          # Development - server
+          go
+          gopls
+          gotools
+          go-tools
+          golangci-lint
+          sqlc
+          wire
+        ];
+        packagesExtra = with pkgs; [
+          # Basic LSPs
+          nixd
+          nixpkgs-fmt
+          bash-language-server
+          shellcheck
+          shfmt
+          lowdown
+        ];
+        packagesItTest = with pkgs; [
+          docker
+          docker-compose
+          coreutils
+          bash
+        ];
+
+        in {
         default = pkgs.mkShell {
-          packages = with pkgs; [
-            coreutils
-
-            # Basic LSPs
-            nixd
-            nixpkgs-fmt
-            bash-language-server
-            shellcheck
-            shfmt
-            lowdown
-
-            # Development - server
-            go
-            gopls
-            gotools
-            go-tools
-            golangci-lint
-            sqlc
-            wire
-          ];
+          packages = packagesDevelop ++ packagesExtra ++ packagesItTest;
         };
 
         # Shell for running integration tests with PostgreSQL
         shell-it-test = pkgs.mkShell {
-          packages = with pkgs; [
-            go
-            gopls
-            gotools
-            go-tools
-            golangci-lint
-            sqlc
-            wire
-
-            docker
-            docker-compose
-            coreutils
-            bash
-          ];
+          packages = packagesDevelop ++ packagesItTest;
           shellHook = ''
             echo "Loading PostgreSQL image from Nix..."
             docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}

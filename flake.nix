@@ -94,6 +94,12 @@ rec {
           sqlc
           wire
         ];
+        packagesItTest = with pkgs; [
+          docker
+          docker-compose
+          coreutils
+          bash
+        ];
         packagesExtra = with pkgs; [
           # Basic LSPs
           nixd
@@ -102,12 +108,6 @@ rec {
           shellcheck
           shfmt
           lowdown
-        ];
-        packagesItTest = with pkgs; [
-          docker
-          docker-compose
-          coreutils
-          bash
         ];
 
         in {

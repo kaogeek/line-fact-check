@@ -72,7 +72,12 @@ rec {
         docker-postgres-it-test = pkgs.dockerTools.pullImage {
           imageName = "postgres";
           imageDigest = "sha256:c0aab7962b283cf24a0defa5d0d59777f5045a7be59905f21ba81a20b1a110c9";
-          sha256 = "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";
+          sha256 = if pkgs.system == "x86_64-darwin" then
+            "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
+          else if pkgs.system == "aarch64-darwin" then
+            "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="  # TODO: Get actual hash for Apple Silicon
+          else
+            "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";  # Linux hashes
           finalImageName = "postgres";
           finalImageTag = "16";
         };

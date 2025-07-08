@@ -105,6 +105,14 @@ rec {
         # Shell for running integration tests with PostgreSQL
         shell-it-test = pkgs.mkShell {
           packages = with pkgs; [
+            go
+            gopls
+            gotools
+            go-tools
+            golangci-lint
+            sqlc
+            wire
+
             docker
             docker-compose
             coreutils

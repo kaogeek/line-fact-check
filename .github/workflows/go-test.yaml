@@ -22,6 +22,7 @@ jobs:
     env:
       ARTIFACT_FACTCHECK: "factcheck-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
       ARTIFACT_FOO: "foo-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
+      ARTIFACT_FACTCHECK_IT: "factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json"
     steps:
       - name: Checkout code
         uses: actions/checkout@master
@@ -68,6 +69,39 @@ jobs:
             go test -race -count=1 -json ./... > $ARTIFACT_FOO
           "
 
+      - name: Test factcheck (integration test)
+        run: |
+          nix develop .#shell-it-test --command bash -c "
+            echo 'Waiting for PostgreSQL to be ready...'
+            
+            # Wait for PostgreSQL to be ready with timeout
+            timeout=90
+            counter=0
+            while [ \$counter -lt \$timeout ]; do
+              if docker exec postgres-it-test pg_isready -U postgres -d factcheck > /dev/null 2>&1; then
+                echo 'PostgreSQL is ready!'
+                break
+              fi
+              echo 'Waiting for PostgreSQL... (\$counter/\$timeout seconds)'
+              sleep 2
+              counter=\$((counter + 2))
+            done
+            
+            if [ \$counter -ge \$timeout ]; then
+              echo 'Error: PostgreSQL did not become ready within \$timeout seconds'
+              docker logs postgres-it-test
+              exit 1
+            fi
+            
+            cd factcheck
+            echo 'PWD: $PWD'
+            echo 'Running integration tests for factcheck...'
+            go test -tags=integration_test -race -count=1 -json ./... > factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json
+            
+            echo 'Integration tests completed'
+            docker stop postgres-it-test && docker rm postgres-it-test
+          "
+
       - name: Test build with Docker
         run: |
           nix build .#docker-factcheck
@@ -80,3 +114,4 @@ jobs:
           path: |
             factcheck/${{ env.ARTIFACT_FACTCHECK }}
             foo/${{ env.ARTIFACT_FOO }}
+            factcheck/${{ env.ARTIFACT_FACTCHECK_IT }}

@@ -1,7 +1,5 @@
 package config
 
-import "fmt"
-
 type Postgres struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
@@ -41,5 +39,5 @@ func NewTest() (Config, error) {
 }
 
 func hack() string {
-	return fmt.Sprintf("%s", []byte{'p', 'o', 's', 't', 'g', 'r', 'e', 's'})
+	return string([]byte{'p', 'o', 's', 't', 'g', 'r', 'e', 's'})
 }

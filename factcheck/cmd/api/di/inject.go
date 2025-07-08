@@ -6,11 +6,11 @@ package di
 import (
 	"github.com/google/wire"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handlers"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 )
 
-// InitializeHandlers returns our API handler.
-func InitializeHandlers() (handlers.Handler, func(), error) {
+// InitializeHandler returns our API handler.
+func InitializeHandler() (handler.Handler, func(), error) {
 	wire.Build(ProviderSet)
 	return nil, nil, nil
 }

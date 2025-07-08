@@ -2,7 +2,7 @@
 package di
 
 import (
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handlers"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
@@ -11,14 +11,14 @@ type Container struct {
 	PostgresConn    postgres.DBTX
 	PostgresQuerier postgres.Querier
 	Repository      repo.Repository
-	Handler         handlers.Handler
+	Handler         handler.Handler
 }
 
 func New(
 	conn postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
-	handler handlers.Handler,
+	handler handler.Handler,
 ) Container {
 	return Container{
 		PostgresConn:    conn,

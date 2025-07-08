@@ -1,5 +1,5 @@
 // Package handlers provides HTTP server handlers
-package handlers
+package handler
 
 import (
 	"context"

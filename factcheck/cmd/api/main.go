@@ -23,7 +23,7 @@ func main() {
 		addr = ":8080"
 	)
 
-	handlers, cleanup, err := di.InitializeHandlers()
+	handlers, cleanup, err := di.InitializeHandler()
 	if err != nil {
 		panic(err)
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handlers"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
@@ -13,14 +13,14 @@ import (
 var ProviderSet = wire.NewSet(
 	ProviderSetBase,
 	repo.New,
-	handlers.New,
+	handler.New,
 	New,
 )
 
 var ProviderSetTest = wire.NewSet(
 	ProviderSetBaseTest,
 	repo.New,
-	handlers.New,
+	handler.New,
 	New,
 )
 

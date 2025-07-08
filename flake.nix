@@ -71,7 +71,6 @@ rec {
         # nix build .#docker-postgres-it-test && docker load < result
         docker-postgres-it-test = pkgs.dockerTools.pullImage {
           imageName = "postgres";
-          imageTag = "16";
           imageDigest = "sha256:7c0cbc894163c3c4c6f919fe3c4d3c3c4c6f919fe3c4d3c3c4c6f919fe3c4d3";
           sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           finalImageName = "postgres";
@@ -101,6 +100,28 @@ rec {
             sqlc
             wire
           ];
+        };
+
+        # Shell for running integration tests with PostgreSQL
+        shell-it-test = pkgs.mkShell {
+          packages = with pkgs; [
+            docker
+            docker-compose
+            coreutils
+            bash
+          ];
+          shellHook = ''
+            echo "Starting PostgreSQL container for integration tests..."
+            docker run -d \
+              --name postgres-it-test \
+              -e POSTGRES_PASSWORD=postgres \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_DB=factcheck \
+              -p 5432:5432 \
+              postgres:16
+            echo "PostgreSQL container started on localhost:5432"
+            echo "Use 'docker stop postgres-it-test && docker rm postgres-it-test' to clean up"
+          '';
         };
       });
     };

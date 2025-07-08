@@ -14,5 +14,5 @@ HTTP server routing is composed with go-chi to keep dependencies to minimum.
 > Because we use Go workspace, sometimes `go generate` might complain if we omit `-mod-mod` flag.
 
 The following code generation tools are used:
-- sqlc for database interactions, see @/sqlc.yaml and @/data
-- wire for dependency injection, lives inside @/internal/di
+- sqlc for database interactions, see [sqlc.yaml](/factcheck/sqlc.yaml) and [/data/](/factcheck/data)
+- wire for dependency injection, lives inside [internal/di](/factcheck/cmd/api/di)

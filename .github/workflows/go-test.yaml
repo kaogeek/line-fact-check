@@ -1,4 +1,4 @@
-name: test go
+name: test go (Linux)
 on:
   workflow_dispatch:
   pull_request:
@@ -6,11 +6,10 @@ on:
 
 jobs:
   test:
-    name: Test code
+    name: Test code (Linux)
     strategy:
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
 
         go-version:
@@ -35,13 +34,13 @@ jobs:
       - name: Check wire code generation
         run: |
           nix develop --command bash -c "
+            cd factcheck
             echo 'Generating wire code for factcheck...'
-            cd factcheck/cmd/api/di
-            wire
+            wire ./...
             echo 'Wire generation complete'
             
             echo 'Checking for wire-generated code differences...'
-            cd ../../../
+            cd ..
             if [ -n \"$(git status --porcelain)\" ]; then
               echo 'Error: Generated code differs from repository state'
               git diff

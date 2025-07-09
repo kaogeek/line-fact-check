@@ -92,8 +92,6 @@ rec {
             Entrypoint = [ "docker-entrypoint.sh" ];
             Cmd = [ "postgres" ];
             Env = [
-              "POSTGRES_PASSWORD=postgres"
-              "POSTGRES_USER=postgres"
               "POSTGRES_DB=factcheck"
             ];
           };

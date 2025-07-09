@@ -85,8 +85,6 @@ rec {
             finalImageTag = "16";
           };
           runAsRoot = ''
-            #!${pkgs.runtimeShell}
-            # Copy schema file to PostgreSQL initialization directory
             cp ${./factcheck/data/postgres/schema.sql} /docker-entrypoint-initdb.d/01-schema.sql
           '';
           config = {

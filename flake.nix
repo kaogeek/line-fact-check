@@ -84,6 +84,11 @@ rec {
             finalImageName = "postgres";
             finalImageTag = "16";
           };
+          runAsRoot = ''
+            #!${pkgs.runtimeShell}
+            # Copy schema file to PostgreSQL initialization directory
+            cp ${./factcheck/data/postgres/schema.sql} /docker-entrypoint-initdb.d/01-schema.sql
+          '';
           config = {
             Entrypoint = [ "docker-entrypoint.sh" ];
             Cmd = [ "postgres" ];
@@ -163,10 +168,6 @@ rec {
               docker logs postgres-it-test
               exit 1
             fi
-            
-            echo "Running database migration..."
-            docker exec -i postgres-it-test psql -U postgres -d factcheck < ${./factcheck/data/postgres/schema.sql}
-            echo "Database migration completed"
             
             echo "Use 'docker stop postgres-it-test && docker rm postgres-it-test' to clean up"
           '';

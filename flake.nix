@@ -84,7 +84,7 @@ rec {
             finalImageName = "postgres";
             finalImageTag = "16";
           };
-          copyToRoot = pkgs.runCommand "postgres-init" {} ''
+          copyToRoot = pkgs.runCommand "postgres-init-schema-factcheck" {} ''
             mkdir -p $out/docker-entrypoint-initdb.d
             cp ${./factcheck/data/postgres/schema.sql} $out/docker-entrypoint-initdb.d/01-schema.sql
           '';

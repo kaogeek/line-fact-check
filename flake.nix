@@ -78,7 +78,7 @@ rec {
             "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
           else
             "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";
-          finalImageName = "postgres";
+          finalImageName = "postgres-factcheck";
           finalImageTag = "16";
         };
       });
@@ -129,7 +129,7 @@ rec {
               -e POSTGRES_USER=postgres \
               -e POSTGRES_DB=factcheck \
               -p 5432:5432 \
-              postgres:16
+              postgres-factcheck:16
             echo "PostgreSQL container started on localhost:5432"
             
             echo "Waiting for PostgreSQL to be ready..."

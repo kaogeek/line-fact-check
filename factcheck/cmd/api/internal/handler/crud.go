@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 
@@ -153,14 +152,10 @@ func paramID(r *http.Request) string {
 }
 
 func decode[T any](r *http.Request) (T, error) {
-	var zero T
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		return zero, err
-	}
 	var t T
-	err = json.Unmarshal(b, &t)
+	err := json.NewDecoder(r.Body).Decode(&t)
 	if err != nil {
+		var zero T
 		return zero, err
 	}
 	return t, nil

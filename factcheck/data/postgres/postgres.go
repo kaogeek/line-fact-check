@@ -29,6 +29,7 @@ func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	slog.Info("postgres connected",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
@@ -37,7 +38,9 @@ func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 	)
 
 	cleanup := func() {
+		defer slog.Info("postgres conn closed or cleaned up")
 		if conn == nil {
+			slog.Warn("postgres conn is nil")
 			return
 		}
 		err := conn.Close(context.Background())

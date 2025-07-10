@@ -14,8 +14,13 @@ import { formatDate } from '@/formatter/date-formatter';
 import TopicMessageDetail from './components/TopicMessageDetail';
 import { useGetMessageByTopicId } from '@/hooks/api/userMessage';
 import TopicMessageAnswer from './components/TopicMessageAnswer';
+import { useState } from 'react';
+import AnswerAuditLogDialog from './dialog/AnswerAuditLogDialog';
+import TopicAuditLogDialog from './dialog/TopicAuditLogDialog';
 
 export default function TopicDetailPage() {
+  const [openTopicHistoryDialog, setOpenTopicHistoryDialog] = useState<boolean>(false);
+  const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
   const { id } = useParams();
 
   if (!id) {
@@ -30,28 +35,51 @@ export default function TopicDetailPage() {
 
   const messages = useGetMessageByTopicId(topic.id);
 
+  const onHandleClickAnswerHistory = () => {
+    setOpenAnswerHistoryDialog(true);
+  };
+
+  const onHandleClickTopicHistory = () => {
+    setOpenTopicHistoryDialog(true);
+  };
+
   return (
-    <div className="flex flex-col gap-4 p-4 h-full">
-      <div className="flex flex-col">
-        <div className="flex gap-2">
-          <TYH3 className="flex-1">Topic: {topic.code}</TYH3>
-          <TopicStatusBadge status={topic.status} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <EllipsisVertical />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Approve</DropdownMenuItem>
-              <DropdownMenuItem>Reject</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <>
+      <AnswerAuditLogDialog
+        open={openAnswerHistoryDialog}
+        onOpenChange={setOpenAnswerHistoryDialog}
+        topicId={id}
+      ></AnswerAuditLogDialog>
+      <TopicAuditLogDialog
+        open={openTopicHistoryDialog}
+        onOpenChange={setOpenTopicHistoryDialog}
+        topicId={id}
+      ></TopicAuditLogDialog>
+      <div className="flex flex-col gap-4 p-4 h-full">
+        <div className="flex flex-col">
+          <div className="flex gap-2">
+            <TYH3 className="flex-1">Topic: {topic.code}</TYH3>
+            <TopicStatusBadge status={topic.status} />
+            <Button variant="outline" onClick={onHandleClickTopicHistory}>
+              History
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <EllipsisVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Approve</DropdownMenuItem>
+                <DropdownMenuItem>Reject</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
         </div>
-        <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
+        <TopicMessageDetail dataList={messages} />
+        <TopicMessageAnswer onClickHistory={onHandleClickAnswerHistory} />
       </div>
-      <TopicMessageDetail dataList={messages} />
-      <TopicMessageAnswer />
-    </div>
+    </>
   );
 }

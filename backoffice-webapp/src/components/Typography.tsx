@@ -27,7 +27,7 @@ export function TYH4({ children, className }: TYProps) {
 }
 
 export function TYP({ children, className }: TYProps) {
-  return <p className={clsx('leading-7', className)}>{children}</p>;
+  return <p className={clsx(className)}>{children}</p>;
 }
 
 export function TYLarge({ children, className }: TYProps) {

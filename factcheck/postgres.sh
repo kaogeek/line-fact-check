@@ -5,13 +5,18 @@
 
 set -e
 
+if [ -z "$1" ]; then
+    echo "Usage: $0 <password>"
+    exit 1
+fi
+
 CONTAINER_NAME="factcheck-postgres"
 IMAGE_NAME="postgres:15"
 HOST_PORT=5432
 CONTAINER_PORT=5432
 DB_NAME="factcheck"
 DB_USER="postgres"
-DB_PASSWORD="postgres"
+DB_PASSWORD="$1"
 
 echo "Starting PostgreSQL container for factcheck API..."
 

@@ -27,19 +27,19 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build factcheck from flake
+        run: |
+          nix build .#factcheck
+
+      - name: Zip factcheck binaries
+        run: |
+          zip -r line-fact-check-x86_64_linux.zip result/bin
+
       - name: Build foo from flake
         run: |
           nix build .#foo
 
       - name: Zip foo binaries
-        run: |
-          zip -r line-fact-check-x86_64_linux.zip result/bin
-
-      - name: Build bar from flake
-        run: |
-          nix build .#bar
-
-      - name: Zip bar binaries
         run: |
           zip -r line-fact-check-x86_64_linux.zip result/bin
 

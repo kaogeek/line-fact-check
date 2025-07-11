@@ -34,10 +34,10 @@ func (h *handler) CreateTopic(ctx context.Context, request openapi.CreateTopicRe
 	}
 	created, err := h.topics.Create(ctx, topic)
 	if err != nil {
-		return openapi.CreateTopic500TextResponse(err.Error()), nil
+		return nil, err
 	}
 	if created.ID != id.String() {
-		return openapi.CreateTopic500TextResponse(fmt.Sprintf("topic id mismatch: %s != %s", created.ID, id.String())), nil
+		return nil, fmt.Errorf("topic id mismatch: %s != %s", created.ID, id.String())
 	}
 	return openapi.CreateTopic201JSONResponse(openapi.Topic{
 		CreatedAt: created.CreatedAt,
@@ -51,14 +51,14 @@ func (h *handler) CreateTopic(ctx context.Context, request openapi.CreateTopicRe
 func (h *handler) ListTopics(ctx context.Context, request openapi.ListTopicsRequestObject) (openapi.ListTopicsResponseObject, error) {
 	list, err := h.topics.List(ctx)
 	if err != nil {
-		return openapi.ListTopics500TextResponse(err.Error()), nil
+		return nil, err
 	}
 	topics := make([]openapi.Topic, len(list))
 	for i := range list {
 		t := &list[i]
 		id, err := uuid.Parse(t.ID)
 		if err != nil {
-			return openapi.ListTopics500TextResponse(err.Error()), nil
+			return nil, err
 		}
 		topics[i] = openapi.Topic{
 			CreatedAt: t.CreatedAt,
@@ -74,11 +74,11 @@ func (h *handler) ListTopics(ctx context.Context, request openapi.ListTopicsRequ
 func (h *handler) GetTopicByID(ctx context.Context, request openapi.GetTopicByIDRequestObject) (openapi.GetTopicByIDResponseObject, error) {
 	topic, err := h.topics.GetByID(ctx, request.Id.String())
 	if err != nil {
-		return openapi.GetTopicByID500TextResponse(err.Error()), nil
+		return nil, err
 	}
 	id, err := uuid.Parse(topic.ID)
 	if err != nil {
-		return openapi.GetTopicByID500TextResponse(err.Error()), nil
+		return nil, err
 	}
 	return openapi.GetTopicByID200JSONResponse(openapi.Topic{
 		Id:        id,
@@ -92,7 +92,7 @@ func (h *handler) GetTopicByID(ctx context.Context, request openapi.GetTopicByID
 func (h *handler) DeleteTopicByID(ctx context.Context, request openapi.DeleteTopicByIDRequestObject) (openapi.DeleteTopicByIDResponseObject, error) {
 	err := h.topics.Delete(ctx, request.Id.String())
 	if err != nil {
-		return openapi.DeleteTopicByID500TextResponse(err.Error()), nil
+		return nil, err
 	}
 	return openapi.DeleteTopicByID200TextResponse("ok"), nil
 }

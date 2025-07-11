@@ -1,5 +1,5 @@
-package: api
-output: api/generated/server.gen.go
+package: openapi
+output: openapi/server.gen.go
 generate:
   chi-server: true
   strict-server: true

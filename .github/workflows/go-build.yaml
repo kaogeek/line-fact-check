@@ -45,7 +45,7 @@ jobs:
       - name: Build version with Nix
         run: |
           nix build .#version
-          cp result/bin/version.txt $ARTIFACT_FACTCHECK/ $ARTIFACT_FOO/
+          cp result/version.txt $ARTIFACT_FACTCHECK/ $ARTIFACT_FOO/
 
       - name: Upload Go binaries
         uses: actions/upload-artifact@v4

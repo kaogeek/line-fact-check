@@ -57,12 +57,17 @@ jobs:
           name: line-fact-check-zip
           path: ./
 
-      - name: Get version from Nix flake output
+      - name: Inspect version from Nix flake output [optional]
         run: |
+          # Store 2025-07-10-1752226427 in env $RELEASE_DATE
+          unzip -l line-fact-check-x86_64_linux.zip
+          echo "Listing stuff..."
+          tree .
           unzip -p line-fact-check-x86_64_linux.zip result/version.txt > ./version.txt
+          echo "Listing stuff..."
+          tree .
           export FLAKE_VERSION=$(< ./version.txt)
           echo "Release Flake version is: $FLAKE_VERSION"
-          echo "RELEASE_DATE=$FLAKE_VERSION" >> $GITHUB_ENV
       
       - name: Create Release
         id: create_release
@@ -70,8 +75,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}-${{ env.RELEASE_DATE }}-${{ github.sha }}
-          release_name: Release ${{ github.ref }} ${{ env.RELEASE_DATE }} ${{ github.sha }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
 

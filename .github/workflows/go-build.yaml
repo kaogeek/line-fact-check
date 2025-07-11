@@ -45,8 +45,6 @@ jobs:
       - name: Build version with Nix
         run: |
           nix build .#version
-          echo "Listing stuff..."
-          tree .
           cp result/version.txt $ARTIFACT_FACTCHECK
           cp result/version.txt $ARTIFACT_FOO
 

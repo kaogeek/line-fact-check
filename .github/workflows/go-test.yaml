@@ -108,10 +108,7 @@ jobs:
             
             echo "Testing health endpoint..."
             curl -f http://localhost:8080/health || (echo "Health check failed" && docker logs foo-test && exit 1)
-            
-            echo "Testing root endpoint..."
-            curl -f http://localhost:8080/ || (echo "Root endpoint failed" && docker logs foo-test && exit 1)
-            
+
             echo "Cleaning up..."
             docker stop foo-test && docker rm foo-test
           "

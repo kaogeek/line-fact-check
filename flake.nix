@@ -124,6 +124,7 @@ rec {
           golangci-lint
           sqlc
           wire
+          oapi-codegen
         ];
         packagesItTest = with pkgs; [
           docker

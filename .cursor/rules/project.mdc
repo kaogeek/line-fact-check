@@ -1,6 +1,6 @@
 ---
-description: Helper for Go
-globs: factcheck/**,.github/workflows/**
+description: Context for this project
+globs:
 alwaysApply: true
 ---
 
@@ -29,3 +29,7 @@ We try to use Nix everywhere when we could, for example, in [.github/workflows/r
 
 # Jargons (in code and chat)
 - A Go integration test is called "it-test"
+
+# factcheck
+[factcheck](/factcheck/) is a Go module and the main backend of this project. It has access to PostgreSQL database,
+and is exposed to external services via HTTP REST API.

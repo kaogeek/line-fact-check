@@ -85,14 +85,14 @@ rec {
           fromImage = pkgs.dockerTools.pullImage {
             imageName = "postgres";
             imageDigest = "sha256:c0aab7962b283cf24a0defa5d0d59777f5045a7be59905f21ba81a20b1a110c9";
+            finalImageName = "postgres";
+            finalImageTag = "16";
             sha256 = if pkgs.system == "x86_64-darwin" then
               "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
             else if pkgs.system == "aarch64-darwin" then
               "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
             else
               "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";
-            finalImageName = "postgres";
-            finalImageTag = "16";
           };
           copyToRoot = pkgs.runCommand "postgres-init-schema-factcheck" {} ''
             mkdir -p $out/docker-entrypoint-initdb.d

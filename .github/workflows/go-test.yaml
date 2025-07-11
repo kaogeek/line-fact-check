@@ -32,7 +32,7 @@ jobs:
       - name: Setup Nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Check wire code generation
+      - name: Check code generation in factcheck
         run: |
           nix develop --command bash -c "
             cd factcheck
@@ -41,6 +41,20 @@ jobs:
             echo 'Wire generation complete'
             
             echo 'Checking for wire-generated code differences...'
+            cd ..
+            if [ -n \"$(git status --porcelain)\" ]; then
+              echo 'Error: Generated code differs from repository state'
+              git diff
+              exit 1
+            else
+              echo 'Generated code matches repository state'
+            fi
+
+            cd factcheck
+            echo 'Generating sqlc code for factcheck...'
+            sqlc generate
+            echo 'SQLC generation complete'
+            echo 'Checking for sqlc-generated code differences...'
             cd ..
             if [ -n \"$(git status --porcelain)\" ]; then
               echo 'Error: Generated code differs from repository state'
@@ -71,8 +85,32 @@ jobs:
 
       - name: Test build with Docker
         run: |
-          nix build .#docker-factcheck
-          nix build .#docker-postgres-it-test
+          nix develop --command bash -c "
+            nix build .#docker-postgres-it-test
+            nix build .#docker-foo
+          "
+
+      - name: Test package with Docker
+        if: matrix.os != 'macos-latest'
+        run: |
+          nix develop --command bash -c "
+            nix build .#docker-foo
+            # Test docker-foo image functionality
+            echo "Loading docker-foo image..."
+            docker load < result
+            
+            echo "Starting docker-foo container..."
+            docker run -d --name foo-test -p 8080:8080 $(docker images --format "{{.Repository}}:{{.Tag}}" | grep foo | head -1)
+            
+            echo "Waiting for foo container to be ready..."
+            sleep 5
+            
+            echo "Testing health endpoint..."
+            curl -f http://localhost:8080/health || (echo "Health check failed" && docker logs foo-test && exit 1)
+
+            echo "Cleaning up..."
+            docker stop foo-test && docker rm foo-test
+          "
 
       - name: Test factcheck (integration test)
         if: matrix.os != 'macos-latest'

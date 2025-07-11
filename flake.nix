@@ -58,9 +58,19 @@ rec {
         docker-factcheck = pkgs.dockerTools.buildImage {
           name = "factcheck";
           tag = version;
-          copyToRoot = [ pkgs.bash pkgs.coreutils ];
           config = {
             Entrypoint = [ "${self.packages.${pkgs.system}.factcheck}/bin/api" ];
+            ExposedPorts = {
+              "8080/tcp" = {};
+            };
+          };
+        };
+
+        docker-foo = pkgs.dockerTools.buildImage {
+          name = "foo";
+          tag = version;
+          config = {
+            Entrypoint = [ "${self.packages.${pkgs.system}.foo}/bin/foo" ];
             ExposedPorts = {
               "8080/tcp" = {};
             };

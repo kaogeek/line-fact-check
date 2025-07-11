@@ -27,6 +27,10 @@ rec {
 
     {
       packages = forAllSystems ({ pkgs }: {
+        version = pkgs.writeText "version.txt" ''
+          ${version}
+        '';
+
         foo = pkgs.buildGoModule {
           inherit version;
           pname = "foo";
@@ -138,6 +142,11 @@ rec {
         in {
         default = pkgs.mkShell {
           packages = packagesDevelop ++ packagesExtra ++ packagesItTest;
+          shellHook = ''
+            echo "Entering devShell from flake.nix"
+            export FACTCHECK_VERSION=${version}
+            echo "FACTCHECK_VERSION=$FACTCHECK_VERSION"
+          ''
         };
 
         # Shell for running integration tests with PostgreSQL

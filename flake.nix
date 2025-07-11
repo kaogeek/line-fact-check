@@ -146,7 +146,7 @@ rec {
             echo "Entering devShell from flake.nix"
             export FACTCHECK_VERSION=${version}
             echo "FACTCHECK_VERSION=$FACTCHECK_VERSION"
-          ''
+          '';
         };
 
         # Shell for running integration tests with PostgreSQL

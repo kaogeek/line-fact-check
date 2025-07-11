@@ -36,7 +36,6 @@ jobs:
         run: |
           nix develop --command bash -c "
             cd factcheck
-
             echo 'Generating wire code for factcheck...'
             wire ./...
             echo 'Wire generation complete'
@@ -51,10 +50,10 @@ jobs:
               echo 'Generated code matches repository state'
             fi
 
+            cd factcheck
             echo 'Generating sqlc code for factcheck...'
             sqlc generate
             echo 'SQLC generation complete'
-
             echo 'Checking for sqlc-generated code differences...'
             cd ..
             if [ -n \"$(git status --porcelain)\" ]; then

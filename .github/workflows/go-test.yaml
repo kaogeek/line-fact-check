@@ -32,15 +32,30 @@ jobs:
       - name: Setup Nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Check wire code generation
+      - name: Check code generation in factcheck
         run: |
           nix develop --command bash -c "
             cd factcheck
+
             echo 'Generating wire code for factcheck...'
             wire ./...
             echo 'Wire generation complete'
             
             echo 'Checking for wire-generated code differences...'
+            cd ..
+            if [ -n \"$(git status --porcelain)\" ]; then
+              echo 'Error: Generated code differs from repository state'
+              git diff
+              exit 1
+            else
+              echo 'Generated code matches repository state'
+            fi
+
+            echo 'Generating sqlc code for factcheck...'
+            sqlc generate
+            echo 'SQLC generation complete'
+
+            echo 'Checking for sqlc-generated code differences...'
             cd ..
             if [ -n \"$(git status --porcelain)\" ]; then
               echo 'Error: Generated code differs from repository state'

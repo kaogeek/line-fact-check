@@ -27,9 +27,11 @@ rec {
 
     {
       packages = forAllSystems ({ pkgs }: {
-        version = pkgs.writeText "version.txt" ''
-          ${version}
-        '';
+        version = pkgs.writeTextFile {
+          name = "factcheck-version";
+          text = version;
+          destination = "/version.txt";
+        };
 
         foo = pkgs.buildGoModule {
           inherit version;

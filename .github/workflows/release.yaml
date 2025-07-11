@@ -61,7 +61,7 @@ jobs:
         run: |
           # Store 2025-07-10-1752226427 in env $RELEASE_DATE
           unzip line-fact-check-x86_64_linux.zip -d unzipped;
-          export FLAKE_VERSION=$(< ./unzipped/version.txt)
+          export FLAKE_VERSION=$(< ./unzipped/result/version.txt)
           echo "Release Flake version is: $FLAKE_VERSION"
       
       - name: Create Release
@@ -105,7 +105,7 @@ jobs:
         run: |
           # Store 2025-07-10-1752226427 in env $RELEASE_DATE
           unzip line-fact-check-x86_64_linux.zip -d unzipped;
-          export FLAKE_VERSION=$(< ./unzipped/version.txt)
+          export FLAKE_VERSION=$(< ./unzipped/result/version.txt)
           echo "Release Flake version is: $FLAKE_VERSION"
           echo "RELEASE_DATE=$FLAKE_VERSION" >> $GITHUB_ENV
 

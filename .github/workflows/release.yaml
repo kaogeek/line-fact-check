@@ -56,6 +56,13 @@ jobs:
         with:
           name: line-fact-check-zip
           path: ./
+
+      - name: Inspect version from Nix flake output [optional]
+        run: |
+          # Store 2025-07-10-1752226427 in env $RELEASE_DATE
+          unzip line-fact-check-x86_64_linux.zip -d unzipped;
+          export FLAKE_VERSION=$(< ./unzipped/version)
+          echo "Release Flake version is: $FLAKE_VERSION"
       
       - name: Create Release
         id: create_release
@@ -94,10 +101,13 @@ jobs:
           name: line-fact-check-zip
           path: ./
       
-      - name: Get today's date
+      - name: Get version from Nix flake output
         run: |
           # Store 2025-07-10-1752226427 in env $RELEASE_DATE
-          echo "RELEASE_DATE=$(date +'%Y-%m-%d-%s')" >> $GITHUB_ENV
+          unzip line-fact-check-x86_64_linux.zip -d unzipped;
+          export FLAKE_VERSION=$(< ./unzipped/version)
+          echo "Release Flake version is: $FLAKE_VERSION"
+          echo "RELEASE_DATE=$FLAKE_VERSION" >> $GITHUB_ENV
 
       - name: Create Release for branch ${{ github.ref_name }}
         id: create_release

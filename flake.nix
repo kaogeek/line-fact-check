@@ -67,6 +67,18 @@ rec {
           };
         };
 
+        docker-foo = pkgs.dockerTools.buildImage {
+          name = "foo";
+          tag = version;
+          copyToRoot = [ pkgs.bash pkgs.coreutils ];
+          config = {
+            Entrypoint = [ "${self.packages.${pkgs.system}.foo}/bin/foo" ];
+            ExposedPorts = {
+              "8080/tcp" = {};
+            };
+          };
+        };
+
         # PostgreSQL Docker image for integration tests
         # nix build .#docker-postgres-it-test && docker load < result
         docker-postgres-it-test = pkgs.dockerTools.buildImage {

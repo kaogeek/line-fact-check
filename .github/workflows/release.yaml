@@ -32,7 +32,7 @@ jobs:
           nix build .#factcheck
           zip -r line-fact-check-x86_64_linux.zip result/bin
           nix build .#docker-factcheck
-          zip -r line-fact-check-x86_64_linux.zip result/bin
+          zip -r line-fact-check-x86_64_linux.zip result
 
       - name: Upload artifact
         uses: actions/upload-artifact@master

@@ -60,6 +60,9 @@ jobs:
       - name: Inspect version from Nix flake output [optional]
         run: |
           # Store 2025-07-10-1752226427 in env $RELEASE_DATE
+          unzip -l line-fact-check-x86_64_linux.zip
+          echo "Listing stuff..."
+          tree .
           unzip line-fact-check-x86_64_linux.zip;
           echo "Listing stuff..."
           tree .

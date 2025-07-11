@@ -42,6 +42,11 @@ jobs:
           mkdir -p $ARTIFACT_FOO
           cp result/bin/* $ARTIFACT_FOO/ || true
 
+      - name: Build version with Nix
+        run: |
+          nix build .#version
+          cp result/version $ARTIFACT_FACTCHECK/ $ARTIFACT_FOO/
+
       - name: Upload Go binaries
         uses: actions/upload-artifact@v4
         with:

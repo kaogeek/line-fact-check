@@ -8,8 +8,7 @@ rec {
   outputs = { self, nixpkgs }:
     let
       homepage = "https://github.com/kaogeek/line-fact-check";
-      lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-      version = builtins.substring 0 8 lastModifiedDate;
+      version = "${self.lastModified}"; # UNIX timestamp
 
       # The set of systems to provide outputs for
       allSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];

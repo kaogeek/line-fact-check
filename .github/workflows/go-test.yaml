@@ -88,6 +88,7 @@ jobs:
           nix develop --command bash -c "
             nix build .#docker-postgres-it-test
             nix build .#docker-foo
+            nix build .#version
           "
 
       - name: Test package with Docker

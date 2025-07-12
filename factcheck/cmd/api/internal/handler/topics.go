@@ -3,12 +3,11 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
-
-	"errors"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"

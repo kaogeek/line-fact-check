@@ -160,29 +160,3 @@ func replyJSON(w http.ResponseWriter, data any, status int) error {
 	}
 	return nil
 }
-
-func errNotFound(w http.ResponseWriter, id string) {
-	w.WriteHeader(http.StatusNotFound)
-	contentTypeText(w.Header())
-	fmt.Fprintf(w, "not found: %s", id)
-}
-
-func errInternalError(w http.ResponseWriter, err string) {
-	w.WriteHeader(http.StatusInternalServerError)
-	contentTypeText(w.Header())
-	fmt.Fprintf(w, "server error: %s", err)
-}
-
-func errBadRequest(w http.ResponseWriter, err string) {
-	w.WriteHeader(http.StatusBadRequest)
-	contentTypeText(w.Header())
-	fmt.Fprintf(w, "bad request: %s", err)
-}
-
-func contentTypeJSON(h http.Header) {
-	h.Add("Content-Type", "application/json; charset=utf-8")
-}
-
-func contentTypeText(h http.Header) {
-	h.Add("Content-Type", "text/plain; charset=utf-8")
-}

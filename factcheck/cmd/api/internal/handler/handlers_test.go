@@ -30,17 +30,24 @@ func reqBodyJSON(data any) *bytes.Buffer {
 	return buf
 }
 
-func TestHandlerTopic(t *testing.T) {
+func TestHandlerTopic_Stateful(t *testing.T) {
 	const timeout = time.Millisecond * 200
 	const url = "localhost:8778/"
 
-	t.Run("create", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainer()
-		if err != nil {
-			panic(err)
-		}
-		defer cleanup()
+	app, cleanup, err := di.InitializeContainer()
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
 
+	// Clear all data
+	t.Log("WARN: Clearing all data from database")
+	app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
+	app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
+	app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
+	t.Log("WARN: Cleared all data from database")
+
+	t.Run("CRUD", func(t *testing.T) {
 		now := time.Now()
 		name := fmt.Sprintf("topic-test-normal-%s", now.String())
 		desc := fmt.Sprintf("topic-test-normal-%s-desc", now.String())
@@ -50,24 +57,36 @@ func TestHandlerTopic(t *testing.T) {
 		}
 
 		body := reqBodyJSON(topic)
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, body)
+		reqCreate, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, body)
 		assertEq(t, err, nil)
 		resp := httptest.NewRecorder()
-		app.Handler.CreateTopic(resp, req)
+		app.Handler.CreateTopic(resp, reqCreate)
 
 		// Assert response
-		actual1 := factcheck.Topic{}
-		err = json.Unmarshal(resp.Body.Bytes(), &actual1)
+		created := factcheck.Topic{}
+		err = json.Unmarshal(resp.Body.Bytes(), &created)
 		assertEq(t, err, nil)
-		assertNeq(t, actual1.ID, "")
-		assertEq(t, actual1.Name, name)
-		assertEq(t, actual1.Description, desc)
-		assertEq(t, actual1.Status, factcheck.StatusTopicPending)
+		assertNeq(t, created.ID, "")
+		assertEq(t, created.Name, name)
+		assertEq(t, created.Description, desc)
+		assertEq(t, created.Status, factcheck.StatusTopicPending)
 
 		// Assert in database
-		actual2, err := app.Repository.Topic.GetByID(t.Context(), actual1.ID)
+		actual, err := app.Repository.Topic.GetByID(t.Context(), created.ID)
 		assertEq(t, err, nil)
-		assertEq(t, actual2, actual1)
+		assertEq(t, actual, created)
+
+		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, nil)
+		assertEq(t, err, nil)
+		respList := httptest.NewRecorder()
+		app.Handler.ListTopics(respList, reqList)
+
+		// Assert response
+		actualList := []factcheck.Topic{}
+		err = json.Unmarshal(respList.Body.Bytes(), &actualList)
+		assertEq(t, err, nil)
+		assertEq(t, len(actualList), 1)
+		assertEq(t, actualList[0], created)
 	})
 }
 

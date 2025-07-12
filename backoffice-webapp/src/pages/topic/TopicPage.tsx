@@ -1,5 +1,4 @@
 import TopicSearchBar from './components/TopicSearchBar';
-import TopicPagination from './components/TopicPagination';
 
 import TopicData from './components/TopicData';
 import { useCountTopics, useGetTopics } from '@/hooks/api/useTopic';
@@ -7,14 +6,19 @@ import { useEffect, useState } from 'react';
 import TabIndex from '../../components/TabIndex';
 import { TopicStatus, type GetTopicCriteria, type Topic } from '@/lib/api/type/topic';
 import { TYH3 } from '@/components/Typography';
+import type { PaginationReq } from '@/lib/api/type/base';
+import PaginationControl from '@/components/PaginationControl';
 
 export default function TopicPage() {
   const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0]);
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     statusIn: tabs[0].statusIn,
   });
+  const [paginationReq, setPaginationReq] = useState<PaginationReq>({
+    page: 1,
+  });
   const [activeTab, setActiveTab] = useState<number>(0);
-  const { data: topics, isLoading: topicsIsLoading, error: topicsError } = useGetTopics(criteria);
+  const { data: data, isLoading, error } = useGetTopics(criteria, paginationReq);
   const { data: countTopics } = useCountTopics(criteria);
 
   useEffect(() => {
@@ -46,6 +50,10 @@ export default function TopicPage() {
     });
   };
 
+  const handlePageChange = (paginationReq: PaginationReq) => {
+    setPaginationReq(paginationReq);
+  };
+
   const handleReject = (topic: Topic, idx: number) => {
     console.log(topic);
     console.log(idx);
@@ -57,9 +65,9 @@ export default function TopicPage() {
       <TopicSearchBar initKeyword={criteria.keyword} handleSearch={handleSearch} />
       <TabIndex activeTab={activeTab} setActiveTab={handleTabChange} tabs={tabs} counts={counts} />
       <div className="flex-1 overflow-auto">
-        <TopicData isLoading={topicsIsLoading} dataList={topics} error={topicsError}></TopicData>
+        <TopicData isLoading={isLoading} dataList={data?.items} error={error}></TopicData>
       </div>
-      <TopicPagination />
+      <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
     </div>
   );
 }

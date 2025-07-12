@@ -17,16 +17,16 @@ type Repository struct {
 
 // ErrNotFound is returned when a requested resource is not found
 type ErrNotFound struct {
-	Err    error
-	Filter any
+	Err    error `json:"-"` // Prevent leaks?
+	Filter any   `json:"filter"`
 }
 
 // New creates a new repository with all implementations
 func New(queries *postgres.Queries) Repository {
 	return Repository{
-		Topic:       NewRepositoryTopic(queries),
-		Message:     NewRepositoryMessage(queries),
-		UserMessage: NewRepositoryUserMessage(queries),
+		Topic:       NewTopics(queries),
+		Message:     NewMessages(queries),
+		UserMessage: NewUserMessages(queries),
 	}
 }
 

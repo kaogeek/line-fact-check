@@ -2,9 +2,7 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -24,8 +22,8 @@ type userMessages struct {
 	queries *postgres.Queries
 }
 
-// NewRepositoryUserMessage creates a new user message repository
-func NewRepositoryUserMessage(queries *postgres.Queries) UserMessages {
+// NewUserMessages creates a new user message repository
+func NewUserMessages(queries *postgres.Queries) UserMessages {
 	return &userMessages{
 		queries: queries,
 	}
@@ -37,12 +35,10 @@ func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage[json
 	if err != nil {
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
-
 	dbUserMessage, err := u.queries.CreateUserMessage(ctx, params)
 	if err != nil {
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
-
 	return userMessageDomain(dbUserMessage)
 }
 
@@ -54,13 +50,7 @@ func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMe
 	}
 	dbUserMessage, err := u.queries.GetUserMessage(ctx, uuid)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return factcheck.UserMessage[json.RawMessage]{}, &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": id},
-			}
-		}
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage[json.RawMessage]{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return userMessageDomain(dbUserMessage)
 }
@@ -70,12 +60,10 @@ func (u *userMessages) ListByMessage(ctx context.Context, messageID string) ([]f
 	if err != nil {
 		return nil, err
 	}
-
 	dbUserMessages, err := u.queries.ListUserMessagesByMessage(ctx, uuid)
 	if err != nil {
 		return nil, err
 	}
-
 	userMessages := make([]factcheck.UserMessage[json.RawMessage], len(dbUserMessages))
 	for i, dbUserMessage := range dbUserMessages {
 		userMessage, err := userMessageDomain(dbUserMessage)
@@ -93,18 +81,10 @@ func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage[json
 	if err != nil {
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
-
 	dbUserMessage, err := u.queries.UpdateUserMessage(ctx, params)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return factcheck.UserMessage[json.RawMessage]{}, &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": um.ID},
-			}
-		}
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage[json.RawMessage]{}, handleNotFound(err, map[string]string{"id": um.ID})
 	}
-
 	return userMessageDomain(dbUserMessage)
 }
 
@@ -116,13 +96,7 @@ func (u *userMessages) Delete(ctx context.Context, id string) error {
 	}
 	err = u.queries.DeleteUserMessage(ctx, uuid)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": id},
-			}
-		}
-		return err
+		return handleNotFound(err, map[string]string{"id": id})
 	}
 	return nil
 }

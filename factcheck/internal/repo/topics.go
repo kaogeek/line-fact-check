@@ -27,8 +27,8 @@ type topics struct {
 	queries *postgres.Queries
 }
 
-// NewRepositoryTopic creates a new topic repository
-func NewRepositoryTopic(queries *postgres.Queries) Topics {
+// NewTopics creates a new topic repository
+func NewTopics(queries *postgres.Queries) Topics {
 	return &topics{
 		queries: queries,
 	}

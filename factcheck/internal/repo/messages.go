@@ -2,8 +2,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -23,8 +21,8 @@ type messages struct {
 	queries *postgres.Queries
 }
 
-// NewRepositoryMessage creates a new message repository
-func NewRepositoryMessage(queries *postgres.Queries) Messages {
+// NewMessages creates a new message repository
+func NewMessages(queries *postgres.Queries) Messages {
 	return &messages{
 		queries: queries,
 	}
@@ -51,13 +49,7 @@ func (m *messages) GetByID(ctx context.Context, id string) (factcheck.Message, e
 	}
 	dbMessage, err := m.queries.GetMessage(ctx, messageID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return factcheck.Message{}, &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": id},
-			}
-		}
-		return factcheck.Message{}, err
+		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return messageDomain(dbMessage), nil
 }
@@ -87,13 +79,7 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	}
 	dbMessage, err := m.queries.UpdateMessage(ctx, params)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return factcheck.Message{}, &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": msg.ID},
-			}
-		}
-		return factcheck.Message{}, err
+		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": msg.ID})
 	}
 	return messageDomain(dbMessage), nil
 }
@@ -106,13 +92,7 @@ func (m *messages) Delete(ctx context.Context, id string) error {
 	}
 	err = m.queries.DeleteMessage(ctx, messageID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return &ErrNotFound{
-				Err:    err,
-				Filter: map[string]string{"id": id},
-			}
-		}
-		return err
+		return handleNotFound(err, map[string]string{"id": id})
 	}
 	return nil
 }

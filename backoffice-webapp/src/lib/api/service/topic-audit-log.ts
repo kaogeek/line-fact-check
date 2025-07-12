@@ -1,3 +1,4 @@
+import { MOCKUP_API_LOADING_MS } from '@/constants/app';
 import { TopicAuditLogType, type TopicAuditLog } from '../type/topic-audit-log';
 
 function isHasTopicId(data: TopicAuditLog, topicId: string) {
@@ -8,16 +9,21 @@ function isInType(data: TopicAuditLog, typeIn: string[]): boolean {
   return typeIn.includes(data.status);
 }
 
-export function getTopicAuditLogs(topicId: string, typeIn?: string[]): TopicAuditLog[] {
-  const conditions: ((data: TopicAuditLog) => boolean)[] = [];
+export function getTopicAuditLogs(topicId: string, typeIn?: string[]): Promise<TopicAuditLog[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const conditions: ((data: TopicAuditLog) => boolean)[] = [];
 
-  conditions.push((data) => isHasTopicId(data, topicId));
+      conditions.push((data) => isHasTopicId(data, topicId));
 
-  if (typeIn) {
-    conditions.push((data) => isInType(data, typeIn));
-  }
+      if (typeIn) {
+        conditions.push((data) => isInType(data, typeIn));
+      }
 
-  return dataList.filter((data) => conditions.every((condition) => condition(data)));
+      const filteredLogs = dataList.filter((data) => conditions.every((condition) => condition(data)));
+      resolve(filteredLogs);
+    }, MOCKUP_API_LOADING_MS);
+  });
 }
 
 export const dataList: TopicAuditLog[] = [

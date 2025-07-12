@@ -2,14 +2,25 @@ import { TYH3 } from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { Message } from '@/lib/api/type/message';
 import { formatDate } from '@/formatter/date-formatter';
+import { useGetMessageByTopicId } from '@/hooks/api/userMessage';
+import TableStateRow from '@/components/table/TableStateRow';
+import LoadingState from '@/components/state/LoadingState';
+import ErrorState from '@/components/state/ErrorState';
 
 interface TopicMessageDetailProps {
-  dataList: Message[];
+  topicId: string | null;
 }
 
-export default function TopicMessageDetail({ dataList }: TopicMessageDetailProps) {
+const colSpan = 4;
+
+export default function TopicMessageDetail({ topicId }: TopicMessageDetailProps) {
+  if (!topicId) {
+    return <></>;
+  }
+
+  const { isLoading, data: dataList, error } = useGetMessageByTopicId(topicId);
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
@@ -29,14 +40,25 @@ export default function TopicMessageDetail({ dataList }: TopicMessageDetailProps
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dataList.map((data, idx) => (
-              <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
-                <TableCell>{data.code}</TableCell>
-                <TableCell>{data.message}</TableCell>
-                <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
-                <TableCell>{formatDate(data.createDate)}</TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+              <TableStateRow colSpan={colSpan}>
+                <LoadingState />
+              </TableStateRow>
+            ) : error ? (
+              <TableStateRow colSpan={colSpan}>
+                <ErrorState />
+              </TableStateRow>
+            ) : (
+              dataList &&
+              dataList.map((data, idx) => (
+                <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
+                  <TableCell>{data.code}</TableCell>
+                  <TableCell>{data.message}</TableCell>
+                  <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
+                  <TableCell>{formatDate(data.createDate)}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

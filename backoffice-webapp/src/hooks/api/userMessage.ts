@@ -1,7 +1,9 @@
 import { getMessagesByTopicId } from '@/lib/api/service/message';
-import type { Message } from '@/lib/api/type/message';
-import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-export function useGetMessageByTopicId(id: string): Message[] {
-  return useMemo(() => getMessagesByTopicId(id), [id]);
+export function useGetMessageByTopicId(id: string) {
+  return useQuery({
+    queryKey: ['messages', id],
+    queryFn: () => getMessagesByTopicId(id),
+  });
 }

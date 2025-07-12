@@ -1,3 +1,4 @@
+import { MOCKUP_API_LOADING_MS } from '@/constants/app';
 import {
   TopicStatus,
   type CountTopic,
@@ -14,23 +15,33 @@ function isInStatus(data: Topic, statusIn: string[]): boolean {
   return statusIn.includes(data.status);
 }
 
-export function getTopics(criteria: GetTopicCriteria): Topic[] {
-  const { keyword, statusIn } = criteria;
-  const conditions: ((data: Topic) => boolean)[] = [];
+export function getTopics(criteria: GetTopicCriteria): Promise<Topic[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const { keyword, statusIn } = criteria;
+      const conditions: ((data: Topic) => boolean)[] = [];
 
-  if (keyword) {
-    conditions.push((data) => isInKeyword(data, keyword));
-  }
+      if (keyword) {
+        conditions.push((data) => isInKeyword(data, keyword));
+      }
 
-  if (statusIn) {
-    conditions.push((data) => isInStatus(data, statusIn));
-  }
+      if (statusIn) {
+        conditions.push((data) => isInStatus(data, statusIn));
+      }
 
-  return dataList.filter((data) => conditions.every((condition) => condition(data)));
+      const filteredTopics = dataList.filter((data) => conditions.every((condition) => condition(data)));
+      resolve(filteredTopics);
+    }, MOCKUP_API_LOADING_MS);
+  });
 }
 
-export function getTopicById(id: string): Topic | undefined {
-  return dataList.find((data) => data.id === id);
+export function getTopicById(id: string): Promise<Topic | undefined> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const topic = dataList.find((data) => data.id === id);
+      resolve(topic);
+    }, MOCKUP_API_LOADING_MS);
+  });
 }
 
 function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicCriteria): number {
@@ -46,12 +57,16 @@ function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicC
   return dataList.filter((data) => conditions.every((condition) => condition(data))).length;
 }
 
-export function countTopics(criteria: CountTopicCriteria): CountTopic {
-  return {
-    total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
-    pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
-    answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
-  };
+export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
+        pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
+        answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
+      });
+    }, MOCKUP_API_LOADING_MS);
+  });
 }
 
 export const dataList: Topic[] = [

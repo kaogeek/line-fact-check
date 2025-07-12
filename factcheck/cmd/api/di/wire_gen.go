@@ -9,14 +9,15 @@ package di
 import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
 // Injectors from inject.go:
 
-// InitializeHandler returns our API handler.
-func InitializeHandler() (handler.Handler, func(), error) {
+// InitializeHandler returns our HTTP API server.
+func InitializeServer() (server.Server, func(), error) {
 	configConfig, err := config.New()
 	if err != nil {
 		return nil, nil, err
@@ -28,7 +29,8 @@ func InitializeHandler() (handler.Handler, func(), error) {
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
-	return handlerHandler, func() {
+	httpServer := server.New(configConfig, handlerHandler)
+	return httpServer, func() {
 		cleanup()
 	}, nil
 }
@@ -47,7 +49,8 @@ func InitializeContainer() (Container, func(), error) {
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
-	container := New(configConfig, conn, queries, repository, handlerHandler)
+	httpServer := server.New(configConfig, handlerHandler)
+	container := New(configConfig, conn, queries, repository, handlerHandler, httpServer)
 	return container, func() {
 		cleanup()
 	}, nil
@@ -65,7 +68,8 @@ func InitializeContainerTest() (Container, func(), error) {
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
-	container := New(configConfig, conn, queries, repository, handlerHandler)
+	httpServer := server.New(configConfig, handlerHandler)
+	container := New(configConfig, conn, queries, repository, handlerHandler, httpServer)
 	return container, func() {
 		cleanup()
 	}, nil

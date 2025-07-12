@@ -4,6 +4,7 @@ package di
 import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
@@ -14,6 +15,7 @@ type Container struct {
 	PostgresQuerier postgres.Querier
 	Repository      repo.Repository
 	Handler         handler.Handler
+	Server          server.Server
 }
 
 func New(
@@ -22,6 +24,7 @@ func New(
 	querier postgres.Querier,
 	repo repo.Repository,
 	handler handler.Handler,
+	server server.Server,
 ) Container {
 	return Container{
 		Conf:            conf,
@@ -29,5 +32,6 @@ func New(
 		PostgresQuerier: querier,
 		Repository:      repo,
 		Handler:         handler,
+		Server:          server,
 	}
 }

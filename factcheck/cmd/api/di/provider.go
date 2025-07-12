@@ -1,11 +1,14 @@
 package di
 
 import (
+	"net/http"
+
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
@@ -14,6 +17,8 @@ var ProviderSet = wire.NewSet(
 	ProviderSetBase,
 	repo.New,
 	handler.New,
+	wire.Bind(new(server.Server), new(*http.Server)),
+	server.New,
 	New,
 )
 
@@ -21,6 +26,8 @@ var ProviderSetTest = wire.NewSet(
 	ProviderSetBaseTest,
 	repo.New,
 	handler.New,
+	wire.Bind(new(server.Server), new(*http.Server)),
+	server.New,
 	New,
 )
 

@@ -2,6 +2,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -14,7 +15,12 @@ import (
 	"github.com/kaogeek/line-fact-check/pillars"
 )
 
-func NewServer(conf config.Config, h handler.Handler) *http.Server {
+type Server interface {
+	ListenAndServe() error
+	Shutdown(context.Context) error
+}
+
+func New(conf config.Config, h handler.Handler) *http.Server {
 	const name = "factcheck-api"
 	topics, messages := chi.NewMux(), chi.NewMux()
 	topics.Get("/", h.ListTopics)
@@ -36,7 +42,7 @@ func NewServer(conf config.Config, h handler.Handler) *http.Server {
 	r.Mount("/messages", messages)
 
 	return &http.Server{
-		Addr:         conf.AppName,
+		Addr:         utils.DefaultIfZero(conf.HTTP.ListenAddr, ":8080"),
 		Handler:      r,
 		ReadTimeout:  utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutReadMS)*time.Millisecond, time.Second),
 		WriteTimeout: utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutWriteMS)*time.Millisecond, time.Second),

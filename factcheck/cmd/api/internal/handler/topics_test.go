@@ -195,6 +195,44 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, actualAfterNameUpdate.Description, desc)
 		assertEq(t, actualAfterNameUpdate.Status, factcheck.StatusTopicResolved)
 
+		// Test UpdateTopicDescription
+		t.Log("Testing UpdateTopicDescription")
+		newDesc := "Updated description for testing"
+		updateDescBody := reqBodyJSON(struct {
+			Description string `json:"description"`
+		}{
+			Description: newDesc,
+		})
+		reqUpdateDesc, err := http.NewRequestWithContext(t.Context(), http.MethodPut, testServer.URL+"/topics/"+created.ID+"/description", updateDescBody)
+		assertEq(t, err, nil)
+		respUpdateDesc, err := http.DefaultClient.Do(reqUpdateDesc)
+		assertEq(t, err, nil)
+		defer respUpdateDesc.Body.Close()
+		assertEq(t, respUpdateDesc.StatusCode, http.StatusOK)
+
+		// Assert UpdateTopicDescription response
+		updatedDesc := factcheck.Topic{}
+		err = json.NewDecoder(respUpdateDesc.Body).Decode(&updatedDesc)
+		assertEq(t, err, nil)
+		assertEq(t, updatedDesc.Description, newDesc)
+		assertEq(t, updatedDesc.Name, newName)                         // Name should remain unchanged
+		assertEq(t, updatedDesc.Status, factcheck.StatusTopicResolved) // Status should remain unchanged
+
+		// Verify description update in database via GetByID
+		reqGetAfterDescUpdate, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/"+created.ID, nil)
+		assertEq(t, err, nil)
+		respGetAfterDescUpdate, err := http.DefaultClient.Do(reqGetAfterDescUpdate)
+		assertEq(t, err, nil)
+		defer respGetAfterDescUpdate.Body.Close()
+		assertEq(t, respGetAfterDescUpdate.StatusCode, http.StatusOK)
+
+		actualAfterDescUpdate := factcheck.Topic{}
+		err = json.NewDecoder(respGetAfterDescUpdate.Body).Decode(&actualAfterDescUpdate)
+		assertEq(t, err, nil)
+		assertEq(t, actualAfterDescUpdate.Description, newDesc)
+		assertEq(t, actualAfterDescUpdate.Name, newName)
+		assertEq(t, actualAfterDescUpdate.Status, factcheck.StatusTopicResolved)
+
 		t.Log("Testing DeleteTopicByID")
 		reqDelete, err := http.NewRequestWithContext(t.Context(), http.MethodDelete, testServer.URL+"/topics/"+created.ID, nil)
 		assertEq(t, err, nil)

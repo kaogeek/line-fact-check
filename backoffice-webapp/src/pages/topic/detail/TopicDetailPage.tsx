@@ -18,8 +18,11 @@ import AnswerAuditLogDialog from './dialog/AnswerAuditLogDialog';
 import TopicAuditLogDialog from './dialog/TopicAuditLogDialog';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
+import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
 
 export default function TopicDetailPage() {
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [openTopicPickerDialog, setOpenTopicPickerDialog] = useState<boolean>(false);
   const [openTopicHistoryDialog, setOpenTopicHistoryDialog] = useState<boolean>(false);
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
   const { id } = useParams();
@@ -29,6 +32,15 @@ export default function TopicDetailPage() {
   }
 
   const { isLoading, data: topic, error } = useGetTopicById(id);
+
+  const onHandleClickMoveMessage = (messageId: string) => {
+    setSelectedMessageId(messageId);
+    setOpenTopicPickerDialog(true);
+  };
+
+  const onHandleChooseDestination = (topicId: string) => {
+    console.log(`Move ${selectedMessageId} to ${topicId}`);
+  };
 
   const onHandleClickAnswerHistory = () => {
     setOpenAnswerHistoryDialog(true);
@@ -48,6 +60,12 @@ export default function TopicDetailPage() {
         <Navigate to="/404" replace />
       ) : (
         <>
+          <TopicPickerDialog
+            open={openTopicPickerDialog}
+            onOpenChange={setOpenTopicPickerDialog}
+            currentId={id}
+            onChoose={onHandleChooseDestination}
+          ></TopicPickerDialog>
           <AnswerAuditLogDialog
             open={openAnswerHistoryDialog}
             onOpenChange={setOpenAnswerHistoryDialog}
@@ -80,7 +98,7 @@ export default function TopicDetailPage() {
               </div>
               <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
             </div>
-            <TopicMessageDetail topicId={topic.id} />
+            <TopicMessageDetail topicId={topic.id} onClickMove={onHandleClickMoveMessage} />
             <TopicMessageAnswer onClickHistory={onHandleClickAnswerHistory} />
           </div>
         </>

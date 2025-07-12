@@ -58,5 +58,6 @@ export interface CountTopic {
 }
 
 export interface GetTopicCriteria extends CountTopicCriteria {
+  idNotId?: string[];
   statusIn?: string[];
 }

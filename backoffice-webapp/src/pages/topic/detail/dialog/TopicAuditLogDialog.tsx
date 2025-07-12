@@ -12,14 +12,20 @@ interface TopicAuditLogDialog {
 }
 
 export default function TopicAuditLogDialog({ open, onOpenChange, topicId }: TopicAuditLogDialog) {
-  const { isLoading, data: topicAuditLogs, error } = useGetTopicAuditLogs(topicId);
+  const {
+    isLoading,
+    data: topicAuditLogs,
+    error,
+  } = useGetTopicAuditLogs(topicId, undefined, {
+    enabled: open,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Topic history</DialogTitle>
-          <DialogDescription>
+          <DialogDescription asChild>
             <div className="flex flex-col gap-2">
               {isLoading ? (
                 <LoadingState />

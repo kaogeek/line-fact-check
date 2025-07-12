@@ -11,6 +11,10 @@ function isInKeyword(data: Topic, keyword: string): boolean {
   return data.description.toLowerCase().includes(keyword.toLowerCase());
 }
 
+function isIdIn(data: Topic, idIn: string[]): boolean {
+  return idIn.includes(data.id);
+}
+
 function isInStatus(data: Topic, statusIn: string[]): boolean {
   return statusIn.includes(data.status);
 }
@@ -18,7 +22,7 @@ function isInStatus(data: Topic, statusIn: string[]): boolean {
 export function getTopics(criteria: GetTopicCriteria): Promise<Topic[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const { keyword, statusIn } = criteria;
+      const { keyword, statusIn, idNotId } = criteria;
       const conditions: ((data: Topic) => boolean)[] = [];
 
       if (keyword) {
@@ -27,6 +31,10 @@ export function getTopics(criteria: GetTopicCriteria): Promise<Topic[]> {
 
       if (statusIn) {
         conditions.push((data) => isInStatus(data, statusIn));
+      }
+
+      if (idNotId) {
+        conditions.push((data) => !isIdIn(data, idNotId));
       }
 
       const filteredTopics = dataList.filter((data) => conditions.every((condition) => condition(data)));

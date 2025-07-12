@@ -34,12 +34,10 @@ func (m *messages) Create(ctx context.Context, msg factcheck.Message) (factcheck
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	dbMessage, err := m.queries.CreateMessage(ctx, params)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	return messageDomain(dbMessage), nil
 }
 
@@ -49,12 +47,10 @@ func (m *messages) GetByID(ctx context.Context, id string) (factcheck.Message, e
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	dbMessage, err := m.queries.GetMessage(ctx, messageID)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	return messageDomain(dbMessage), nil
 }
 
@@ -64,17 +60,14 @@ func (m *messages) ListByTopic(ctx context.Context, topicID string) ([]factcheck
 	if err != nil {
 		return nil, err
 	}
-
 	dbMessages, err := m.queries.ListMessagesByTopic(ctx, topicUUID)
 	if err != nil {
 		return nil, err
 	}
-
 	messages := make([]factcheck.Message, len(dbMessages))
 	for i, dbMessage := range dbMessages {
 		messages[i] = messageDomain(dbMessage)
 	}
-
 	return messages, nil
 }
 
@@ -84,12 +77,10 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	dbMessage, err := m.queries.UpdateMessage(ctx, params)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-
 	return messageDomain(dbMessage), nil
 }
 
@@ -99,6 +90,5 @@ func (m *messages) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-
 	return m.queries.DeleteMessage(ctx, messageID)
 }

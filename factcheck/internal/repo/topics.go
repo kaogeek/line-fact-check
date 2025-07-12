@@ -54,12 +54,10 @@ func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-
 	dbTopic, err := t.queries.GetTopic(ctx, topicID)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-
 	return topicDomain(dbTopic), nil
 }
 
@@ -69,12 +67,10 @@ func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
 		topics[i] = topicDomain(dbTopic)
 	}
-
 	return topics, nil
 }
 
@@ -84,12 +80,10 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic)
 	if err != nil {
 		return nil, err
 	}
-
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
 		topics[i] = topicDomain(dbTopic)
 	}
-
 	return topics, nil
 }
 

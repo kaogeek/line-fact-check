@@ -6,6 +6,8 @@ import {
   type GetTopicCriteria,
   type Topic,
 } from '../type/topic';
+import type { PaginationReq, PaginationRes } from '../type/base';
+import { paginate } from '@/lib/utils/page-utils';
 
 function isInKeyword(data: Topic, keyword: string): boolean {
   return data.description.toLowerCase().includes(keyword.toLowerCase());
@@ -19,7 +21,7 @@ function isInStatus(data: Topic, statusIn: string[]): boolean {
   return statusIn.includes(data.status);
 }
 
-export function getTopics(criteria: GetTopicCriteria): Promise<Topic[]> {
+export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<PaginationRes<Topic>> {
   return new Promise((resolve) => {
     setTimeout(() => {
       const { keyword, statusIn, idNotId } = criteria;
@@ -38,7 +40,7 @@ export function getTopics(criteria: GetTopicCriteria): Promise<Topic[]> {
       }
 
       const filteredTopics = dataList.filter((data) => conditions.every((condition) => condition(data)));
-      resolve(filteredTopics);
+      resolve(paginate(filteredTopics, pagination));
     }, MOCKUP_API_LOADING_MS);
   });
 }

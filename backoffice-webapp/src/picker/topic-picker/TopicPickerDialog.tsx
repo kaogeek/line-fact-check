@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGetTopics } from '@/hooks/api/useTopic';
 import TopicPickerData from './components/TopicPickerData';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { GetTopicCriteria } from '@/lib/api/type/topic';
+import type { PaginationReq } from '@/lib/api/type/base';
+import PaginationControl from '@/components/PaginationControl';
 
 interface TopicPickerDialogProps {
   open?: boolean;
@@ -15,18 +17,21 @@ export default function TopicPickerDialog({ open, onOpenChange, currentId, onCho
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     idNotId: currentId ? [currentId] : undefined,
   });
+  const [paginationReq, setPaginationReq] = useState<PaginationReq>({
+    page: 1,
+  });
 
-  const {
-    isLoading,
-    data: dataList,
-    error,
-  } = useGetTopics(criteria, {
+  const { isLoading, data, error } = useGetTopics(criteria, paginationReq, {
     enabled: open,
   });
 
-  function onHandleChoose(topicId: string) {
+  function handleChoose(topicId: string) {
     onOpenChange && onOpenChange(false);
     onChoose(topicId);
+  }
+
+  function handlePageChange(paginationReq: PaginationReq) {
+    setPaginationReq(paginationReq);
   }
 
   return (
@@ -35,12 +40,15 @@ export default function TopicPickerDialog({ open, onOpenChange, currentId, onCho
         <DialogHeader>
           <DialogTitle>Answer history</DialogTitle>
           <DialogDescription asChild>
-            <TopicPickerData
-              isLoading={isLoading}
-              dataList={dataList}
-              error={error}
-              onChoose={onHandleChoose}
-            ></TopicPickerData>
+            <div className="flex flex-col gap-4">
+              <TopicPickerData
+                isLoading={isLoading}
+                dataList={data?.items}
+                error={error}
+                onChoose={handleChoose}
+              ></TopicPickerData>
+              <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+            </div>
           </DialogDescription>
         </DialogHeader>
       </DialogContent>

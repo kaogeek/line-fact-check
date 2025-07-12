@@ -1,13 +1,18 @@
 import { countTopics, getTopicById, getTopics } from '@/lib/api/service/topic';
 import type { CountTopic, CountTopicCriteria, GetTopicCriteria, Topic } from '@/lib/api/type/topic';
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { BaseQueryOptions } from './type';
+import type { PaginationReq, PaginationRes } from '@/lib/api/type/base';
 
-export function useGetTopics(criteria: GetTopicCriteria, options?: BaseQueryOptions<Topic[]>) {
+export function useGetTopics(
+  criteria: GetTopicCriteria,
+  pagination: PaginationReq,
+  options?: BaseQueryOptions<PaginationRes<Topic>>
+) {
   return useQuery({
     ...options,
-    queryKey: ['topics', criteria],
-    queryFn: () => getTopics(criteria),
+    queryKey: ['topics', criteria, pagination],
+    queryFn: () => getTopics(criteria, pagination),
   });
 }
 
@@ -19,7 +24,7 @@ export function useGetTopicById(id: string, options?: BaseQueryOptions<Topic | u
   });
 }
 
-export function useCountTopics(criteria: CountTopicCriteria, options?: UseQueryOptions<CountTopic, Error, CountTopic>) {
+export function useCountTopics(criteria: CountTopicCriteria, options?: BaseQueryOptions<CountTopic>) {
   return useQuery({
     ...options,
     queryKey: ['countTopics', criteria],

@@ -43,11 +43,12 @@ type Message struct {
 }
 
 type UserMessage[T any] struct {
-	RepliedAt *time.Time
-	MessageID string
-	Metadata  T
-	CreatedAt time.Time
-	UpdatedAt *time.Time
+	ID        string     `json:"id"`
+	RepliedAt *time.Time `json:"replied_at"`
+	MessageID string     `json:"message_id"`
+	Metadata  T          `json:"metadata"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 func (s StatusTopic) IsValid() bool {

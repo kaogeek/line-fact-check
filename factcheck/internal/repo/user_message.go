@@ -2,7 +2,9 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -52,6 +54,12 @@ func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMe
 	}
 	dbUserMessage, err := u.queries.GetUserMessage(ctx, uuid)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return factcheck.UserMessage[json.RawMessage]{}, &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": id},
+			}
+		}
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
 	return userMessageDomain(dbUserMessage)
@@ -88,6 +96,12 @@ func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage[json
 
 	dbUserMessage, err := u.queries.UpdateUserMessage(ctx, params)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return factcheck.UserMessage[json.RawMessage]{}, &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": um.ID},
+			}
+		}
 		return factcheck.UserMessage[json.RawMessage]{}, err
 	}
 
@@ -100,5 +114,15 @@ func (u *userMessages) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	return u.queries.DeleteUserMessage(ctx, uuid)
+	err = u.queries.DeleteUserMessage(ctx, uuid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": id},
+			}
+		}
+		return err
+	}
+	return nil
 }

@@ -1,10 +1,13 @@
 package handler_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
@@ -25,9 +28,18 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 
 	// Clear all data
 	t.Log("WARN: Clearing all data from database")
-	app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
-	app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
-	app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
+	if err != nil {
+		panic(err)
+	}
 	t.Log("WARN: Cleared all data from database")
 
 	t.Run("CRUD 1 topic", func(t *testing.T) {
@@ -249,4 +261,98 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		defer respGetByID.Body.Close()
 		assertEq(t, respGetByID.StatusCode, http.StatusNotFound)
 	})
+
+	t.Run("Test not found scenarios", func(t *testing.T) {
+		// Test GetByID with non-existent ID
+		nonExistentID := "00000000-0000-0000-0000-000000000000"
+		reqGetByID, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/"+nonExistentID, nil)
+		assertEq(t, err, nil)
+		respGetByID, err := http.DefaultClient.Do(reqGetByID)
+		assertEq(t, err, nil)
+		defer respGetByID.Body.Close()
+
+		// Debug: read the response body to see what error we're getting
+		respBody, err := io.ReadAll(respGetByID.Body)
+		assertEq(t, err, nil)
+		t.Logf("GetByID response status: %d, body: %s", respGetByID.StatusCode, string(respBody))
+
+		assertEq(t, respGetByID.StatusCode, http.StatusNotFound)
+
+		// Test UpdateTopicStatus with non-existent ID
+		updateStatusBody := reqBodyJSON(struct {
+			Status string `json:"status"`
+		}{
+			Status: string(factcheck.StatusTopicResolved),
+		})
+		reqUpdateStatus, err := http.NewRequestWithContext(t.Context(), http.MethodPut, testServer.URL+"/topics/"+nonExistentID+"/status", updateStatusBody)
+		assertEq(t, err, nil)
+		reqUpdateStatus.Header.Set("Content-Type", "application/json")
+		respUpdateStatus, err := http.DefaultClient.Do(reqUpdateStatus)
+		assertEq(t, err, nil)
+		defer respUpdateStatus.Body.Close()
+		assertEq(t, respUpdateStatus.StatusCode, http.StatusNotFound)
+
+		// Test UpdateTopicName with non-existent ID
+		updateNameBody := reqBodyJSON(struct {
+			Name string `json:"name"`
+		}{
+			Name: "Updated name",
+		})
+		reqUpdateName, err := http.NewRequestWithContext(t.Context(), http.MethodPut, testServer.URL+"/topics/"+nonExistentID+"/name", updateNameBody)
+		assertEq(t, err, nil)
+		reqUpdateName.Header.Set("Content-Type", "application/json")
+		respUpdateName, err := http.DefaultClient.Do(reqUpdateName)
+		assertEq(t, err, nil)
+		defer respUpdateName.Body.Close()
+		assertEq(t, respUpdateName.StatusCode, http.StatusNotFound)
+
+		// Test UpdateTopicDescription with non-existent ID
+		updateDescBody := reqBodyJSON(struct {
+			Description string `json:"description"`
+		}{
+			Description: "Updated description",
+		})
+		reqUpdateDesc, err := http.NewRequestWithContext(t.Context(), http.MethodPut, testServer.URL+"/topics/"+nonExistentID+"/description", updateDescBody)
+		assertEq(t, err, nil)
+		reqUpdateDesc.Header.Set("Content-Type", "application/json")
+		respUpdateDesc, err := http.DefaultClient.Do(reqUpdateDesc)
+		assertEq(t, err, nil)
+		defer respUpdateDesc.Body.Close()
+		assertEq(t, respUpdateDesc.StatusCode, http.StatusNotFound)
+
+		// Test that the error response contains detailed information
+		body, err := io.ReadAll(respUpdateDesc.Body)
+		assertEq(t, err, nil)
+		errorMessage := string(body)
+		t.Logf("Error message: %s", errorMessage)
+		// The error message should contain the filter information from our custom error type
+		assertEq(t, strings.Contains(errorMessage, "not found for filter"), true)
+		assertEq(t, strings.Contains(errorMessage, nonExistentID), true)
+	})
+}
+
+func assertEq[X comparable](t *testing.T, actual, expected X) {
+	if actual != expected {
+		t.Logf("actual: %+v", actual)
+		t.Logf("expected: %+v", expected)
+		t.Fatalf("assertEq: unexpected value for type %T", actual)
+	}
+}
+
+// nolint:unused
+func assertNeq[X comparable](t *testing.T, actual, notExpected X) {
+	if actual == notExpected {
+		t.Logf("not expected: %+v", notExpected)
+		t.Fatalf("assertEq: unexpected value for type %T", actual)
+	}
+}
+
+func reqBodyJSON(data any) *bytes.Buffer {
+	buf := bytes.NewBuffer(nil)
+	enc := json.NewEncoder(buf)
+	err := enc.Encode(data)
+	if err != nil {
+		panic(err)
+	}
+	return buf
 }

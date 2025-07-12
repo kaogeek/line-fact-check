@@ -56,7 +56,7 @@ func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error
 	}
 	dbTopic, err := t.queries.GetTopic(ctx, topicID)
 	if err != nil {
-		return factcheck.Topic{}, err
+		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return topicDomain(dbTopic), nil
 }
@@ -114,7 +114,11 @@ func (t *topics) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	return t.queries.DeleteTopic(ctx, topicID)
+	err = t.queries.DeleteTopic(ctx, topicID)
+	if err != nil {
+		return handleNotFound(err, map[string]string{"id": id})
+	}
+	return nil
 }
 
 func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
@@ -127,7 +131,7 @@ func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.S
 		Status: string(status),
 	})
 	if err != nil {
-		return factcheck.Topic{}, err
+		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return topicDomain(dbTopic), nil
 }
@@ -142,7 +146,7 @@ func (t *topics) UpdateDescription(ctx context.Context, id string, description s
 		Description: description,
 	})
 	if err != nil {
-		return factcheck.Topic{}, err
+		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return topicDomain(dbTopic), nil
 }
@@ -157,7 +161,7 @@ func (t *topics) UpdateName(ctx context.Context, id string, name string) (factch
 		Name: name,
 	})
 	if err != nil {
-		return factcheck.Topic{}, err
+		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return topicDomain(dbTopic), nil
 }

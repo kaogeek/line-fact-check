@@ -8,7 +8,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"errors"
+
 	"github.com/kaogeek/line-fact-check/factcheck"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
@@ -61,6 +64,15 @@ func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	topic, err := h.topics.UpdateStatus(r.Context(), paramID(r), factcheck.StatusTopic(body.Status))
 	if err != nil {
+		if repo.IsNotFound(err) {
+			var notFoundErr *repo.ErrNotFound
+			if errors.As(err, &notFoundErr) {
+				errNotFound(w, notFoundErr.Error())
+			} else {
+				errNotFound(w, fmt.Sprintf("topic not found: %s", paramID(r)))
+			}
+			return
+		}
 		errInternalError(w, err.Error())
 		return
 	}
@@ -77,6 +89,15 @@ func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request)
 	}
 	topic, err := h.topics.UpdateDescription(r.Context(), paramID(r), body.Description)
 	if err != nil {
+		if repo.IsNotFound(err) {
+			var notFoundErr *repo.ErrNotFound
+			if errors.As(err, &notFoundErr) {
+				errNotFound(w, notFoundErr.Error())
+			} else {
+				errNotFound(w, fmt.Sprintf("topic not found: %s", paramID(r)))
+			}
+			return
+		}
 		errInternalError(w, err.Error())
 		return
 	}
@@ -93,6 +114,15 @@ func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
 	}
 	topic, err := h.topics.UpdateName(r.Context(), paramID(r), body.Name)
 	if err != nil {
+		if repo.IsNotFound(err) {
+			var notFoundErr *repo.ErrNotFound
+			if errors.As(err, &notFoundErr) {
+				errNotFound(w, notFoundErr.Error())
+			} else {
+				errNotFound(w, fmt.Sprintf("topic not found: %s", paramID(r)))
+			}
+			return
+		}
 		errInternalError(w, err.Error())
 		return
 	}

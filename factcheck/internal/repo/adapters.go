@@ -133,7 +133,7 @@ func messageDomain(dbMessage postgres.Message) factcheck.Message {
 
 func userMessage(u factcheck.UserMessage[json.RawMessage]) (postgres.CreateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
-	if err := userMessageID.Scan(u.MessageID); err != nil {
+	if err := userMessageID.Scan(u.ID); err != nil {
 		return postgres.CreateUserMessageParams{}, err
 	}
 	var messageID pgtype.UUID
@@ -168,7 +168,7 @@ func userMessage(u factcheck.UserMessage[json.RawMessage]) (postgres.CreateUserM
 
 func userMessageUpdate(userMessage factcheck.UserMessage[json.RawMessage]) (postgres.UpdateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
-	if err := userMessageID.Scan(userMessage.MessageID); err != nil {
+	if err := userMessageID.Scan(userMessage.ID); err != nil {
 		return postgres.UpdateUserMessageParams{}, err
 	}
 	updatedAt, err := timestamptzNullable(userMessage.UpdatedAt)
@@ -194,7 +194,7 @@ func userMessageUpdate(userMessage factcheck.UserMessage[json.RawMessage]) (post
 func userMessageDomain(dbUserMessage postgres.UserMessage) (factcheck.UserMessage[json.RawMessage], error) {
 	userMessage := factcheck.UserMessage[json.RawMessage]{}
 	if dbUserMessage.ID.Valid {
-		userMessage.MessageID = dbUserMessage.ID.String()
+		userMessage.ID = dbUserMessage.ID.String()
 	}
 	if dbUserMessage.MessageID.Valid {
 		userMessage.MessageID = dbUserMessage.MessageID.String()

@@ -2,6 +2,8 @@ package repo
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -49,6 +51,12 @@ func (m *messages) GetByID(ctx context.Context, id string) (factcheck.Message, e
 	}
 	dbMessage, err := m.queries.GetMessage(ctx, messageID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return factcheck.Message{}, &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": id},
+			}
+		}
 		return factcheck.Message{}, err
 	}
 	return messageDomain(dbMessage), nil
@@ -79,6 +87,12 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	}
 	dbMessage, err := m.queries.UpdateMessage(ctx, params)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return factcheck.Message{}, &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": msg.ID},
+			}
+		}
 		return factcheck.Message{}, err
 	}
 	return messageDomain(dbMessage), nil
@@ -90,5 +104,15 @@ func (m *messages) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	return m.queries.DeleteMessage(ctx, messageID)
+	err = m.queries.DeleteMessage(ctx, messageID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &ErrNotFound{
+				Err:    err,
+				Filter: map[string]string{"id": id},
+			}
+		}
+		return err
+	}
+	return nil
 }

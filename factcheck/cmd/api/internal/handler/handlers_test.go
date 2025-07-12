@@ -55,7 +55,7 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 	app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
 	t.Log("WARN: Cleared all data from database")
 
-	t.Run("CRUD", func(t *testing.T) {
+	t.Run("CRUD 1 topic", func(t *testing.T) {
 		now := utils.TimeNow().Round(0) // Postgres timestampz will not preserve monotonic clock
 		utils.TimeFreeze(now)
 		defer utils.TimeUnfreeze()

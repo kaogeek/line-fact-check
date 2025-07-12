@@ -38,9 +38,7 @@ func createModify[T any](f func(context.Context, T) T) optionCreate[T] {
 func create[T any](
 	w http.ResponseWriter,
 	r *http.Request,
-	repo interface {
-		Create(context.Context, T) (T, error)
-	},
+	createFn func(context.Context, T) (T, error),
 	opts ...optionCreate[T],
 ) {
 	options := optionsCreate[T]{}
@@ -62,7 +60,7 @@ func create[T any](
 	if options.modify != nil {
 		data = options.modify(r.Context(), data)
 	}
-	created, err := repo.Create(r.Context(), data)
+	created, err := createFn(r.Context(), data)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
@@ -73,11 +71,9 @@ func create[T any](
 func list[T any](
 	w http.ResponseWriter,
 	r *http.Request,
-	repo interface {
-		List(context.Context) ([]T, error)
-	},
+	listFn func(context.Context) ([]T, error),
 ) {
-	l, err := repo.List(r.Context())
+	l, err := listFn(r.Context())
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
@@ -85,37 +81,14 @@ func list[T any](
 	sendJSON(w, l, http.StatusOK)
 }
 
-func getByID[T any](
-	w http.ResponseWriter,
-	r *http.Request,
-	repo interface {
-		GetByID(context.Context, string) (T, error)
-	},
-) {
-	id := paramID(r)
-	if id == "" {
-		errBadRequest(w, "empty id")
-		return
-	}
-	data, err := repo.GetByID(r.Context(), id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			errNotFound(w, id)
-			return
-		}
-		errInternalError(w, err.Error())
-		return
-	}
-	sendJSON(w, data, http.StatusOK)
-}
-
+// getBy uses getFn to get a T based on filter F.
 func getBy[T any, F any](
 	w http.ResponseWriter,
 	r *http.Request,
 	filter F,
-	f func(context.Context, F) (T, error),
+	getFn func(ctx context.Context, filter F) (T, error),
 ) {
-	data, err := f(r.Context(), filter)
+	data, err := getFn(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			errNotFound(w, fmt.Sprintf("not found for filter %+v: %s", filter, err.Error()))
@@ -130,16 +103,14 @@ func getBy[T any, F any](
 func deleteByID[T any](
 	w http.ResponseWriter,
 	r *http.Request,
-	repo interface {
-		Delete(context.Context, string) error
-	},
+	deleteFn func(context.Context, string) error,
 ) {
 	id := paramID(r)
 	if id == "" {
 		errBadRequest(w, "empty id")
 		return
 	}
-	err := repo.Delete(r.Context(), id)
+	err := deleteFn(r.Context(), id)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

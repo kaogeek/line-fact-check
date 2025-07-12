@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
@@ -39,14 +38,15 @@ func reqBodyJSON(data any) *bytes.Buffer {
 }
 
 func TestHandlerTopic_Stateful(t *testing.T) {
-	const timeout = time.Millisecond * 200
-	const url = "localhost:8778"
-
 	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {
 		panic(err)
 	}
 	defer cleanup()
+
+	// Create test server
+	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
+	defer testServer.Close()
 
 	// Clear all data
 	t.Log("WARN: Clearing all data from database")
@@ -68,15 +68,17 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		}
 
 		body := reqBodyJSON(topic)
-		reqCreate, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, body)
+		reqCreate, err := http.NewRequestWithContext(t.Context(), http.MethodPost, testServer.URL+"/topics/", body)
 		assertEq(t, err, nil)
-		respCreate := httptest.NewRecorder()
-		app.Handler.CreateTopic(respCreate, reqCreate)
-		assertEq(t, respCreate.Code, http.StatusCreated)
+		reqCreate.Header.Set("Content-Type", "application/json")
+		respCreate, err := http.DefaultClient.Do(reqCreate)
+		assertEq(t, err, nil)
+		defer respCreate.Body.Close()
+		assertEq(t, respCreate.StatusCode, http.StatusCreated)
 
 		// Assert response
 		created := factcheck.Topic{}
-		err = json.Unmarshal(respCreate.Body.Bytes(), &created)
+		err = json.NewDecoder(respCreate.Body).Decode(&created)
 		assertEq(t, err, nil)
 		expected := factcheck.Topic{
 			ID:           created.ID,
@@ -95,15 +97,16 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, err, nil)
 		assertEq(t, actualDB, expected)
 
-		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, nil)
+		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/", nil)
 		assertEq(t, err, nil)
-		respList := httptest.NewRecorder()
-		app.Handler.ListTopics(respList, reqList)
-		assertEq(t, respList.Code, http.StatusOK)
+		respList, err := http.DefaultClient.Do(reqList)
+		assertEq(t, err, nil)
+		defer respList.Body.Close()
+		assertEq(t, respList.StatusCode, http.StatusOK)
 
 		// Assert response
 		actualList := []factcheck.Topic{}
-		err = json.Unmarshal(respList.Body.Bytes(), &actualList)
+		err = json.NewDecoder(respList.Body).Decode(&actualList)
 		assertEq(t, err, nil)
 		assertEq(t, len(actualList), 1)
 		assertEq(t, actualList[0], created)

@@ -21,7 +21,6 @@ type Server interface {
 }
 
 func New(conf config.Config, h handler.Handler) *http.Server {
-	const name = "factcheck-api"
 	topics, messages := chi.NewMux(), chi.NewMux()
 	topics.Get("/", h.ListTopics)
 	topics.Get("/{id}", h.GetTopicByID)
@@ -36,8 +35,8 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Handle("/", pillars.HandlerEcho(name))
-	r.Handle("/health", pillars.HandlerOk(name))
+	r.Handle("/", pillars.HandlerEcho(conf.AppName))
+	r.Handle("/health", pillars.HandlerOk(conf.AppName))
 	r.Mount("/topics", topics)
 	r.Mount("/messages", messages)
 

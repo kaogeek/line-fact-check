@@ -110,6 +110,34 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, err, nil)
 		assertEq(t, len(actualList), 1)
 		assertEq(t, actualList[0], created)
+
+		reqGetByID, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/"+created.ID, nil)
+		assertEq(t, err, nil)
+		respGetByID, err := http.DefaultClient.Do(reqGetByID)
+		assertEq(t, err, nil)
+		defer respGetByID.Body.Close()
+		assertEq(t, respGetByID.StatusCode, http.StatusOK)
+
+		// Assert response
+		actualGetByID := factcheck.Topic{}
+		err = json.NewDecoder(respGetByID.Body).Decode(&actualGetByID)
+		assertEq(t, err, nil)
+		assertEq(t, actualGetByID, created)
+
+		reqDelete, err := http.NewRequestWithContext(t.Context(), http.MethodDelete, testServer.URL+"/topics/"+created.ID, nil)
+		assertEq(t, err, nil)
+		respDelete, err := http.DefaultClient.Do(reqDelete)
+		assertEq(t, err, nil)
+		defer respDelete.Body.Close()
+		assertEq(t, respDelete.StatusCode, http.StatusOK)
+
+		// Get by ID should return 404
+		reqGetByID, err = http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/"+created.ID, nil)
+		assertEq(t, err, nil)
+		respGetByID, err = http.DefaultClient.Do(reqGetByID)
+		assertEq(t, err, nil)
+		defer respGetByID.Body.Close()
+		assertEq(t, respGetByID.StatusCode, http.StatusNotFound)
 	})
 }
 

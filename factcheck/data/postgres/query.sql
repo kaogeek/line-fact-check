@@ -32,6 +32,14 @@ UPDATE topics SET
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
+-- name: CountTopicsByStatus :one
+SELECT COUNT(*) FROM topics WHERE status = $1;
+
+-- name: CountTopicsGroupedByStatus :many
+SELECT status, COUNT(*) as count 
+FROM topics 
+GROUP BY status;
+
 -- name: DeleteTopic :exec
 DELETE FROM topics WHERE id = $1;
 

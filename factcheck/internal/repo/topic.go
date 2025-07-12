@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -13,6 +14,8 @@ type RepositoryTopic interface {
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
+	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
+	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -89,6 +92,27 @@ func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.Sta
 	}
 
 	return topics, nil
+}
+
+func (r *repositoryTopic) CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
+	return r.queries.CountTopicsByStatus(ctx, string(status))
+}
+
+func (r *repositoryTopic) CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
+	rows, err := r.queries.CountTopicsGroupedByStatus(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[factcheck.StatusTopic]int64)
+	for i := range rows {
+		r := &rows[i]
+		s := factcheck.StatusTopic(r.Status)
+		if !s.IsValid() {
+			return nil, fmt.Errorf("unexpected invalid status '%s' with %d count", s, r.Count)
+		}
+		result[s] = r.Count
+	}
+	return result, nil
 }
 
 // Delete deletes a topic by ID using the stringToUUID adapter

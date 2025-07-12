@@ -11,6 +11,8 @@ import (
 )
 
 type Querier interface {
+	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
+	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)
 	CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error)

@@ -11,6 +11,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countTopicsByStatus = `-- name: CountTopicsByStatus :one
+SELECT COUNT(*) FROM topics WHERE status = $1
+`
+
+func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64, error) {
+	row := q.db.QueryRow(ctx, countTopicsByStatus, status)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countTopicsGroupedByStatus = `-- name: CountTopicsGroupedByStatus :many
+SELECT status, COUNT(*) as count 
+FROM topics 
+GROUP BY status
+`
+
+type CountTopicsGroupedByStatusRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupedByStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsGroupedByStatusRow
+	for rows.Next() {
+		var i CountTopicsGroupedByStatusRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (
     id, topic_id, text, type, created_at, updated_at

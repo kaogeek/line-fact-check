@@ -3,14 +3,11 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
-	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
 type optionsCreate[T any] struct {
@@ -91,16 +88,7 @@ func getBy[T any, F any](
 ) {
 	data, err := getFn(r.Context(), filter)
 	if err != nil {
-		if repo.IsNotFound(err) {
-			var notFoundErr *repo.ErrNotFound
-			if errors.As(err, &notFoundErr) {
-				errNotFound(w, notFoundErr.Error())
-			} else {
-				errNotFound(w, fmt.Sprintf("not found for filter %+v", filter))
-			}
-			return
-		}
-		errInternalError(w, err.Error())
+		handleNotFound(w, err, "resource", fmt.Sprintf("%+v", filter))
 		return
 	}
 	sendJSON(w, data, http.StatusOK)

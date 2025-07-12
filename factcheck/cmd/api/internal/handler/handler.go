@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
@@ -30,4 +32,18 @@ func New(repo repo.Repository) Handler {
 		topics:   repo.Topic,
 		messages: repo.Message,
 	}
+}
+
+// handleNotFound standardizes not-found error handling in handlers
+func handleNotFound(w http.ResponseWriter, err error, resourceType string, filter string) {
+	if repo.IsNotFound(err) {
+		var notFoundErr *repo.ErrNotFound
+		if errors.As(err, &notFoundErr) {
+			errNotFound(w, notFoundErr.Error())
+		} else {
+			errNotFound(w, fmt.Sprintf("%s not found: %s", resourceType, filter))
+		}
+		return
+	}
+	errInternalError(w, err.Error())
 }

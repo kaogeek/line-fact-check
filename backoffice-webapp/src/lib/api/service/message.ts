@@ -1,11 +1,16 @@
+import { MOCKUP_API_LOADING_MS } from '@/constants/app';
 import type { Message } from '../type/message';
 
 function isHasTopicId(data: Message, topicId: string) {
   return data.topicId === topicId;
 }
 
-export function getMessagesByTopicId(topicId: string): Message[] {
-  return dataList.filter((data) => isHasTopicId(data, topicId));
+export function getMessagesByTopicId(topicId: string): Promise<Message[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(dataList.filter((data) => isHasTopicId(data, topicId)));
+    }, MOCKUP_API_LOADING_MS);
+  });
 }
 
 export const dataList: Message[] = [

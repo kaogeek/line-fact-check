@@ -14,10 +14,14 @@ export default function TopicPage() {
     statusIn: tabs[0].statusIn,
   });
   const [activeTab, setActiveTab] = useState<number>(0);
-  const topics = useGetTopics(criteria);
-  const countTopics = useCountTopics(criteria);
+  const { data: topics, isLoading: topicsIsLoading, error: topicsError } = useGetTopics(criteria);
+  const { data: countTopics } = useCountTopics(criteria);
 
   useEffect(() => {
+    if (!countTopics) {
+      return;
+    }
+
     const { total, pending, answered } = countTopics;
 
     setCounts([total, pending, answered, 0, 0]);
@@ -53,7 +57,7 @@ export default function TopicPage() {
       <TopicSearchBar initKeyword={criteria.keyword} handleSearch={handleSearch} />
       <TabIndex activeTab={activeTab} setActiveTab={handleTabChange} tabs={tabs} counts={counts} />
       <div className="flex-1 overflow-auto">
-        <TopicData dataList={topics}></TopicData>
+        <TopicData isLoading={topicsIsLoading} dataList={topics} error={topicsError}></TopicData>
       </div>
       <TopicPagination />
     </div>

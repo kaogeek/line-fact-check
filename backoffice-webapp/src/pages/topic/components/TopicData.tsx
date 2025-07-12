@@ -12,13 +12,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { EllipsisVertical } from 'lucide-react';
+import LoadingState from '@/components/state/LoadingState';
+import ErrorState from '@/components/state/ErrorState';
+import TableStateRow from '@/components/table/TableStateRow';
+import NoDataState from '@/components/state/NoDataState';
 
 interface TopicDataProps {
-  dataList: Topic[];
+  isLoading: boolean;
+  dataList?: Topic[];
+  error: Error | null;
   onReject?: (topic: Topic, idx: number) => void;
 }
 
-export default function TopicData({ dataList, onReject }: TopicDataProps) {
+const colSpan = 6;
+
+export default function TopicData({ isLoading, dataList, error, onReject }: TopicDataProps) {
   return (
     <div className="rounded-md border h-full">
       <Table className="[&>*]:whitespace-nowrap sticky top-0 bg-background after:content-[''] after:inset-x-0 after:h-px after:bg-border after:absolute after:bottom-0">
@@ -33,34 +41,49 @@ export default function TopicData({ dataList, onReject }: TopicDataProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {dataList.map((data, idx) => (
-            <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
-              <TableCell>
-                <Link to={`/topic/${data.id}`}>
-                  <TYLink>{data.code}</TYLink>
-                </Link>
-              </TableCell>
-              <TableCell>
-                {data.description}{' '}
-                {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
-              </TableCell>
-              <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
-              <TableCell>{formatDate(data.createDate)}</TableCell>
-              <TableCell>
-                <TopicStatusBadge status={data.status}></TopicStatusBadge>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <EllipsisVertical />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={() => onReject && onReject(data, idx)}>Reject</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
+          {isLoading ? (
+            <TableStateRow colSpan={colSpan}>
+              <LoadingState />
+            </TableStateRow>
+          ) : error ? (
+            <TableStateRow colSpan={colSpan}>
+              <ErrorState />
+            </TableStateRow>
+          ) : !dataList ? (
+            <TableStateRow colSpan={colSpan}>
+              <NoDataState />
+            </TableStateRow>
+          ) : (
+            dataList &&
+            dataList.map((data, idx) => (
+              <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
+                <TableCell>
+                  <Link to={`/topic/${data.id}`}>
+                    <TYLink>{data.code}</TYLink>
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  {data.description}{' '}
+                  {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
+                </TableCell>
+                <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
+                <TableCell>{formatDate(data.createDate)}</TableCell>
+                <TableCell>
+                  <TopicStatusBadge status={data.status}></TopicStatusBadge>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <EllipsisVertical />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onSelect={() => onReject && onReject(data, idx)}>Reject</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

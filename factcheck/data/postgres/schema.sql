@@ -2,6 +2,7 @@
 CREATE TABLE topics (
     id            UUID NOT NULL PRIMARY KEY,
     name          text NOT NULL,
+    description   text NOT NULL,
     status        text NOT NULL,
     result        text,
     result_status text,

@@ -25,6 +25,7 @@ const (
 type Topic struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
+	Description  string            `json:"description"`
 	Status       StatusTopic       `json:"status"`
 	Result       string            `json:"result"`
 	ResultStatus StatusTopicResult `json:"result_status"`

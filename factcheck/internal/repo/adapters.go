@@ -34,6 +34,7 @@ func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
 	return postgres.CreateTopicParams{
 		ID:           topicID,
 		Name:         topic.Name,
+		Description:  topic.Description,
 		Status:       string(topic.Status),
 		Result:       result,
 		ResultStatus: resultStatus,
@@ -62,6 +63,7 @@ func topicUpdate(topic factcheck.Topic) (postgres.UpdateTopicParams, error) {
 	return postgres.UpdateTopicParams{
 		ID:           topicID,
 		Name:         topic.Name,
+		Description:  topic.Description,
 		Status:       string(topic.Status),
 		Result:       result,
 		ResultStatus: resultStatus,
@@ -71,8 +73,9 @@ func topicUpdate(topic factcheck.Topic) (postgres.UpdateTopicParams, error) {
 
 func topicDomain(dbTopic postgres.Topic) factcheck.Topic {
 	topic := factcheck.Topic{
-		Name:   dbTopic.Name,
-		Status: factcheck.StatusTopic(dbTopic.Status),
+		Name:        dbTopic.Name,
+		Description: dbTopic.Description,
+		Status:      factcheck.StatusTopic(dbTopic.Status),
 	}
 	if dbTopic.ID.Valid {
 		topic.ID = dbTopic.ID.String()

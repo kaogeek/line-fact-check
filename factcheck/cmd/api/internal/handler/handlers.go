@@ -77,6 +77,7 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 			return factcheck.Topic{
 				ID:           uuid.New().String(),
 				Name:         topic.Name,
+				Description:  topic.Description,
 				Status:       factcheck.StatusTopicPending,
 				Result:       topic.Result,
 				ResultStatus: topic.ResultStatus,

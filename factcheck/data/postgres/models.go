@@ -20,6 +20,7 @@ type Message struct {
 type Topic struct {
 	ID           pgtype.UUID        `json:"id"`
 	Name         string             `json:"name"`
+	Description  string             `json:"description"`
 	Status       string             `json:"status"`
 	Result       pgtype.Text        `json:"result"`
 	ResultStatus pgtype.Text        `json:"result_status"`

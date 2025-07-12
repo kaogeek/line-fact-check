@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +20,7 @@ type TestSuite struct {
 	container di.Container
 }
 
-func reqBodyJSON(data any) io.Reader {
+func reqBodyJSON(data any) *bytes.Buffer {
 	buf := bytes.NewBuffer(nil)
 	enc := json.NewEncoder(buf)
 	err := enc.Encode(data)
@@ -42,12 +41,16 @@ func TestHandlerTopic(t *testing.T) {
 		}
 		defer cleanup()
 
-		name := fmt.Sprintf("topic-test-normal-%s", time.Now().String())
+		now := time.Now()
+		name := fmt.Sprintf("topic-test-normal-%s", now.String())
+		desc := fmt.Sprintf("topic-test-normal-%s-desc", now.String())
 		topic := factcheck.Topic{
-			Name: name,
+			Name:        name,
+			Description: desc,
 		}
 
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, reqBodyJSON(topic))
+		body := reqBodyJSON(topic)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, body)
 		assertEq(t, err, nil)
 		resp := httptest.NewRecorder()
 		app.Handler.CreateTopic(resp, req)
@@ -58,6 +61,7 @@ func TestHandlerTopic(t *testing.T) {
 		assertEq(t, err, nil)
 		assertNeq(t, actual1.ID, "")
 		assertEq(t, actual1.Name, name)
+		assertEq(t, actual1.Description, desc)
 		assertEq(t, actual1.Status, factcheck.StatusTopicPending)
 
 		// Assert in database

@@ -2,31 +2,25 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Topic } from '@/lib/api/type/topic';
 import { formatDate } from '@/formatter/date-formatter';
-import TopicStatusBadge from './TopicStatusBadge';
 import { Link } from 'react-router';
 import { TYLink } from '@/components/Typography';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { EllipsisVertical } from 'lucide-react';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TableStateRow from '@/components/table/TableStateRow';
 import NoDataState from '@/components/state/NoDataState';
+import TopicStatusBadge from '@/pages/topic/components/TopicStatusBadge';
+import { Button } from '@/components/ui/button';
 
-interface TopicDataProps {
+interface TopicPickerDataProps {
   isLoading: boolean;
   dataList?: Topic[];
   error: Error | null;
-  onReject?: (topic: Topic, idx: number) => void;
+  onChoose: (topicId: string) => void;
 }
 
 const colSpan = 6;
 
-export default function TopicData({ isLoading, dataList, error, onReject }: TopicDataProps) {
+export default function TopicPickerData({ isLoading, dataList, error, onChoose }: TopicPickerDataProps) {
   return (
     <div className="rounded-md border h-full">
       <Table className="[&>*]:whitespace-nowrap sticky top-0 bg-background after:content-[''] after:inset-x-0 after:h-px after:bg-border after:absolute after:bottom-0">
@@ -71,14 +65,9 @@ export default function TopicData({ isLoading, dataList, error, onReject }: Topi
                   <TopicStatusBadge status={data.status}></TopicStatusBadge>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <EllipsisVertical />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onSelect={() => onReject && onReject(data, idx)}>Reject</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button variant="default" onClick={() => onChoose(data.id)}>
+                    Choose
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

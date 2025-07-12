@@ -1,20 +1,22 @@
 import { TYH3 } from '@/components/Typography';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { MoveRight, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/formatter/date-formatter';
 import { useGetMessageByTopicId } from '@/hooks/api/userMessage';
 import TableStateRow from '@/components/table/TableStateRow';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
+import NoDataState from '@/components/state/NoDataState';
 
 interface TopicMessageDetailProps {
   topicId: string | null;
+  onClickMove: (messageId: string) => void;
 }
 
 const colSpan = 4;
 
-export default function TopicMessageDetail({ topicId }: TopicMessageDetailProps) {
+export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessageDetailProps) {
   if (!topicId) {
     return <></>;
   }
@@ -37,6 +39,7 @@ export default function TopicMessageDetail({ topicId }: TopicMessageDetailProps)
               <TableHead>Message</TableHead>
               <TableHead className="w-[100px]">Total message</TableHead>
               <TableHead className="w-[100px]">Create date</TableHead>
+              <TableHead className="w-[20px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -48,14 +51,22 @@ export default function TopicMessageDetail({ topicId }: TopicMessageDetailProps)
               <TableStateRow colSpan={colSpan}>
                 <ErrorState />
               </TableStateRow>
+            ) : !dataList ? (
+              <TableStateRow colSpan={colSpan}>
+                <NoDataState />
+              </TableStateRow>
             ) : (
-              dataList &&
               dataList.map((data, idx) => (
                 <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
                   <TableCell>{data.code}</TableCell>
                   <TableCell>{data.message}</TableCell>
                   <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
                   <TableCell>{formatDate(data.createDate)}</TableCell>
+                  <TableCell>
+                    <Button variant="outline" onClick={() => onClickMove(data.id)}>
+                      <MoveRight />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}

@@ -34,7 +34,7 @@ export default function TopicMessageAnswer({ onClickHistory }: TopicMessageAnswe
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <TYH3 className="flex-1">Answer</TYH3>
-              <Button variant="outline" onClick={onClickHistory}>
+              <Button variant="outline" type="button" onClick={onClickHistory}>
                 History
               </Button>
               <Button variant="default" type="submit">

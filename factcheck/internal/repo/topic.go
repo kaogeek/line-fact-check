@@ -13,7 +13,6 @@ type RepositoryTopic interface {
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
-	Update(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -87,21 +86,6 @@ func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.Sta
 	}
 
 	return topics, nil
-}
-
-// Update updates a topic using the topicUpdate adapter
-func (r *repositoryTopic) Update(ctx context.Context, t factcheck.Topic) (factcheck.Topic, error) {
-	params, err := topicUpdate(t)
-	if err != nil {
-		return factcheck.Topic{}, err
-	}
-
-	dbTopic, err := r.queries.UpdateTopic(ctx, params)
-	if err != nil {
-		return factcheck.Topic{}, err
-	}
-
-	return topicDomain(dbTopic), nil
 }
 
 // Delete deletes a topic by ID using the stringToUUID adapter

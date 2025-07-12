@@ -14,14 +14,22 @@ SELECT * FROM topics ORDER BY created_at DESC;
 -- name: ListTopicsByStatus :many
 SELECT * FROM topics WHERE status = $1 ORDER BY created_at DESC;
 
--- name: UpdateTopic :one
+-- name: UpdateTopicStatus :one
+UPDATE topics SET 
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateTopicDescription :one
+UPDATE topics SET 
+    description = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateTopicName :one
 UPDATE topics SET 
     name = $2,
-    description = $3,
-    status = $4,
-    result = $5,
-    result_status = $6,
-    updated_at = $7
+    updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
 -- name: DeleteTopic :exec

@@ -43,34 +43,6 @@ func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
 	}, nil
 }
 
-func topicUpdate(topic factcheck.Topic) (postgres.UpdateTopicParams, error) {
-	var topicID pgtype.UUID
-	if err := topicID.Scan(topic.ID); err != nil {
-		return postgres.UpdateTopicParams{}, err
-	}
-	updatedAt, err := timestamptzNullable(topic.UpdatedAt)
-	if err != nil {
-		return postgres.UpdateTopicParams{}, err
-	}
-	result, err := text(topic.Result)
-	if err != nil {
-		return postgres.UpdateTopicParams{}, err
-	}
-	resultStatus, err := text(string(topic.ResultStatus))
-	if err != nil {
-		return postgres.UpdateTopicParams{}, err
-	}
-	return postgres.UpdateTopicParams{
-		ID:           topicID,
-		Name:         topic.Name,
-		Description:  topic.Description,
-		Status:       string(topic.Status),
-		Result:       result,
-		ResultStatus: resultStatus,
-		UpdatedAt:    updatedAt,
-	}, nil
-}
-
 func topicDomain(dbTopic postgres.Topic) factcheck.Topic {
 	topic := factcheck.Topic{
 		Name:        dbTopic.Name,

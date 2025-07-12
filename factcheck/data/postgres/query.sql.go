@@ -376,37 +376,76 @@ func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (M
 	return i, err
 }
 
-const updateTopic = `-- name: UpdateTopic :one
+const updateTopicDescription = `-- name: UpdateTopicDescription :one
 UPDATE topics SET 
-    name = $2,
-    description = $3,
-    status = $4,
-    result = $5,
-    result_status = $6,
-    updated_at = $7
+    description = $2,
+    updated_at = NOW()
 WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
 `
 
-type UpdateTopicParams struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Status       string             `json:"status"`
-	Result       pgtype.Text        `json:"result"`
-	ResultStatus pgtype.Text        `json:"result_status"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+type UpdateTopicDescriptionParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Description string      `json:"description"`
 }
 
-func (q *Queries) UpdateTopic(ctx context.Context, arg UpdateTopicParams) (Topic, error) {
-	row := q.db.QueryRow(ctx, updateTopic,
-		arg.ID,
-		arg.Name,
-		arg.Description,
-		arg.Status,
-		arg.Result,
-		arg.ResultStatus,
-		arg.UpdatedAt,
+func (q *Queries) UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicDescription, arg.ID, arg.Description)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.Result,
+		&i.ResultStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
+	return i, err
+}
+
+const updateTopicName = `-- name: UpdateTopicName :one
+UPDATE topics SET 
+    name = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
+`
+
+type UpdateTopicNameParams struct {
+	ID   pgtype.UUID `json:"id"`
+	Name string      `json:"name"`
+}
+
+func (q *Queries) UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicName, arg.ID, arg.Name)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.Result,
+		&i.ResultStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTopicStatus = `-- name: UpdateTopicStatus :one
+UPDATE topics SET 
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
+`
+
+type UpdateTopicStatusParams struct {
+	ID     pgtype.UUID `json:"id"`
+	Status string      `json:"status"`
+}
+
+func (q *Queries) UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicStatus, arg.ID, arg.Status)
 	var i Topic
 	err := row.Scan(
 		&i.ID,

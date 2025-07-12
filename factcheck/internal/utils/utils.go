@@ -10,3 +10,7 @@ func DefaultIfZero[T comparable](v, d T) T {
 	}
 	return d
 }
+
+func Ptr[T any](v T) *T {
+	return &v
+}

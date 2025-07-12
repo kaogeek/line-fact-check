@@ -25,7 +25,9 @@ type Querier interface {
 	ListTopicsByStatus(ctx context.Context, status string) ([]Topic, error)
 	ListUserMessagesByMessage(ctx context.Context, messageID pgtype.UUID) ([]UserMessage, error)
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error)
-	UpdateTopic(ctx context.Context, arg UpdateTopicParams) (Topic, error)
+	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
+	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)
+	UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error)
 	UpdateUserMessage(ctx context.Context, arg UpdateUserMessageParams) (UserMessage, error)
 }
 

@@ -13,6 +13,7 @@ type Handler interface {
 	DeleteTopicByID(http.ResponseWriter, *http.Request)
 	UpdateTopicStatus(http.ResponseWriter, *http.Request)
 	UpdateTopicDescription(http.ResponseWriter, *http.Request)
+	UpdateTopicName(http.ResponseWriter, *http.Request)
 
 	CreateMessage(http.ResponseWriter, *http.Request)
 	ListMessagesByTopicID(http.ResponseWriter, *http.Request)

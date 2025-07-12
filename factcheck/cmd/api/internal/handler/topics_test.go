@@ -1,44 +1,16 @@
-//go:build integration_test
-// +build integration_test
-
 package handler_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
-
-type TestSuite struct {
-	container di.Container
-}
-
-func init() {
-	// Set slog level to DEBUG and log with json formatter
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-	})))
-}
-
-func reqBodyJSON(data any) *bytes.Buffer {
-	buf := bytes.NewBuffer(nil)
-	enc := json.NewEncoder(buf)
-	err := enc.Encode(data)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
 
 func TestHandlerTopic_Stateful(t *testing.T) {
 	app, cleanup, err := di.InitializeContainerTest()
@@ -185,6 +157,44 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, err, nil)
 		assertEq(t, actualAfterStatusUpdate.Status, factcheck.StatusTopicResolved)
 
+		// Test UpdateTopicName
+		t.Log("Testing UpdateTopicName")
+		newName := "Updated topic name for testing"
+		updateNameBody := reqBodyJSON(struct {
+			Name string `json:"name"`
+		}{
+			Name: newName,
+		})
+		reqUpdateName, err := http.NewRequestWithContext(t.Context(), http.MethodPut, testServer.URL+"/topics/"+created.ID+"/name", updateNameBody)
+		assertEq(t, err, nil)
+		respUpdateName, err := http.DefaultClient.Do(reqUpdateName)
+		assertEq(t, err, nil)
+		defer respUpdateName.Body.Close()
+		assertEq(t, respUpdateName.StatusCode, http.StatusOK)
+
+		// Assert UpdateTopicName response
+		updatedName := factcheck.Topic{}
+		err = json.NewDecoder(respUpdateName.Body).Decode(&updatedName)
+		assertEq(t, err, nil)
+		assertEq(t, updatedName.Name, newName)
+		assertEq(t, updatedName.Description, desc)
+		assertEq(t, updatedName.Status, factcheck.StatusTopicResolved)
+
+		// Verify name update in database via GetByID
+		reqGetAfterNameUpdate, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/"+created.ID, nil)
+		assertEq(t, err, nil)
+		respGetAfterNameUpdate, err := http.DefaultClient.Do(reqGetAfterNameUpdate)
+		assertEq(t, err, nil)
+		defer respGetAfterNameUpdate.Body.Close()
+		assertEq(t, respGetAfterNameUpdate.StatusCode, http.StatusOK)
+
+		actualAfterNameUpdate := factcheck.Topic{}
+		err = json.NewDecoder(respGetAfterNameUpdate.Body).Decode(&actualAfterNameUpdate)
+		assertEq(t, err, nil)
+		assertEq(t, actualAfterNameUpdate.Name, newName)
+		assertEq(t, actualAfterNameUpdate.Description, desc)
+		assertEq(t, actualAfterNameUpdate.Status, factcheck.StatusTopicResolved)
+
 		t.Log("Testing DeleteTopicByID")
 		reqDelete, err := http.NewRequestWithContext(t.Context(), http.MethodDelete, testServer.URL+"/topics/"+created.ID, nil)
 		assertEq(t, err, nil)
@@ -201,20 +211,4 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		defer respGetByID.Body.Close()
 		assertEq(t, respGetByID.StatusCode, http.StatusNotFound)
 	})
-}
-
-func assertEq[X comparable](t *testing.T, actual, expected X) {
-	if actual != expected {
-		t.Logf("actual: %+v", actual)
-		t.Logf("expected: %+v", expected)
-		t.Fatalf("assertEq: unexpected value for type %T", actual)
-	}
-}
-
-// nolint:unused
-func assertNeq[X comparable](t *testing.T, actual, notExpected X) {
-	if actual == notExpected {
-		t.Logf("not expected: %+v", notExpected)
-		t.Fatalf("assertEq: unexpected value for type %T", actual)
-	}
 }

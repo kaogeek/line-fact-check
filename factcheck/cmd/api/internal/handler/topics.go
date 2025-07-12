@@ -82,3 +82,19 @@ func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request)
 	}
 	sendJSON(w, topic, http.StatusOK)
 }
+
+func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
+	body, err := decode[struct {
+		Name string `json:"name"`
+	}](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	topic, err := h.topics.UpdateName(r.Context(), paramID(r), body.Name)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topic, http.StatusOK)
+}

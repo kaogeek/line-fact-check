@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 type Handler interface {
@@ -80,8 +80,8 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 				Description:  topic.Description,
 				Status:       factcheck.StatusTopicPending,
 				Result:       topic.Result,
-				ResultStatus: topic.ResultStatus,
-				CreatedAt:    time.Now(),
+				ResultStatus: factcheck.StatusTopicResultNone,
+				CreatedAt:    utils.TimeNow(),
 				UpdatedAt:    nil,
 			}
 		}),
@@ -106,7 +106,7 @@ func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 				TopicID:   m.TopicID,
 				Text:      m.Text,
 				Type:      m.Type,
-				CreatedAt: time.Now(),
+				CreatedAt: utils.TimeNow(),
 				UpdatedAt: nil,
 			}
 		}),

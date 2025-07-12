@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,10 +15,17 @@ import (
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 type TestSuite struct {
 	container di.Container
+}
+
+func init() {
+	slog.Info("handlers_test.level.slog")
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.Info("handlers_test.level.slog=DEBUG")
 }
 
 func reqBodyJSON(data any) *bytes.Buffer {
@@ -48,7 +56,10 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 	t.Log("WARN: Cleared all data from database")
 
 	t.Run("CRUD", func(t *testing.T) {
-		now := time.Now()
+		now := utils.TimeNow().Round(0) // Postgres timestampz will not preserve monotonic clock
+		utils.TimeFreeze(now)
+		defer utils.TimeUnfreeze()
+
 		name := fmt.Sprintf("topic-test-normal-%s", now.String())
 		desc := fmt.Sprintf("topic-test-normal-%s-desc", now.String())
 		topic := factcheck.Topic{
@@ -66,15 +77,22 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		created := factcheck.Topic{}
 		err = json.Unmarshal(resp.Body.Bytes(), &created)
 		assertEq(t, err, nil)
-		assertNeq(t, created.ID, "")
-		assertEq(t, created.Name, name)
-		assertEq(t, created.Description, desc)
-		assertEq(t, created.Status, factcheck.StatusTopicPending)
+		expected := factcheck.Topic{
+			ID:           created.ID,
+			Name:         name,
+			Description:  desc,
+			Status:       factcheck.StatusTopicPending,
+			Result:       "",
+			ResultStatus: factcheck.StatusTopicResultNone,
+			CreatedAt:    now,
+			UpdatedAt:    nil,
+		}
+		assertEq(t, created, expected)
 
 		// Assert in database
-		actual, err := app.Repository.Topic.GetByID(t.Context(), created.ID)
+		actualDB, err := app.Repository.Topic.GetByID(t.Context(), created.ID)
 		assertEq(t, err, nil)
-		assertEq(t, actual, created)
+		assertEq(t, actualDB, expected)
 
 		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, nil)
 		assertEq(t, err, nil)
@@ -98,6 +116,7 @@ func assertEq[X comparable](t *testing.T, actual, expected X) {
 	}
 }
 
+// nolint:unused
 func assertNeq[X comparable](t *testing.T, actual, notExpected X) {
 	if actual == notExpected {
 		t.Logf("not expected: %+v", notExpected)

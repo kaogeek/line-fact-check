@@ -14,6 +14,9 @@ type RepositoryTopic interface {
 	List(ctx context.Context) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
 	Delete(ctx context.Context, id string) error
+	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
+	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
+	UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error)
 }
 
 // repositoryTopic implements RepositoryTopic
@@ -96,4 +99,49 @@ func (r *repositoryTopic) Delete(ctx context.Context, id string) error {
 	}
 
 	return r.queries.DeleteTopic(ctx, topicID)
+}
+
+func (r *repositoryTopic) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
+	topicID, err := uuid(id)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	dbTopic, err := r.queries.UpdateTopicStatus(ctx, postgres.UpdateTopicStatusParams{
+		ID:     topicID,
+		Status: string(status),
+	})
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	return topicDomain(dbTopic), nil
+}
+
+func (r *repositoryTopic) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
+	topicID, err := uuid(id)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	dbTopic, err := r.queries.UpdateTopicDescription(ctx, postgres.UpdateTopicDescriptionParams{
+		ID:          topicID,
+		Description: description,
+	})
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	return topicDomain(dbTopic), nil
+}
+
+func (r *repositoryTopic) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
+	topicID, err := uuid(id)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	dbTopic, err := r.queries.UpdateTopicName(ctx, postgres.UpdateTopicNameParams{
+		ID:   topicID,
+		Name: name,
+	})
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	return topicDomain(dbTopic), nil
 }

@@ -1,0 +1,44 @@
+// Package server defines top-level http server for factcheck-api
+package server
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
+	"github.com/kaogeek/line-fact-check/pillars"
+)
+
+func NewServer(conf config.Config, h handler.Handler) *http.Server {
+	const name = "factcheck-api"
+	topics, messages := chi.NewMux(), chi.NewMux()
+	topics.Get("/", h.ListTopics)
+	topics.Get("/{id}", h.GetTopicByID)
+	topics.Post("/", h.CreateTopic)
+	topics.Delete("/{id}", h.DeleteTopicByID)
+	messages.Get("/by-topic/{id}", h.ListMessagesByTopicID)
+	messages.Post("/", h.CreateMessage)
+	messages.Delete("/", h.DeleteMessageByID)
+
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Handle("/", pillars.HandlerEcho(name))
+	r.Handle("/health", pillars.HandlerOk(name))
+	r.Mount("/topics", topics)
+	r.Mount("/messages", messages)
+
+	return &http.Server{
+		Addr:         conf.AppName,
+		Handler:      r,
+		ReadTimeout:  utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutReadMS)*time.Millisecond, time.Second),
+		WriteTimeout: utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutWriteMS)*time.Millisecond, time.Second),
+	}
+}

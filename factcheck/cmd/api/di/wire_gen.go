@@ -47,7 +47,25 @@ func InitializeContainer() (Container, func(), error) {
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
-	container := New(conn, queries, repository, handlerHandler)
+	container := New(configConfig, conn, queries, repository, handlerHandler)
+	return container, func() {
+		cleanup()
+	}, nil
+}
+
+func InitializeContainerTest() (Container, func(), error) {
+	configConfig, err := config.NewTest()
+	if err != nil {
+		return Container{}, nil, err
+	}
+	conn, cleanup, err := postgres.NewConn(configConfig)
+	if err != nil {
+		return Container{}, nil, err
+	}
+	queries := postgres.New(conn)
+	repository := repo.New(queries)
+	handlerHandler := handler.New(repository)
+	container := New(configConfig, conn, queries, repository, handlerHandler)
 	return container, func() {
 		cleanup()
 	}, nil

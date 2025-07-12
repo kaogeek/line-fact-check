@@ -40,9 +40,9 @@ func reqBodyJSON(data any) *bytes.Buffer {
 
 func TestHandlerTopic_Stateful(t *testing.T) {
 	const timeout = time.Millisecond * 200
-	const url = "localhost:8778/"
+	const url = "localhost:8778"
 
-	app, cleanup, err := di.InitializeContainer()
+	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {
 		panic(err)
 	}
@@ -70,12 +70,13 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		body := reqBodyJSON(topic)
 		reqCreate, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, body)
 		assertEq(t, err, nil)
-		resp := httptest.NewRecorder()
-		app.Handler.CreateTopic(resp, reqCreate)
+		respCreate := httptest.NewRecorder()
+		app.Handler.CreateTopic(respCreate, reqCreate)
+		assertEq(t, respCreate.Code, http.StatusCreated)
 
 		// Assert response
 		created := factcheck.Topic{}
-		err = json.Unmarshal(resp.Body.Bytes(), &created)
+		err = json.Unmarshal(respCreate.Body.Bytes(), &created)
 		assertEq(t, err, nil)
 		expected := factcheck.Topic{
 			ID:           created.ID,
@@ -98,6 +99,7 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, err, nil)
 		respList := httptest.NewRecorder()
 		app.Handler.ListTopics(respList, reqList)
+		assertEq(t, respList.Code, http.StatusOK)
 
 		// Assert response
 		actualList := []factcheck.Topic{}

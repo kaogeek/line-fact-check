@@ -7,8 +7,8 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
-// RepositoryMessage defines the interface for message data operations
-type RepositoryMessage interface {
+// Messages defines the interface for message data operations
+type Messages interface {
 	Create(ctx context.Context, message factcheck.Message) (factcheck.Message, error)
 	GetByID(ctx context.Context, id string) (factcheck.Message, error)
 	ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error)
@@ -16,26 +16,26 @@ type RepositoryMessage interface {
 	Delete(ctx context.Context, id string) error
 }
 
-// repositoryMessage implements RepositoryMessage
-type repositoryMessage struct {
+// messages implements RepositoryMessage
+type messages struct {
 	queries *postgres.Queries
 }
 
 // NewRepositoryMessage creates a new message repository
-func NewRepositoryMessage(queries *postgres.Queries) RepositoryMessage {
-	return &repositoryMessage{
+func NewRepositoryMessage(queries *postgres.Queries) Messages {
+	return &messages{
 		queries: queries,
 	}
 }
 
 // Create creates a new message using the message adapter
-func (r *repositoryMessage) Create(ctx context.Context, msg factcheck.Message) (factcheck.Message, error) {
+func (m *messages) Create(ctx context.Context, msg factcheck.Message) (factcheck.Message, error) {
 	params, err := message(msg)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
 
-	dbMessage, err := r.queries.CreateMessage(ctx, params)
+	dbMessage, err := m.queries.CreateMessage(ctx, params)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -44,13 +44,13 @@ func (r *repositoryMessage) Create(ctx context.Context, msg factcheck.Message) (
 }
 
 // GetByID retrieves a message by ID using the messageDomain adapter
-func (r *repositoryMessage) GetByID(ctx context.Context, id string) (factcheck.Message, error) {
+func (m *messages) GetByID(ctx context.Context, id string) (factcheck.Message, error) {
 	messageID, err := uuid(id)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
 
-	dbMessage, err := r.queries.GetMessage(ctx, messageID)
+	dbMessage, err := m.queries.GetMessage(ctx, messageID)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -59,13 +59,13 @@ func (r *repositoryMessage) GetByID(ctx context.Context, id string) (factcheck.M
 }
 
 // ListByTopic retrieves messages by topic ID using the messageDomain adapter
-func (r *repositoryMessage) ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error) {
+func (m *messages) ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error) {
 	topicUUID, err := uuid(topicID)
 	if err != nil {
 		return nil, err
 	}
 
-	dbMessages, err := r.queries.ListMessagesByTopic(ctx, topicUUID)
+	dbMessages, err := m.queries.ListMessagesByTopic(ctx, topicUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +79,13 @@ func (r *repositoryMessage) ListByTopic(ctx context.Context, topicID string) ([]
 }
 
 // Update updates a message using the messageUpdate adapter
-func (r *repositoryMessage) Update(ctx context.Context, msg factcheck.Message) (factcheck.Message, error) {
+func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck.Message, error) {
 	params, err := messageUpdate(msg)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
 
-	dbMessage, err := r.queries.UpdateMessage(ctx, params)
+	dbMessage, err := m.queries.UpdateMessage(ctx, params)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -94,11 +94,11 @@ func (r *repositoryMessage) Update(ctx context.Context, msg factcheck.Message) (
 }
 
 // Delete deletes a message by ID using the stringToUUID adapter
-func (r *repositoryMessage) Delete(ctx context.Context, id string) error {
+func (m *messages) Delete(ctx context.Context, id string) error {
 	messageID, err := uuid(id)
 	if err != nil {
 		return err
 	}
 
-	return r.queries.DeleteMessage(ctx, messageID)
+	return m.queries.DeleteMessage(ctx, messageID)
 }

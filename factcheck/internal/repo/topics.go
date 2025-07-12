@@ -8,8 +8,8 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
-// RepositoryTopic defines the interface for topic data operations
-type RepositoryTopic interface {
+// Topics defines the interface for topic data operations
+type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context) ([]factcheck.Topic, error)
@@ -22,26 +22,25 @@ type RepositoryTopic interface {
 	UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error)
 }
 
-// repositoryTopic implements RepositoryTopic
-type repositoryTopic struct {
+// topics implements RepositoryTopic
+type topics struct {
 	queries *postgres.Queries
 }
 
 // NewRepositoryTopic creates a new topic repository
-func NewRepositoryTopic(queries *postgres.Queries) RepositoryTopic {
-	return &repositoryTopic{
+func NewRepositoryTopic(queries *postgres.Queries) Topics {
+	return &topics{
 		queries: queries,
 	}
 }
 
 // Create creates a new topic using the topic adapter
-func (r *repositoryTopic) Create(ctx context.Context, t factcheck.Topic) (factcheck.Topic, error) {
-	params, err := topic(t)
+func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Topic, error) {
+	params, err := topic(top)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-
-	dbTopic, err := r.queries.CreateTopic(ctx, params)
+	dbTopic, err := t.queries.CreateTopic(ctx, params)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -50,13 +49,13 @@ func (r *repositoryTopic) Create(ctx context.Context, t factcheck.Topic) (factch
 }
 
 // GetByID retrieves a topic by ID using the topicDomain adapter
-func (r *repositoryTopic) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
+func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
 	topicID, err := uuid(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
 
-	dbTopic, err := r.queries.GetTopic(ctx, topicID)
+	dbTopic, err := t.queries.GetTopic(ctx, topicID)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -65,8 +64,8 @@ func (r *repositoryTopic) GetByID(ctx context.Context, id string) (factcheck.Top
 }
 
 // List retrieves all topics using the topicDomain adapter
-func (r *repositoryTopic) List(ctx context.Context) ([]factcheck.Topic, error) {
-	dbTopics, err := r.queries.ListTopics(ctx)
+func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
+	dbTopics, err := t.queries.ListTopics(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +79,8 @@ func (r *repositoryTopic) List(ctx context.Context) ([]factcheck.Topic, error) {
 }
 
 // ListByStatus retrieves topics by status using the topicDomain adapter
-func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error) {
-	dbTopics, err := r.queries.ListTopicsByStatus(ctx, string(status))
+func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error) {
+	dbTopics, err := t.queries.ListTopicsByStatus(ctx, string(status))
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +93,12 @@ func (r *repositoryTopic) ListByStatus(ctx context.Context, status factcheck.Sta
 	return topics, nil
 }
 
-func (r *repositoryTopic) CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
-	return r.queries.CountTopicsByStatus(ctx, string(status))
+func (t *topics) CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
+	return t.queries.CountTopicsByStatus(ctx, string(status))
 }
 
-func (r *repositoryTopic) CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
-	rows, err := r.queries.CountTopicsGroupedByStatus(ctx)
+func (t *topics) CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
+	rows, err := t.queries.CountTopicsGroupedByStatus(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -116,21 +115,20 @@ func (r *repositoryTopic) CountByStatuses(ctx context.Context) (map[factcheck.St
 }
 
 // Delete deletes a topic by ID using the stringToUUID adapter
-func (r *repositoryTopic) Delete(ctx context.Context, id string) error {
+func (t *topics) Delete(ctx context.Context, id string) error {
 	topicID, err := uuid(id)
 	if err != nil {
 		return err
 	}
-
-	return r.queries.DeleteTopic(ctx, topicID)
+	return t.queries.DeleteTopic(ctx, topicID)
 }
 
-func (r *repositoryTopic) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
+func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
 	topicID, err := uuid(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := r.queries.UpdateTopicStatus(ctx, postgres.UpdateTopicStatusParams{
+	dbTopic, err := t.queries.UpdateTopicStatus(ctx, postgres.UpdateTopicStatusParams{
 		ID:     topicID,
 		Status: string(status),
 	})
@@ -140,12 +138,12 @@ func (r *repositoryTopic) UpdateStatus(ctx context.Context, id string, status fa
 	return topicDomain(dbTopic), nil
 }
 
-func (r *repositoryTopic) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
+func (t *topics) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
 	topicID, err := uuid(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := r.queries.UpdateTopicDescription(ctx, postgres.UpdateTopicDescriptionParams{
+	dbTopic, err := t.queries.UpdateTopicDescription(ctx, postgres.UpdateTopicDescriptionParams{
 		ID:          topicID,
 		Description: description,
 	})
@@ -155,12 +153,12 @@ func (r *repositoryTopic) UpdateDescription(ctx context.Context, id string, desc
 	return topicDomain(dbTopic), nil
 }
 
-func (r *repositoryTopic) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
+func (t *topics) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
 	topicID, err := uuid(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := r.queries.UpdateTopicName(ctx, postgres.UpdateTopicNameParams{
+	dbTopic, err := t.queries.UpdateTopicName(ctx, postgres.UpdateTopicNameParams{
 		ID:   topicID,
 		Name: name,
 	})

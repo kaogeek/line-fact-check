@@ -6,9 +6,9 @@ import (
 
 // Repository combines all repository interfaces
 type Repository struct {
-	Topic       RepositoryTopic
-	Message     RepositoryMessage
-	UserMessage RepositoryUserMessage
+	Topic       Topics
+	Message     Messages
+	UserMessage UserMessages
 }
 
 // New creates a new repository with all implementations

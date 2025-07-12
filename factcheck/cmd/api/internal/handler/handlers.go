@@ -26,8 +26,8 @@ type Handler interface {
 }
 
 type handler struct {
-	topics   repo.RepositoryTopic
-	messages repo.RepositoryMessage
+	topics   repo.Topics
+	messages repo.Messages
 }
 
 func New(repo repo.Repository) Handler {
@@ -86,6 +86,34 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 			}
 		}),
 	)
+}
+
+func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {
+	status, err := decode[string](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	topic, err := h.topics.UpdateStatus(r.Context(), paramID(r), factcheck.StatusTopic(status))
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topic, http.StatusOK)
+}
+
+func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request) {
+	description, err := decode[string](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	topic, err := h.topics.UpdateDescription(r.Context(), paramID(r), description)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topic, http.StatusOK)
 }
 
 func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {

@@ -8,11 +8,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/kaogeek/line-fact-check/pillars"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
-	"github.com/kaogeek/line-fact-check/pillars"
 )
 
 type Server interface {

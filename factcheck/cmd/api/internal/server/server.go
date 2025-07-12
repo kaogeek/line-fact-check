@@ -26,6 +26,8 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	topics.Get("/{id}", h.GetTopicByID)
 	topics.Post("/", h.CreateTopic)
 	topics.Delete("/{id}", h.DeleteTopicByID)
+	topics.Put("/{id}/status", h.UpdateTopicStatus)
+	topics.Put("/{id}/description", h.UpdateTopicDescription)
 	messages.Get("/by-topic/{id}", h.ListMessagesByTopicID)
 	messages.Post("/", h.CreateMessage)
 	messages.Delete("/", h.DeleteMessageByID)

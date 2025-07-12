@@ -52,12 +52,14 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {
-	status, err := decode[string](r)
+	body, err := decode[struct {
+		Status string `json:"status"`
+	}](r)
 	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
-	topic, err := h.topics.UpdateStatus(r.Context(), paramID(r), factcheck.StatusTopic(status))
+	topic, err := h.topics.UpdateStatus(r.Context(), paramID(r), factcheck.StatusTopic(body.Status))
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
@@ -66,12 +68,14 @@ func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request) {
-	description, err := decode[string](r)
+	body, err := decode[struct {
+		Description string `json:"description"`
+	}](r)
 	if err != nil {
 		errBadRequest(w, err.Error())
 		return
 	}
-	topic, err := h.topics.UpdateDescription(r.Context(), paramID(r), description)
+	topic, err := h.topics.UpdateDescription(r.Context(), paramID(r), body.Description)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

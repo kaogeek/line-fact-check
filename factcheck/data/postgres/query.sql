@@ -1,8 +1,8 @@
 -- name: CreateTopic :one
 INSERT INTO topics (
-    id, name, status, result, result_status, created_at, updated_at
+    id, name, description, status, result, result_status, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 -- name: GetTopic :one
@@ -14,14 +14,31 @@ SELECT * FROM topics ORDER BY created_at DESC;
 -- name: ListTopicsByStatus :many
 SELECT * FROM topics WHERE status = $1 ORDER BY created_at DESC;
 
--- name: UpdateTopic :one
+-- name: UpdateTopicStatus :one
+UPDATE topics SET 
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateTopicDescription :one
+UPDATE topics SET 
+    description = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateTopicName :one
 UPDATE topics SET 
     name = $2,
-    status = $3,
-    result = $4,
-    result_status = $5,
-    updated_at = $6
+    updated_at = NOW()
 WHERE id = $1 RETURNING *;
+
+-- name: CountTopicsByStatus :one
+SELECT COUNT(*) FROM topics WHERE status = $1;
+
+-- name: CountTopicsGroupedByStatus :many
+SELECT status, COUNT(*) as count 
+FROM topics 
+GROUP BY status;
 
 -- name: DeleteTopic :exec
 DELETE FROM topics WHERE id = $1;

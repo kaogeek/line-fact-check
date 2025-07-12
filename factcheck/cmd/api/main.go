@@ -10,10 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/kaogeek/line-fact-check/pillars"
-
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
 )
 
@@ -22,8 +18,7 @@ func main() {
 		name = "factcheck-api"
 		addr = ":8080"
 	)
-
-	handlers, cleanup, err := di.InitializeHandler()
+	srv, cleanup, err := di.InitializeServer()
 	if err != nil {
 		panic(err)
 	}
@@ -32,32 +27,6 @@ func main() {
 		cleanup()
 		slog.Info("server cleanup completed, exiting...")
 	}()
-
-	topics, messages := chi.NewMux(), chi.NewMux()
-	topics.Get("/", handlers.ListTopics)
-	topics.Get("/{id}", handlers.GetTopicByID)
-	topics.Post("/", handlers.CreateTopic)
-	topics.Delete("/{id}", handlers.DeleteTopicByID)
-	messages.Get("/by-topic/{id}", handlers.ListMessagesByTopicID)
-	messages.Post("/", handlers.CreateMessage)
-	messages.Delete("/", handlers.DeleteMessageByID)
-
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Handle("/", pillars.HandlerEcho(name))
-	r.Handle("/health", pillars.HandlerOk(name))
-	r.Mount("/topics", topics)
-	r.Mount("/messages", messages)
-
-	srv := http.Server{
-		Addr:         addr,
-		Handler:      r,
-		ReadTimeout:  time.Second * 5,
-		WriteTimeout: time.Second * 2,
-	}
 
 	go func() {
 		slog.Info("server starting", "addr", addr)

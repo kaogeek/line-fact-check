@@ -1,6 +1,6 @@
 ---
-description: Helper for Go
-globs: factcheck/**,.github/workflows/**
+description: Rules and context for this project
+globs:
 alwaysApply: true
 ---
 

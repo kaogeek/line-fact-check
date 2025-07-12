@@ -6,11 +6,11 @@ package di
 import (
 	"github.com/google/wire"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 )
 
-// InitializeHandler returns our API handler.
-func InitializeHandler() (handler.Handler, func(), error) {
+// InitializeHandler returns our HTTP API server.
+func InitializeServer() (server.Server, func(), error) {
 	wire.Build(ProviderSet)
 	return nil, nil, nil
 }
@@ -19,5 +19,10 @@ func InitializeHandler() (handler.Handler, func(), error) {
 // perfect for integration test or debugging
 func InitializeContainer() (Container, func(), error) {
 	wire.Build(ProviderSet)
+	return Container{}, nil, nil
+}
+
+func InitializeContainerTest() (Container, func(), error) {
+	wire.Build(ProviderSetTest)
 	return Container{}, nil, nil
 }

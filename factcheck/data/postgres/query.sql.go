@@ -11,6 +11,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countTopicsByStatus = `-- name: CountTopicsByStatus :one
+SELECT COUNT(*) FROM topics WHERE status = $1
+`
+
+func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64, error) {
+	row := q.db.QueryRow(ctx, countTopicsByStatus, status)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countTopicsGroupedByStatus = `-- name: CountTopicsGroupedByStatus :many
+SELECT status, COUNT(*) as count 
+FROM topics 
+GROUP BY status
+`
+
+type CountTopicsGroupedByStatusRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupedByStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsGroupedByStatusRow
+	for rows.Next() {
+		var i CountTopicsGroupedByStatusRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (
     id, topic_id, text, type, created_at, updated_at
@@ -51,15 +93,16 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 
 const createTopic = `-- name: CreateTopic :one
 INSERT INTO topics (
-    id, name, status, result, result_status, created_at, updated_at
+    id, name, description, status, result, result_status, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, name, status, result, result_status, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, name, description, status, result, result_status, created_at, updated_at
 `
 
 type CreateTopicParams struct {
 	ID           pgtype.UUID        `json:"id"`
 	Name         string             `json:"name"`
+	Description  string             `json:"description"`
 	Status       string             `json:"status"`
 	Result       pgtype.Text        `json:"result"`
 	ResultStatus pgtype.Text        `json:"result_status"`
@@ -71,6 +114,7 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 	row := q.db.QueryRow(ctx, createTopic,
 		arg.ID,
 		arg.Name,
+		arg.Description,
 		arg.Status,
 		arg.Result,
 		arg.ResultStatus,
@@ -81,6 +125,7 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Description,
 		&i.Status,
 		&i.Result,
 		&i.ResultStatus,
@@ -174,7 +219,7 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 }
 
 const getTopic = `-- name: GetTopic :one
-SELECT id, name, status, result, result_status, created_at, updated_at FROM topics WHERE id = $1
+SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics WHERE id = $1
 `
 
 func (q *Queries) GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error) {
@@ -183,6 +228,7 @@ func (q *Queries) GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Description,
 		&i.Status,
 		&i.Result,
 		&i.ResultStatus,
@@ -242,7 +288,7 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 }
 
 const listTopics = `-- name: ListTopics :many
-SELECT id, name, status, result, result_status, created_at, updated_at FROM topics ORDER BY created_at DESC
+SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics ORDER BY created_at DESC
 `
 
 func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
@@ -257,6 +303,7 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Description,
 			&i.Status,
 			&i.Result,
 			&i.ResultStatus,
@@ -274,7 +321,7 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 }
 
 const listTopicsByStatus = `-- name: ListTopicsByStatus :many
-SELECT id, name, status, result, result_status, created_at, updated_at FROM topics WHERE status = $1 ORDER BY created_at DESC
+SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics WHERE status = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListTopicsByStatus(ctx context.Context, status string) ([]Topic, error) {
@@ -289,6 +336,7 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, status string) ([]Topi
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Description,
 			&i.Status,
 			&i.Result,
 			&i.ResultStatus,
@@ -370,38 +418,81 @@ func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (M
 	return i, err
 }
 
-const updateTopic = `-- name: UpdateTopic :one
+const updateTopicDescription = `-- name: UpdateTopicDescription :one
 UPDATE topics SET 
-    name = $2,
-    status = $3,
-    result = $4,
-    result_status = $5,
-    updated_at = $6
-WHERE id = $1 RETURNING id, name, status, result, result_status, created_at, updated_at
+    description = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
 `
 
-type UpdateTopicParams struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Status       string             `json:"status"`
-	Result       pgtype.Text        `json:"result"`
-	ResultStatus pgtype.Text        `json:"result_status"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+type UpdateTopicDescriptionParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Description string      `json:"description"`
 }
 
-func (q *Queries) UpdateTopic(ctx context.Context, arg UpdateTopicParams) (Topic, error) {
-	row := q.db.QueryRow(ctx, updateTopic,
-		arg.ID,
-		arg.Name,
-		arg.Status,
-		arg.Result,
-		arg.ResultStatus,
-		arg.UpdatedAt,
-	)
+func (q *Queries) UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicDescription, arg.ID, arg.Description)
 	var i Topic
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.Result,
+		&i.ResultStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTopicName = `-- name: UpdateTopicName :one
+UPDATE topics SET 
+    name = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
+`
+
+type UpdateTopicNameParams struct {
+	ID   pgtype.UUID `json:"id"`
+	Name string      `json:"name"`
+}
+
+func (q *Queries) UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicName, arg.ID, arg.Name)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.Result,
+		&i.ResultStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTopicStatus = `-- name: UpdateTopicStatus :one
+UPDATE topics SET 
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
+`
+
+type UpdateTopicStatusParams struct {
+	ID     pgtype.UUID `json:"id"`
+	Status string      `json:"status"`
+}
+
+func (q *Queries) UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, updateTopicStatus, arg.ID, arg.Status)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
 		&i.Status,
 		&i.Result,
 		&i.ResultStatus,

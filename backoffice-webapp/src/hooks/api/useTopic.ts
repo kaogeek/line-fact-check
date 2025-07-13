@@ -16,7 +16,7 @@ export function useGetTopics(
   });
 }
 
-export function useGetTopicById(id: string, options?: BaseQueryOptions<Topic | undefined>) {
+export function useGetTopicById(id: string, options?: BaseQueryOptions<Topic | null>) {
   return useQuery({
     ...options,
     queryKey: ['topic', id],

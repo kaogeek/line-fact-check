@@ -6,25 +6,50 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useEffect } from 'react';
+import { useGetTopicAnswerByTopicId } from '@/hooks/api/useTopicAnswer';
+import { TopicAnswerType } from '@/lib/api/type/topic-answer';
+import LoadingState from '@/components/state/LoadingState';
+import ErrorState from '@/components/state/ErrorState';
 
 interface TopicMessageAnswerProps {
   onClickHistory: () => void;
+  topicId: string;
 }
 
 const FormSchema = z.object({
-  type: z.enum(['real', 'fake'], {
+  type: z.enum([TopicAnswerType.REAL, TopicAnswerType.FAKE], {
     required_error: 'You need to select a answser type.',
   }),
   answer: z.string(),
 });
 
-export default function TopicMessageAnswer({ onClickHistory }: TopicMessageAnswerProps) {
+export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMessageAnswerProps) {
+  const { isLoading, data: answer, error } = useGetTopicAnswerByTopicId(topicId);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
+  useEffect(() => {
+    if (answer) {
+      form.reset({
+        type: answer.type,
+        answer: answer.answer,
+      });
+    }
+  }, [answer]);
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
     console.log(data);
+  }
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    console.log(error);
+    return <ErrorState />;
   }
 
   return (
@@ -69,13 +94,13 @@ export default function TopicMessageAnswer({ onClickHistory }: TopicMessageAnswe
                     <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
-                          <RadioGroupItem value="real" />
+                          <RadioGroupItem value={TopicAnswerType.REAL} />
                         </FormControl>
                         <FormLabel className="font-normal">Real</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
-                          <RadioGroupItem value="fake" />
+                          <RadioGroupItem value={TopicAnswerType.FAKE} />
                         </FormControl>
                         <FormLabel className="font-normal">Fake</FormLabel>
                       </FormItem>

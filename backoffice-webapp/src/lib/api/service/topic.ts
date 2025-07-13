@@ -55,10 +55,10 @@ export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq)
   });
 }
 
-export function getTopicById(id: string): Promise<Topic | undefined> {
+export function getTopicById(id: string): Promise<Topic | null> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const topic = dataList.find((data) => data.id === id);
+      const topic = dataList.find((data) => data.id === id) || null;
       resolve(topic);
     }, MOCKUP_API_LOADING_MS);
   });

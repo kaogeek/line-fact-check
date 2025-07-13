@@ -99,7 +99,7 @@ export default function TopicDetailPage() {
               <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
             </div>
             <TopicMessageDetail topicId={topic.id} onClickMove={onHandleClickMoveMessage} />
-            <TopicMessageAnswer onClickHistory={onHandleClickAnswerHistory} />
+            <TopicMessageAnswer topicId={topic.id} onClickHistory={onHandleClickAnswerHistory} />
           </div>
         </>
       )}

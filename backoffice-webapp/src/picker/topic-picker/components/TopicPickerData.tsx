@@ -45,7 +45,7 @@ export default function TopicPickerData({ className, isLoading, dataList, error,
           <TableStateRow colSpan={colSpan}>
             <ErrorState />
           </TableStateRow>
-        ) : !dataList ? (
+        ) : !dataList || !dataList.length ? (
           <TableStateRow colSpan={colSpan}>
             <NoDataState />
           </TableStateRow>
@@ -67,7 +67,7 @@ export default function TopicPickerData({ className, isLoading, dataList, error,
                 <TopicStatusBadge status={data.status}></TopicStatusBadge>
               </TableCell>
               <TableCell>
-                <Button variant="default" onClick={() => onChoose(data.id)}>
+                <Button variant="secondary" onClick={() => onChoose(data.id)}>
                   Choose
                 </Button>
               </TableCell>

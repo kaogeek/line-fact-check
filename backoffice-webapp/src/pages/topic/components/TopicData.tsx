@@ -49,7 +49,7 @@ export default function TopicData({ isLoading, dataList, error, onReject }: Topi
           <TableStateRow colSpan={colSpan}>
             <ErrorState />
           </TableStateRow>
-        ) : !dataList ? (
+        ) : !dataList || !dataList.length ? (
           <TableStateRow colSpan={colSpan}>
             <NoDataState />
           </TableStateRow>

@@ -12,9 +12,9 @@ interface EmptyStateProps {
 }
 
 const sizeClassMap: Record<'sm' | 'md' | 'lg', string> = {
-  sm: 'min-h-[30vh]',
-  md: 'min-h-[60vh]',
-  lg: 'min-h-[80vh]',
+  sm: 'min-h-[200px]',
+  md: 'min-h-[400px]',
+  lg: 'min-h-[600px]',
 };
 
 export default function EmptyState({ title, msg, icon, showIcon = true, action, size = 'md' }: EmptyStateProps) {

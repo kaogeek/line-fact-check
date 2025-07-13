@@ -27,7 +27,7 @@ export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessag
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         <TYH3 className="flex-1">Message</TYH3>
-        <Button variant="default">
+        <Button variant="default" size="icon">
           <Plus />
         </Button>
       </div>
@@ -63,7 +63,7 @@ export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessag
                   <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
                   <TableCell>{formatDate(data.createDate)}</TableCell>
                   <TableCell>
-                    <Button variant="outline" onClick={() => onClickMove(data.id)}>
+                    <Button variant="outline" size="icon" onClick={() => onClickMove(data.id)}>
                       <MoveRight />
                     </Button>
                   </TableCell>

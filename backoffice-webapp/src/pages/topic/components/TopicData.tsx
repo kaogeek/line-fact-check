@@ -16,6 +16,7 @@ import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TableStateRow from '@/components/table/TableStateRow';
 import NoDataState from '@/components/state/NoDataState';
+import { Button } from '@/components/ui/button';
 
 interface TopicDataProps {
   isLoading: boolean;
@@ -72,8 +73,10 @@ export default function TopicData({ isLoading, dataList, error, onReject }: Topi
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <EllipsisVertical />
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <EllipsisVertical />
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onSelect={() => onReject && onReject(data, idx)}>Reject</DropdownMenuItem>

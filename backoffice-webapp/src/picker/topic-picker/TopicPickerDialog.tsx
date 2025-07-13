@@ -36,21 +36,19 @@ export default function TopicPickerDialog({ open, onOpenChange, currentId, onCho
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] lg:max-w-[95vw] max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Answer history</DialogTitle>
-          <DialogDescription asChild>
-            <div className="flex flex-col gap-4">
-              <TopicPickerData
-                isLoading={isLoading}
-                dataList={data?.items}
-                error={error}
-                onChoose={handleChoose}
-              ></TopicPickerData>
-              <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
-            </div>
-          </DialogDescription>
         </DialogHeader>
+        <DialogDescription asChild>
+          <div className="flex flex-col gap-4 min-w-0">
+            <div className="flex-1 min-w-0 overflow-x-auto">
+              <TopicPickerData isLoading={isLoading} dataList={data?.items} error={error} onChoose={handleChoose} />
+            </div>
+
+            <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+          </div>
+        </DialogDescription>
       </DialogContent>
     </Dialog>
   );

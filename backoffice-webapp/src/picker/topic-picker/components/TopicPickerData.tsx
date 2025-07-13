@@ -31,6 +31,33 @@ export default function TopicPickerData({ isLoading, dataList, error, onChoose }
             <TableHead className="w-[100px]">Total message</TableHead>
             <TableHead className="w-[100px]">Create date</TableHead>
             <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
             <TableHead className="w-[20px]"></TableHead>
           </TableRow>
         </TableHeader>

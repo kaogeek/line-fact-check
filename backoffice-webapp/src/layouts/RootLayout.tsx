@@ -30,7 +30,7 @@ export default function RootLayout() {
         setIsOpen={setIsOpen}
       />
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1">
         <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} className="md:hidden" />
         <Outlet />
       </main>

@@ -22,6 +22,12 @@
   font-style: normal;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

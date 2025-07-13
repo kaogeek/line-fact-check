@@ -51,7 +51,7 @@ export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessag
               <TableStateRow colSpan={colSpan}>
                 <ErrorState />
               </TableStateRow>
-            ) : !dataList ? (
+            ) : !dataList || !dataList.length ? (
               <TableStateRow colSpan={colSpan}>
                 <NoDataState />
               </TableStateRow>

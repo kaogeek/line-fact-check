@@ -76,7 +76,7 @@ export default function TopicDetailPage() {
             onOpenChange={setOpenTopicHistoryDialog}
             topicId={id}
           ></TopicAuditLogDialog>
-          <div className="flex flex-col gap-4 p-4 h-full">
+          <div className="flex flex-col gap-4 p-4 h-full overflow-auto">
             <div className="flex flex-col">
               <div className="flex gap-2">
                 <TYH3 className="flex-1">Topic: {topic.code}</TYH3>

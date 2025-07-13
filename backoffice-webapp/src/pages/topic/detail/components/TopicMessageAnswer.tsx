@@ -66,7 +66,7 @@ export default function TopicMessageAnswer({ onClickHistory }: TopicMessageAnswe
                 <FormItem className="space-y-3">
                   <FormLabel>Type</FormLabel>
                   <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex">
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
                           <RadioGroupItem value="real" />

@@ -13,6 +13,23 @@ export function getMessagesByTopicId(topicId: string): Promise<Message[]> {
   });
 }
 
+export function createMessage(topicId: string, message: string): Promise<Message> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newMessage = {
+        id: `MSG${dataList.length + 1}`.padStart(3, '0'),
+        code: `MSG${dataList.length + 1}`.padStart(3, '0'),
+        message,
+        createDate: new Date(),
+        countOfMessageGroup: 1,
+        topicId,
+      };
+      dataList.push(newMessage);
+      resolve(newMessage);
+    }, MOCKUP_API_LOADING_MS);
+  });
+}
+
 export const dataList: Message[] = [
   {
     id: '1',

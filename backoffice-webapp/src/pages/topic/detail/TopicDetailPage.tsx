@@ -21,6 +21,9 @@ import ErrorState from '@/components/state/ErrorState';
 import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
 import AddMessageDialog from './dialog/AddMessageDialog';
 import { useLoader } from '@/hooks/useLoader';
+import { createMessage } from '@/lib/api/service/message';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export default function TopicDetailPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -37,6 +40,19 @@ export default function TopicDetailPage() {
 
   const { isLoading, data: topic, error } = useGetTopicById(id);
 
+  const { mutate: createMessageMutation } = useMutation({
+    mutationFn: (message: string) => createMessage(id!, message),
+    onSettled: () => {
+      toast('Message has been created.');
+      stopLoading();
+    },
+    onSuccess: () => {},
+    onError: (err) => {
+      toast('Failed to create message.');
+      console.error(err);
+    },
+  });
+
   function handleClickMoveMessage(messageId: string) {
     setSelectedMessageId(messageId);
     setOpenTopicPickerDialog(true);
@@ -48,10 +64,7 @@ export default function TopicDetailPage() {
 
   async function handleCreateMessage(message: string) {
     startLoading();
-    console.log(message);
-    setTimeout(() => {
-      stopLoading();
-    }, 500);
+    createMessageMutation(message);
   }
 
   function handleChooseDestination(topicId: string) {

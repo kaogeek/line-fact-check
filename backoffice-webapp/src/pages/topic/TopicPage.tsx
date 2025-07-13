@@ -16,6 +16,7 @@ export default function TopicPage() {
   });
   const [paginationReq, setPaginationReq] = useState<PaginationReq>({
     page: 1,
+    pageSize: 1,
   });
   const [activeTab, setActiveTab] = useState<number>(0);
   const { data: data, isLoading, error } = useGetTopics(criteria, paginationReq);

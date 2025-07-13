@@ -1,5 +1,5 @@
 import { t } from 'i18next';
-import { Loader } from 'lucide-react';
+import Loader from '../Loader';
 
 const LoadingState = () => {
   return (

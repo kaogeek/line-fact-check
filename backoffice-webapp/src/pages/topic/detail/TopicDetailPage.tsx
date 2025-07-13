@@ -20,6 +20,7 @@ import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
 import AddMessageDialog from './dialog/AddMessageDialog';
+import { useLoader } from '@/hooks/useLoader';
 
 export default function TopicDetailPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function TopicDetailPage() {
   const [openTopicHistoryDialog, setOpenTopicHistoryDialog] = useState<boolean>(false);
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
   const { id } = useParams();
+  const { startLoading, stopLoading } = useLoader();
 
   if (!id) {
     return <Navigate to="/404" replace />;
@@ -44,8 +46,12 @@ export default function TopicDetailPage() {
     setOpenAddMessageDialog(true);
   }
 
-  function handleCreateMessage(message: string) {
+  async function handleCreateMessage(message: string) {
+    startLoading();
     console.log(message);
+    setTimeout(() => {
+      stopLoading();
+    }, 500);
   }
 
   function handleChooseDestination(topicId: string) {

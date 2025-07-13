@@ -22,12 +22,6 @@
   font-style: normal;
 }
 
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -211,5 +205,16 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
   }
 }

@@ -83,7 +83,6 @@ export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMes
                 </FormItem>
               )}
             ></FormField>
-            {/* TODO: find why this overflow cause Radio group */}
             <FormField
               control={form.control}
               name="type"
@@ -91,7 +90,7 @@ export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMes
                 <FormItem className="space-y-3">
                   <FormLabel>Type</FormLabel>
                   <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
+                    <RadioGroup onValueChange={field.onChange} value={field.value}>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
                           <RadioGroupItem value={TopicAnswerType.REAL} />

@@ -8,13 +8,20 @@ import PaginationControl from '@/components/PaginationControl';
 import TopicSearchBar from '@/pages/topic/components/TopicSearchBar';
 
 interface TopicPickerDialogProps {
+  title?: string;
   open?: boolean;
   onOpenChange?(open: boolean): void;
   currentId?: string;
   onChoose: (topicId: string) => void;
 }
 
-export default function TopicPickerDialog({ open, onOpenChange, currentId, onChoose }: TopicPickerDialogProps) {
+export default function TopicPickerDialog({
+  title = 'Select topic',
+  open,
+  onOpenChange,
+  currentId,
+  onChoose,
+}: TopicPickerDialogProps) {
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     idNotIn: currentId ? [currentId] : undefined,
   });
@@ -45,7 +52,7 @@ export default function TopicPickerDialog({ open, onOpenChange, currentId, onCho
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] lg:max-w-[95vw] max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Answer history</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <DialogDescription asChild></DialogDescription>
         <div className="flex flex-col gap-4 flex-1 min-h-0">

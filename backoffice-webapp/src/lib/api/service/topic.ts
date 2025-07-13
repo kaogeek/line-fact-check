@@ -29,7 +29,6 @@ export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq)
   console.log(criteria);
   return new Promise((resolve) => {
     setTimeout(() => {
-      console.log('time out');
       const { codeLike, messageLike, statusIn, idNotIn } = criteria;
       const conditions: ((data: Topic) => boolean)[] = [];
 

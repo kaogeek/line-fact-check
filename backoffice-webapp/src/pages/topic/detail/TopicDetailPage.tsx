@@ -24,6 +24,9 @@ import { useLoader } from '@/hooks/useLoader';
 import { createMessage } from '@/lib/api/service/message';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { updateAnswer } from '@/lib/api/service/topic-answer';
+import { approveTopic, rejectTopic } from '@/lib/api/service/topic';
+import { ConfirmAlertDialog } from '../../../components/ConfirmAlertDialog';
 
 export default function TopicDetailPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -31,6 +34,8 @@ export default function TopicDetailPage() {
   const [openTopicPickerDialog, setOpenTopicPickerDialog] = useState<boolean>(false);
   const [openTopicHistoryDialog, setOpenTopicHistoryDialog] = useState<boolean>(false);
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
   const { id } = useParams();
   const { startLoading, stopLoading } = useLoader();
 
@@ -43,12 +48,55 @@ export default function TopicDetailPage() {
   const { mutate: createMessageMutation } = useMutation({
     mutationFn: (message: string) => createMessage(id!, message),
     onSettled: () => {
-      toast('Message has been created.');
       stopLoading();
     },
-    onSuccess: () => {},
+    onSuccess: () => {
+      toast.success('Message has been created.');
+    },
     onError: (err) => {
-      toast('Failed to create message.');
+      toast.error('Failed to create message.');
+      console.error(err);
+    },
+  });
+
+  const { mutate: updateAnswerMutation } = useMutation({
+    mutationFn: ({ answerId, content }: { answerId: string; content: string }) => updateAnswer(id!, answerId, content),
+    onSettled: () => {
+      stopLoading();
+    },
+    onSuccess: () => {
+      toast.success('Answer updated successfully');
+    },
+    onError: (err) => {
+      toast.error('Failed to update answer');
+      console.error(err);
+    },
+  });
+
+  const { mutate: approveTopicMutation } = useMutation({
+    mutationFn: () => approveTopic(id!),
+    onSettled: () => {
+      stopLoading();
+    },
+    onSuccess: () => {
+      toast.success('Topic approved successfully');
+    },
+    onError: (err) => {
+      toast.error('Failed to approve topic');
+      console.error(err);
+    },
+  });
+
+  const { mutate: rejectTopicMutation } = useMutation({
+    mutationFn: () => rejectTopic(id!),
+    onSettled: () => {
+      stopLoading();
+    },
+    onSuccess: () => {
+      toast.success('Topic rejected successfully');
+    },
+    onError: (err) => {
+      toast.error('Failed to reject topic');
       console.error(err);
     },
   });
@@ -67,6 +115,11 @@ export default function TopicDetailPage() {
     createMessageMutation(message);
   }
 
+  async function handleUpdateAnswer(answerId: string, content: string) {
+    startLoading();
+    updateAnswerMutation({ answerId, content });
+  }
+
   function handleChooseDestination(topicId: string) {
     console.log(`Move ${selectedMessageId} to ${topicId}`);
   }
@@ -78,6 +131,26 @@ export default function TopicDetailPage() {
   function handleClickTopicHistory() {
     setOpenTopicHistoryDialog(true);
   }
+
+  const handleApproveClick = () => {
+    setShowApproveDialog(true);
+  };
+
+  const handleRejectClick = () => {
+    setShowRejectDialog(true);
+  };
+
+  const handleConfirmApprove = () => {
+    setShowApproveDialog(false);
+    startLoading();
+    approveTopicMutation();
+  };
+
+  const handleConfirmReject = () => {
+    setShowRejectDialog(false);
+    startLoading();
+    rejectTopicMutation();
+  };
 
   return (
     <>
@@ -110,6 +183,22 @@ export default function TopicDetailPage() {
             onOpenChange={setOpenTopicHistoryDialog}
             topicId={id}
           ></TopicAuditLogDialog>
+          <ConfirmAlertDialog
+            open={showApproveDialog}
+            onOpenChange={setShowApproveDialog}
+            title="Approve Topic"
+            description="Are you sure you want to approve this topic?"
+            confirmText="Approve"
+            onConfirm={handleConfirmApprove}
+          />
+          <ConfirmAlertDialog
+            open={showRejectDialog}
+            onOpenChange={setShowRejectDialog}
+            title="Reject Topic"
+            description="Are you sure you want to reject this topic?"
+            confirmText="Reject"
+            onConfirm={handleConfirmReject}
+          />
           <div className="flex flex-col gap-4 p-4 h-full overflow-auto">
             <div className="flex flex-col">
               <div className="flex gap-2">
@@ -125,8 +214,8 @@ export default function TopicDetailPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem>Approve</DropdownMenuItem>
-                    <DropdownMenuItem>Reject</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleApproveClick}>Approve</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleRejectClick}>Reject</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -137,7 +226,11 @@ export default function TopicDetailPage() {
               onClickMove={handleClickMoveMessage}
               onClickCreate={handleOpenAddMessageDialog}
             />
-            <TopicMessageAnswer topicId={topic.id} onClickHistory={handleClickAnswerHistory} />
+            <TopicMessageAnswer
+              topicId={topic.id}
+              onClickHistory={handleClickAnswerHistory}
+              onUpdateAnswer={handleUpdateAnswer}
+            />
           </div>
         </>
       )}

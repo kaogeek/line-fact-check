@@ -15,6 +15,7 @@ import ErrorState from '@/components/state/ErrorState';
 interface TopicMessageAnswerProps {
   onClickHistory: () => void;
   topicId: string;
+  onUpdateAnswer: (answerId: string, content: string) => Promise<void>;
 }
 
 const formSchema = z.object({
@@ -24,7 +25,7 @@ const formSchema = z.object({
   answer: z.string(),
 });
 
-export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMessageAnswerProps) {
+export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAnswer }: TopicMessageAnswerProps) {
   const { isLoading, data: answer, error } = useGetTopicAnswerByTopicId(topicId);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,8 +40,10 @@ export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMes
     }
   }, [answer]);
 
-  function handleSubmit(data: z.infer<typeof formSchema>) {
-    console.log(data);
+  async function handleSubmit(data: z.infer<typeof formSchema>) {
+    if (answer) {
+      await onUpdateAnswer(answer.topicId, data.answer);
+    }
   }
 
   if (isLoading) {

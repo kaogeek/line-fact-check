@@ -92,6 +92,24 @@ export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
   });
 }
 
+export async function approveTopic(topicId: string) {
+  console.log(`Approving topic ${topicId}`);
+  const topic = dataList.find(t => t.id === topicId);
+  if (topic) {
+    topic.status = TopicStatus.APPROVED;
+  }
+  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+}
+
+export async function rejectTopic(topicId: string) {
+  console.log(`Rejecting topic ${topicId}`);
+  const topic = dataList.find(t => t.id === topicId);
+  if (topic) {
+    topic.status = TopicStatus.REJECTED;
+  }
+  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+}
+
 export const dataList: Topic[] = [
   {
     id: '1',

@@ -13,6 +13,11 @@ export function getTopicAnswerByTopicId(topicId: string): Promise<TopicAnswer | 
   });
 }
 
+export async function updateAnswer(topicId: string, answerId: string, content: string) {
+  console.log(`Updating answer ${answerId} in topic ${topicId} with content: ${content}`);
+  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+}
+
 export const dataList: TopicAnswer[] = [
   {
     answer: 'This claim has been verified by multiple independent sources.',

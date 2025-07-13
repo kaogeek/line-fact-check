@@ -12,11 +12,12 @@ import NoDataState from '@/components/state/NoDataState';
 interface TopicMessageDetailProps {
   topicId: string | null;
   onClickMove: (messageId: string) => void;
+  onClickCreate: () => void;
 }
 
 const colSpan = 4;
 
-export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessageDetailProps) {
+export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate }: TopicMessageDetailProps) {
   if (!topicId) {
     return <></>;
   }
@@ -27,7 +28,7 @@ export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessag
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         <TYH3 className="flex-1">Message</TYH3>
-        <Button variant="default" size="icon">
+        <Button variant="default" size="icon" onClick={onClickCreate}>
           <Plus />
         </Button>
       </div>

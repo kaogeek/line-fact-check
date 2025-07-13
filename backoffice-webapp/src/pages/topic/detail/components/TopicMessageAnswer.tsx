@@ -17,7 +17,7 @@ interface TopicMessageAnswerProps {
   topicId: string;
 }
 
-const FormSchema = z.object({
+const formSchema = z.object({
   type: z.enum([TopicAnswerType.REAL, TopicAnswerType.FAKE], {
     required_error: 'You need to select a answser type.',
   }),
@@ -26,8 +26,8 @@ const FormSchema = z.object({
 
 export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMessageAnswerProps) {
   const { isLoading, data: answer, error } = useGetTopicAnswerByTopicId(topicId);
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMes
     }
   }, [answer]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  function handleSubmit(data: z.infer<typeof formSchema>) {
     console.log(data);
   }
 
@@ -55,7 +55,7 @@ export default function TopicMessageAnswer({ onClickHistory, topicId }: TopicMes
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
               <TYH3 className="flex-1">Answer</TYH3>

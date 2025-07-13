@@ -19,9 +19,11 @@ import TopicAuditLogDialog from './dialog/TopicAuditLogDialog';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
+import AddMessageDialog from './dialog/AddMessageDialog';
 
 export default function TopicDetailPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [openAddMessageDialog, setOpenAddMessageDialog] = useState<boolean>(false);
   const [openTopicPickerDialog, setOpenTopicPickerDialog] = useState<boolean>(false);
   const [openTopicHistoryDialog, setOpenTopicHistoryDialog] = useState<boolean>(false);
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
@@ -33,22 +35,30 @@ export default function TopicDetailPage() {
 
   const { isLoading, data: topic, error } = useGetTopicById(id);
 
-  const onHandleClickMoveMessage = (messageId: string) => {
+  function handleClickMoveMessage(messageId: string) {
     setSelectedMessageId(messageId);
     setOpenTopicPickerDialog(true);
-  };
+  }
 
-  const onHandleChooseDestination = (topicId: string) => {
+  function handleOpenAddMessageDialog() {
+    setOpenAddMessageDialog(true);
+  }
+
+  function handleCreateMessage(message: string) {
+    console.log(message);
+  }
+
+  function handleChooseDestination(topicId: string) {
     console.log(`Move ${selectedMessageId} to ${topicId}`);
-  };
+  }
 
-  const onHandleClickAnswerHistory = () => {
+  function handleClickAnswerHistory() {
     setOpenAnswerHistoryDialog(true);
-  };
+  }
 
-  const onHandleClickTopicHistory = () => {
+  function handleClickTopicHistory() {
     setOpenTopicHistoryDialog(true);
-  };
+  }
 
   return (
     <>
@@ -60,11 +70,16 @@ export default function TopicDetailPage() {
         <Navigate to="/404" replace />
       ) : (
         <>
+          <AddMessageDialog
+            open={openAddMessageDialog}
+            onOpenChange={setOpenAddMessageDialog}
+            onSubmit={handleCreateMessage}
+          />
           <TopicPickerDialog
             open={openTopicPickerDialog}
             onOpenChange={setOpenTopicPickerDialog}
             currentId={id}
-            onChoose={onHandleChooseDestination}
+            onChoose={handleChooseDestination}
           ></TopicPickerDialog>
           <AnswerAuditLogDialog
             open={openAnswerHistoryDialog}
@@ -81,7 +96,7 @@ export default function TopicDetailPage() {
               <div className="flex gap-2">
                 <TYH3 className="flex-1">Topic: {topic.code}</TYH3>
                 <TopicStatusBadge status={topic.status} />
-                <Button variant="outline" onClick={onHandleClickTopicHistory}>
+                <Button variant="outline" onClick={handleClickTopicHistory}>
                   History
                 </Button>
                 <DropdownMenu>
@@ -98,8 +113,12 @@ export default function TopicDetailPage() {
               </div>
               <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
             </div>
-            <TopicMessageDetail topicId={topic.id} onClickMove={onHandleClickMoveMessage} />
-            <TopicMessageAnswer topicId={topic.id} onClickHistory={onHandleClickAnswerHistory} />
+            <TopicMessageDetail
+              topicId={topic.id}
+              onClickMove={handleClickMoveMessage}
+              onClickCreate={handleOpenAddMessageDialog}
+            />
+            <TopicMessageAnswer topicId={topic.id} onClickHistory={handleClickAnswerHistory} />
           </div>
         </>
       )}

@@ -31,16 +31,14 @@ export default function TopicPage() {
     setCounts([total, pending, answered, 0, 0]);
   }, [countTopics]);
 
-  const handleSearch = (keyword: string) => {
+  function handleSearch(keyword: string) {
     setCriteria({
       ...criteria,
       keyword,
     });
+  }
 
-    // TODO set pagination
-  };
-
-  const handleTabChange = (activeTabIdx: number) => {
+  function handleTabChange(activeTabIdx: number) {
     setActiveTab(activeTabIdx);
     const tab = tabs[activeTabIdx];
 
@@ -48,16 +46,16 @@ export default function TopicPage() {
       ...criteria,
       statusIn: tab.statusIn,
     });
-  };
+  }
 
-  const handlePageChange = (paginationReq: PaginationReq) => {
+  function handlePageChange(paginationReq: PaginationReq) {
     setPaginationReq(paginationReq);
-  };
+  }
 
-  const handleReject = (topic: Topic, idx: number) => {
+  function handleReject(topic: Topic, idx: number) {
     console.log(topic);
     console.log(idx);
-  };
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4 h-full">

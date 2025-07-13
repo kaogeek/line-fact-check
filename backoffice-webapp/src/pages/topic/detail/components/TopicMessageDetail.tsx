@@ -31,48 +31,46 @@ export default function TopicMessageDetail({ topicId, onClickMove }: TopicMessag
           <Plus />
         </Button>
       </div>
-      <div className="rounded-md border h-full">
-        <Table className="[&>*]:whitespace-nowrap sticky top-0 bg-background after:content-[''] after:inset-x-0 after:h-px after:bg-border after:absolute after:bottom-0">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Code</TableHead>
-              <TableHead>Message</TableHead>
-              <TableHead className="w-[100px]">Total message</TableHead>
-              <TableHead className="w-[100px]">Create date</TableHead>
-              <TableHead className="w-[20px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableStateRow colSpan={colSpan}>
-                <LoadingState />
-              </TableStateRow>
-            ) : error ? (
-              <TableStateRow colSpan={colSpan}>
-                <ErrorState />
-              </TableStateRow>
-            ) : !dataList || !dataList.length ? (
-              <TableStateRow colSpan={colSpan}>
-                <NoDataState />
-              </TableStateRow>
-            ) : (
-              dataList.map((data, idx) => (
-                <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
-                  <TableCell>{data.code}</TableCell>
-                  <TableCell>{data.message}</TableCell>
-                  <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
-                  <TableCell>{formatDate(data.createDate)}</TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="icon" onClick={() => onClickMove(data.id)}>
-                      <MoveRight />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Table containerClassName="table-round h-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Code</TableHead>
+            <TableHead>Message</TableHead>
+            <TableHead className="w-[100px]">Total message</TableHead>
+            <TableHead className="w-[100px]">Create date</TableHead>
+            <TableHead className="w-[20px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableStateRow colSpan={colSpan}>
+              <LoadingState />
+            </TableStateRow>
+          ) : error ? (
+            <TableStateRow colSpan={colSpan}>
+              <ErrorState />
+            </TableStateRow>
+          ) : !dataList || !dataList.length ? (
+            <TableStateRow colSpan={colSpan}>
+              <NoDataState />
+            </TableStateRow>
+          ) : (
+            dataList.map((data, idx) => (
+              <TableRow key={idx}>
+                <TableCell>{data.code}</TableCell>
+                <TableCell>{data.message}</TableCell>
+                <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
+                <TableCell>{formatDate(data.createDate)}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="icon" onClick={() => onClickMove(data.id)}>
+                    <MoveRight />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

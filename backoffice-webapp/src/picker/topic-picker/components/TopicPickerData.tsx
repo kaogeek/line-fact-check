@@ -10,8 +10,10 @@ import TableStateRow from '@/components/table/TableStateRow';
 import NoDataState from '@/components/state/NoDataState';
 import TopicStatusBadge from '@/pages/topic/components/TopicStatusBadge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface TopicPickerDataProps {
+  className?: string;
   isLoading: boolean;
   dataList?: Topic[];
   error: Error | null;
@@ -20,87 +22,59 @@ interface TopicPickerDataProps {
 
 const colSpan = 6;
 
-export default function TopicPickerData({ isLoading, dataList, error, onChoose }: TopicPickerDataProps) {
+export default function TopicPickerData({ className, isLoading, dataList, error, onChoose }: TopicPickerDataProps) {
   return (
-    <div className="rounded-md border h-full">
-      <Table className="[&>*]:whitespace-nowrap sticky top-0 bg-background after:content-[''] after:inset-x-0 after:h-px after:bg-border after:absolute after:bottom-0">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Code</TableHead>
-            <TableHead>Message</TableHead>
-            <TableHead className="w-[100px]">Total message</TableHead>
-            <TableHead className="w-[100px]">Create date</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[20px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableStateRow colSpan={colSpan}>
-              <LoadingState />
-            </TableStateRow>
-          ) : error ? (
-            <TableStateRow colSpan={colSpan}>
-              <ErrorState />
-            </TableStateRow>
-          ) : !dataList ? (
-            <TableStateRow colSpan={colSpan}>
-              <NoDataState />
-            </TableStateRow>
-          ) : (
-            dataList.map((data, idx) => (
-              <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
-                <TableCell>
-                  <Link to={`/topic/${data.id}`}>
-                    <TYLink>{data.code}</TYLink>
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {data.description}{' '}
-                  {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
-                </TableCell>
-                <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
-                <TableCell>{formatDate(data.createDate)}</TableCell>
-                <TableCell>
-                  <TopicStatusBadge status={data.status}></TopicStatusBadge>
-                </TableCell>
-                <TableCell>
-                  <Button variant="default" onClick={() => onChoose(data.id)}>
-                    Choose
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <Table containerClassName={cn('table-round', className)}>
+      <TableHeader className="sticky-header">
+        <TableRow>
+          <TableHead className="w-[100px]">Code</TableHead>
+          <TableHead>Message</TableHead>
+          <TableHead className="w-[100px]">Total message</TableHead>
+          <TableHead className="w-[100px]">Create date</TableHead>
+          <TableHead className="w-[100px]">Status</TableHead>
+          <TableHead className="w-[20px]"></TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {isLoading ? (
+          <TableStateRow colSpan={colSpan}>
+            <LoadingState />
+          </TableStateRow>
+        ) : error ? (
+          <TableStateRow colSpan={colSpan}>
+            <ErrorState />
+          </TableStateRow>
+        ) : !dataList ? (
+          <TableStateRow colSpan={colSpan}>
+            <NoDataState />
+          </TableStateRow>
+        ) : (
+          dataList.map((data, idx) => (
+            <TableRow key={idx}>
+              <TableCell>
+                <Link to={`/topic/${data.id}`}>
+                  <TYLink>{data.code}</TYLink>
+                </Link>
+              </TableCell>
+              <TableCell>
+                {data.description}{' '}
+                {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
+              </TableCell>
+              <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
+              <TableCell>{formatDate(data.createDate)}</TableCell>
+              <TableCell>
+                <TopicStatusBadge status={data.status}></TopicStatusBadge>
+              </TableCell>
+              <TableCell>
+                <Button variant="default" onClick={() => onChoose(data.id)}>
+                  Choose
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }

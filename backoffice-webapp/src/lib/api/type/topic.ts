@@ -47,17 +47,18 @@ export interface Topic {
   countOfTotalMessage: number;
 }
 
-export interface CountTopicCriteria {
-  keyword?: string;
-}
-
 export interface CountTopic {
   total: number;
   pending: number;
   answered: number;
 }
 
+export interface CountTopicCriteria {
+  codeLike?: string;
+  messageLike?: string;
+}
+
 export interface GetTopicCriteria extends CountTopicCriteria {
-  idNotId?: string[];
+  idNotIn?: string[];
   statusIn?: string[];
 }

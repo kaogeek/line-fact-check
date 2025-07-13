@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { GetTopicCriteria } from '@/lib/api/type/topic';
 import type { PaginationReq } from '@/lib/api/type/base';
 import PaginationControl from '@/components/PaginationControl';
+import TopicSearchBar from '@/pages/topic/components/TopicSearchBar';
 
 interface TopicPickerDialogProps {
   open?: boolean;
@@ -15,7 +16,7 @@ interface TopicPickerDialogProps {
 
 export default function TopicPickerDialog({ open, onOpenChange, currentId, onChoose }: TopicPickerDialogProps) {
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
-    idNotId: currentId ? [currentId] : undefined,
+    idNotIn: currentId ? [currentId] : undefined,
   });
   const [paginationReq, setPaginationReq] = useState<PaginationReq>({
     page: 1,
@@ -34,21 +35,38 @@ export default function TopicPickerDialog({ open, onOpenChange, currentId, onCho
     setPaginationReq(paginationReq);
   }
 
+  function handleSearch(criteria: { codeLike?: string; messageLike?: string }) {
+    setCriteria((prev) => {
+      return { ...prev, codeLike: criteria.codeLike, messageLike: criteria.messageLike };
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] lg:max-w-[95vw] max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-w-[95vw] lg:max-w-[95vw] max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Answer history</DialogTitle>
         </DialogHeader>
-        <DialogDescription asChild>
-          <div className="flex flex-col gap-4 min-w-0">
-            <div className="flex-1 min-w-0 overflow-x-auto">
-              <TopicPickerData isLoading={isLoading} dataList={data?.items} error={error} onChoose={handleChoose} />
-            </div>
+        <DialogDescription asChild></DialogDescription>
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
+          <TopicSearchBar
+            initCodeLike={criteria.codeLike}
+            initMessageLike={criteria.messageLike}
+            handleSearch={handleSearch}
+          />
 
-            <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+          <div className="flex-1 min-h-0 flex flex-col">
+            <TopicPickerData
+              className="flex-1 overflow-auto"
+              isLoading={isLoading}
+              dataList={data?.items}
+              error={error}
+              onChoose={handleChoose}
+            />
           </div>
-        </DialogDescription>
+
+          <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+        </div>
       </DialogContent>
     </Dialog>
   );

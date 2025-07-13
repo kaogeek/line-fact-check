@@ -105,7 +105,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: #ff6a00;
-  --primary-foreground: oklch(0.985 0 0);
+  --primary-foreground: #ffffff;
   --secondary: #0f172a;
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.97 0 0);
@@ -210,11 +210,30 @@
   html,
   body {
     height: 100%;
+    width: 100%;
     overflow: hidden;
   }
 
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+div[data-slot='table-container'].table-round {
+  @apply rounded-md border;
+  > table {
+    background-color: var(--color-background);
+    > thead {
+      &.sticky-header {
+        @apply sticky top-0 z-10 bg-background;
+      }
+    }
+
+    > tbody {
+      > tr:nth-child(odd) {
+        background-color: var(--color-muted);
+      }
+    }
   }
 }

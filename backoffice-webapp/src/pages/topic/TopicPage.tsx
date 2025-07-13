@@ -13,6 +13,8 @@ export default function TopicPage() {
   const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0]);
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     statusIn: tabs[0].statusIn,
+    codeLike: '',
+    messageLike: '',
   });
   const [paginationReq, setPaginationReq] = useState<PaginationReq>({
     page: 1,
@@ -32,10 +34,9 @@ export default function TopicPage() {
     setCounts([total, pending, answered, 0, 0]);
   }, [countTopics]);
 
-  function handleSearch(keyword: string) {
-    setCriteria({
-      ...criteria,
-      keyword,
+  function handleSearch(criteria: { codeLike?: string; messageLike?: string }) {
+    setCriteria((prev) => {
+      return { ...prev, codeLike: criteria.codeLike, messageLike: criteria.messageLike };
     });
   }
 
@@ -61,7 +62,11 @@ export default function TopicPage() {
   return (
     <div className="flex flex-col gap-4 p-4 h-full">
       <TYH3>Topic</TYH3>
-      <TopicSearchBar initKeyword={criteria.keyword} handleSearch={handleSearch} />
+      <TopicSearchBar
+        initCodeLike={criteria.codeLike}
+        initMessageLike={criteria.messageLike}
+        handleSearch={handleSearch}
+      />
       <TabIndex activeTab={activeTab} setActiveTab={handleTabChange} tabs={tabs} counts={counts} />
       <div className="flex-1 overflow-auto">
         <TopicData isLoading={isLoading} dataList={data?.items} error={error}></TopicData>

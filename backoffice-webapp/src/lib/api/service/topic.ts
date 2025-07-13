@@ -9,7 +9,11 @@ import {
 import type { PaginationReq, PaginationRes } from '../type/base';
 import { paginate } from '@/lib/utils/page-utils';
 
-function isInKeyword(data: Topic, keyword: string): boolean {
+function isCodeLike(data: Topic, keyword: string): boolean {
+  return data.code.toLowerCase().includes(keyword.toLowerCase());
+}
+
+function isMessageLike(data: Topic, keyword: string): boolean {
   return data.description.toLowerCase().includes(keyword.toLowerCase());
 }
 
@@ -22,21 +26,27 @@ function isInStatus(data: Topic, statusIn: string[]): boolean {
 }
 
 export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<PaginationRes<Topic>> {
+  console.log(criteria);
   return new Promise((resolve) => {
     setTimeout(() => {
-      const { keyword, statusIn, idNotId } = criteria;
+      console.log('time out');
+      const { codeLike, messageLike, statusIn, idNotIn } = criteria;
       const conditions: ((data: Topic) => boolean)[] = [];
 
-      if (keyword) {
-        conditions.push((data) => isInKeyword(data, keyword));
+      if (codeLike) {
+        conditions.push((data) => isCodeLike(data, codeLike));
+      }
+
+      if (messageLike) {
+        conditions.push((data) => isMessageLike(data, messageLike));
       }
 
       if (statusIn) {
         conditions.push((data) => isInStatus(data, statusIn));
       }
 
-      if (idNotId) {
-        conditions.push((data) => !isIdIn(data, idNotId));
+      if (idNotIn) {
+        conditions.push((data) => !isIdIn(data, idNotIn));
       }
 
       const filteredTopics = dataList.filter((data) => conditions.every((condition) => condition(data)));
@@ -55,11 +65,15 @@ export function getTopicById(id: string): Promise<Topic | undefined> {
 }
 
 function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicCriteria): number {
-  const { keyword } = criteria;
+  const { codeLike, messageLike } = criteria;
   const conditions: ((data: Topic) => boolean)[] = [];
 
-  if (keyword) {
-    conditions.push((data) => isInKeyword(data, keyword));
+  if (codeLike) {
+    conditions.push((data) => isCodeLike(data, codeLike));
+  }
+
+  if (messageLike) {
+    conditions.push((data) => isMessageLike(data, messageLike));
   }
 
   conditions.push((data) => isInStatus(data, statusIn));

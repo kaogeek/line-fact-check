@@ -11,6 +11,32 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const assignMessageToTopic = `-- name: AssignMessageToTopic :one
+UPDATE messages SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, topic_id, text, type, created_at, updated_at
+`
+
+type AssignMessageToTopicParams struct {
+	ID      pgtype.UUID `json:"id"`
+	TopicID pgtype.UUID `json:"topic_id"`
+}
+
+func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error) {
+	row := q.db.QueryRow(ctx, assignMessageToTopic, arg.ID, arg.TopicID)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Text,
+		&i.Type,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const countTopicsByStatus = `-- name: CountTopicsByStatus :one
 SELECT COUNT(*) FROM topics WHERE status = $1
 `

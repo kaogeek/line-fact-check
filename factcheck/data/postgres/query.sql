@@ -80,6 +80,12 @@ UPDATE messages SET
     updated_at = $4
 WHERE id = $1 RETURNING *;
 
+-- name: AssignMessageToTopic :one
+UPDATE messages SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
 -- name: DeleteMessage :exec
 DELETE FROM messages WHERE id = $1;
 

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
@@ -38,7 +36,7 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		}),
 		createModify(func(_ context.Context, topic factcheck.Topic) factcheck.Topic {
 			return factcheck.Topic{
-				ID:           uuid.New().String(),
+				ID:           utils.NewID().String(),
 				Name:         topic.Name,
 				Description:  topic.Description,
 				Status:       factcheck.StatusTopicPending,

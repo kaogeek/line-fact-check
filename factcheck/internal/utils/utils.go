@@ -1,6 +1,8 @@
 // Package utils provides commonly shared code
 package utils
 
+import "github.com/google/uuid"
+
 // DefaultIfZero returns v if v is non-zero,
 // and falls back to default d otherwise
 func DefaultIfZero[T comparable](v, d T) T {
@@ -13,4 +15,8 @@ func DefaultIfZero[T comparable](v, d T) T {
 
 func Ptr[T any](v T) *T {
 	return &v
+}
+
+func NewID() interface{ String() string } {
+	return uuid.New()
 }

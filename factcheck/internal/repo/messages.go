@@ -13,6 +13,7 @@ type Messages interface {
 	GetByID(ctx context.Context, id string) (factcheck.Message, error)
 	ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error)
 	Update(ctx context.Context, message factcheck.Message) (factcheck.Message, error)
+	AssignToTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -81,6 +82,30 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	if err != nil {
 		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": msg.ID})
 	}
+	return messageDomain(dbMessage), nil
+}
+
+// AssignToTopic assigns a message to a different topic
+func (m *messages) AssignToTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error) {
+	// Convert string IDs to pgtype.UUID
+	msgUUID, err := uuid(messageID)
+	if err != nil {
+		return factcheck.Message{}, err
+	}
+	topicUUID, err := uuid(topicID)
+	if err != nil {
+		return factcheck.Message{}, err
+	}
+
+	// Update the message's topic_id
+	dbMessage, err := m.queries.AssignMessageToTopic(ctx, postgres.AssignMessageToTopicParams{
+		ID:      msgUUID,
+		TopicID: topicUUID,
+	})
+	if err != nil {
+		return factcheck.Message{}, handleNotFound(err, map[string]string{"message_id": messageID, "topic_id": topicID})
+	}
+
 	return messageDomain(dbMessage), nil
 }
 

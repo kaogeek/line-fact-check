@@ -28,4 +28,4 @@ The Git repository is hosted on GitHub and we use GitHub Actions for CICD.
 We try to use Nix everywhere when we could, for example, in [.github/workflows/release.yaml](/.github/workflows/release.yaml)
 
 # Jargons (in code and chat)
-- A Go integration test is called "it-test"
+- A Go integration test is called "it-test", and Go integration tests end with `_it_test.go` and tag `integration_test`.

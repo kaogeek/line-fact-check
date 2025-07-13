@@ -76,17 +76,17 @@ func TestRepository_TopicFiltering(t *testing.T) {
 	}
 
 	// Create topics in database
-	createdTopic1, err := app.Repository.Topic.Create(ctx, topic1)
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
 	if err != nil {
 		t.Fatalf("Failed to create topic1: %v", err)
 	}
 
-	createdTopic2, err := app.Repository.Topic.Create(ctx, topic2)
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
 	if err != nil {
 		t.Fatalf("Failed to create topic2: %v", err)
 	}
 
-	createdTopic3, err := app.Repository.Topic.Create(ctx, topic3)
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
 	if err != nil {
 		t.Fatalf("Failed to create topic3: %v", err)
 	}
@@ -130,22 +130,22 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	// Create messages in database
 	// These messages are used indirectly through topic filtering tests
-	_, err = app.Repository.Message.Create(ctx, message1)
+	_, err = app.Repository.Messages.Create(ctx, message1)
 	if err != nil {
 		t.Fatalf("Failed to create message1: %v", err)
 	}
 
-	_, err = app.Repository.Message.Create(ctx, message2)
+	_, err = app.Repository.Messages.Create(ctx, message2)
 	if err != nil {
 		t.Fatalf("Failed to create message2: %v", err)
 	}
 
-	_, err = app.Repository.Message.Create(ctx, message3)
+	_, err = app.Repository.Messages.Create(ctx, message3)
 	if err != nil {
 		t.Fatalf("Failed to create message3: %v", err)
 	}
 
-	_, err = app.Repository.Message.Create(ctx, message4)
+	_, err = app.Repository.Messages.Create(ctx, message4)
 	if err != nil {
 		t.Fatalf("Failed to create message4: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 	t.Run("ListInIDs", func(t *testing.T) {
 		// Test filtering by specific IDs
 		ids := []string{createdTopic1.ID, createdTopic3.ID}
-		topics, err := app.Repository.Topic.ListInIDs(ctx, ids)
+		topics, err := app.Repository.Topics.ListInIDs(ctx, ids)
 		if err != nil {
 			t.Fatalf("ListInIDs failed: %v", err)
 		}
@@ -181,7 +181,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListByMessageText", func(t *testing.T) {
 		// Test filtering by message text containing "COVID"
-		topics, err := app.Repository.Topic.ListByMessageText(ctx, "COVID")
+		topics, err := app.Repository.Topics.ListByMessageText(ctx, "COVID")
 		if err != nil {
 			t.Fatalf("ListByMessageText failed: %v", err)
 		}
@@ -198,7 +198,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 	t.Run("ListInIDsAndMessageText", func(t *testing.T) {
 		// Test filtering by both IDs and message text
 		ids := []string{createdTopic1.ID, createdTopic2.ID, createdTopic3.ID}
-		topics, err := app.Repository.Topic.ListInIDsAndMessageText(ctx, ids, "COVID")
+		topics, err := app.Repository.Topics.ListInIDsAndMessageText(ctx, ids, "COVID")
 		if err != nil {
 			t.Fatalf("ListInIDsAndMessageText failed: %v", err)
 		}
@@ -215,7 +215,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 	t.Run("ListFiltered - IDs only", func(t *testing.T) {
 		// Test wrapper method with IDs only
 		ids := []string{createdTopic1.ID, createdTopic2.ID}
-		topics, err := app.Repository.Topic.ListFiltered(ctx, ids, "")
+		topics, err := app.Repository.Topics.ListFiltered(ctx, ids, "")
 		if err != nil {
 			t.Fatalf("ListFiltered with IDs only failed: %v", err)
 		}
@@ -227,7 +227,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListFiltered - message text only", func(t *testing.T) {
 		// Test wrapper method with message text only
-		topics, err := app.Repository.Topic.ListFiltered(ctx, nil, "Election")
+		topics, err := app.Repository.Topics.ListFiltered(ctx, nil, "Election")
 		if err != nil {
 			t.Fatalf("ListFiltered with message text only failed: %v", err)
 		}
@@ -244,7 +244,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 	t.Run("ListFiltered - both filters", func(t *testing.T) {
 		// Test wrapper method with both filters
 		ids := []string{createdTopic1.ID, createdTopic2.ID, createdTopic3.ID}
-		topics, err := app.Repository.Topic.ListFiltered(ctx, ids, "COVID")
+		topics, err := app.Repository.Topics.ListFiltered(ctx, ids, "COVID")
 		if err != nil {
 			t.Fatalf("ListFiltered with both filters failed: %v", err)
 		}
@@ -260,7 +260,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListFiltered - no filters", func(t *testing.T) {
 		// Test wrapper method with no filters
-		topics, err := app.Repository.Topic.ListFiltered(ctx, nil, "")
+		topics, err := app.Repository.Topics.ListFiltered(ctx, nil, "")
 		if err != nil {
 			t.Fatalf("ListFiltered with no filters failed: %v", err)
 		}
@@ -272,7 +272,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListFiltered - empty IDs", func(t *testing.T) {
 		// Test wrapper method with empty IDs
-		topics, err := app.Repository.Topic.ListFiltered(ctx, []string{}, "COVID")
+		topics, err := app.Repository.Topics.ListFiltered(ctx, []string{}, "COVID")
 		if err != nil {
 			t.Fatalf("ListFiltered with empty IDs failed: %v", err)
 		}
@@ -336,12 +336,12 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 	}
 
 	// Create topics in database
-	createdTopic1, err := app.Repository.Topic.Create(ctx, topic1)
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
 	if err != nil {
 		t.Fatalf("Failed to create topic1: %v", err)
 	}
 
-	createdTopic2, err := app.Repository.Topic.Create(ctx, topic2)
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
 	if err != nil {
 		t.Fatalf("Failed to create topic2: %v", err)
 	}
@@ -356,7 +356,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 		UpdatedAt: nil,
 	}
 
-	createdMessage, err := app.Repository.Message.Create(ctx, message)
+	createdMessage, err := app.Repository.Messages.Create(ctx, message)
 	if err != nil {
 		t.Fatalf("Failed to create message: %v", err)
 	}
@@ -367,7 +367,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 	}
 
 	// Verify topic1 has the message
-	topic1Messages, err := app.Repository.Message.ListByTopic(ctx, createdTopic1.ID)
+	topic1Messages, err := app.Repository.Messages.ListByTopic(ctx, createdTopic1.ID)
 	if err != nil {
 		t.Fatalf("Failed to list messages for topic1: %v", err)
 	}
@@ -376,7 +376,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 	}
 
 	// Verify topic2 has no messages initially
-	topic2Messages, err := app.Repository.Message.ListByTopic(ctx, createdTopic2.ID)
+	topic2Messages, err := app.Repository.Messages.ListByTopic(ctx, createdTopic2.ID)
 	if err != nil {
 		t.Fatalf("Failed to list messages for topic2: %v", err)
 	}
@@ -386,7 +386,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 
 	t.Run("AssignMessageToTopic", func(t *testing.T) {
 		// Assign message to topic2
-		updatedMessage, err := app.Repository.Message.AssignToTopic(ctx, createdMessage.ID, createdTopic2.ID)
+		updatedMessage, err := app.Repository.Messages.AssignTopic(ctx, createdMessage.ID, createdTopic2.ID)
 		if err != nil {
 			t.Fatalf("Failed to assign message to topic2: %v", err)
 		}
@@ -408,7 +408,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 		}
 
 		// Verify topic1 no longer has the message
-		topic1MessagesAfter, err := app.Repository.Message.ListByTopic(ctx, createdTopic1.ID)
+		topic1MessagesAfter, err := app.Repository.Messages.ListByTopic(ctx, createdTopic1.ID)
 		if err != nil {
 			t.Fatalf("Failed to list messages for topic1 after assignment: %v", err)
 		}
@@ -417,7 +417,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 		}
 
 		// Verify topic2 now has the message
-		topic2MessagesAfter, err := app.Repository.Message.ListByTopic(ctx, createdTopic2.ID)
+		topic2MessagesAfter, err := app.Repository.Messages.ListByTopic(ctx, createdTopic2.ID)
 		if err != nil {
 			t.Fatalf("Failed to list messages for topic2 after assignment: %v", err)
 		}
@@ -433,7 +433,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 
 	t.Run("AssignMessageToTopic - Invalid Message ID", func(t *testing.T) {
 		// Try to assign a non-existent message
-		_, err := app.Repository.Message.AssignToTopic(ctx, "non-existent-id", createdTopic2.ID)
+		_, err := app.Repository.Messages.AssignTopic(ctx, "non-existent-id", createdTopic2.ID)
 		if err == nil {
 			t.Fatalf("Expected error when assigning non-existent message")
 		}
@@ -450,13 +450,13 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 			UpdatedAt: nil,
 		}
 
-		createdMessage2, err := app.Repository.Message.Create(ctx, message2)
+		createdMessage2, err := app.Repository.Messages.Create(ctx, message2)
 		if err != nil {
 			t.Fatalf("Failed to create message2: %v", err)
 		}
 
 		// Try to assign to a non-existent topic
-		_, err = app.Repository.Message.AssignToTopic(ctx, createdMessage2.ID, "non-existent-topic-id")
+		_, err = app.Repository.Messages.AssignTopic(ctx, createdMessage2.ID, "non-existent-topic-id")
 		if err == nil {
 			t.Fatalf("Expected error when assigning to non-existent topic")
 		}

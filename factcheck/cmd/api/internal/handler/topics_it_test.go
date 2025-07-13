@@ -84,7 +84,7 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, created, expected)
 
 		// Assert in database
-		actualDB, err := app.Repository.Topic.GetByID(t.Context(), created.ID)
+		actualDB, err := app.Repository.Topics.GetByID(t.Context(), created.ID)
 		assertEq(t, err, nil)
 		assertEq(t, actualDB, expected)
 

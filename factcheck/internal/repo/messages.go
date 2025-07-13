@@ -13,7 +13,7 @@ type Messages interface {
 	GetByID(ctx context.Context, id string) (factcheck.Message, error)
 	ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error)
 	Update(ctx context.Context, message factcheck.Message) (factcheck.Message, error)
-	AssignToTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error)
+	AssignTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -85,8 +85,8 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	return messageDomain(dbMessage), nil
 }
 
-// AssignToTopic assigns a message to a different topic
-func (m *messages) AssignToTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error) {
+// AssignTopic assigns a message to a different topic
+func (m *messages) AssignTopic(ctx context.Context, messageID string, topicID string) (factcheck.Message, error) {
 	// Convert string IDs to pgtype.UUID
 	msgUUID, err := uuid(messageID)
 	if err != nil {

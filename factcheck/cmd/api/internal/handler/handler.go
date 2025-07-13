@@ -33,8 +33,8 @@ type handler struct {
 
 func New(repo repo.Repository) Handler {
 	return &handler{
-		topics:   repo.Topic,
-		messages: repo.Message,
+		topics:   repo.Topics,
+		messages: repo.Messages,
 	}
 }
 

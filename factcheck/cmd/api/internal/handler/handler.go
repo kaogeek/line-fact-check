@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
@@ -46,6 +50,55 @@ func handleNotFound(w http.ResponseWriter, err error, resourceType string, filte
 		return
 	}
 	errInternalError(w, err.Error())
+}
+
+func paramID(r *http.Request) string {
+	return chi.URLParam(r, "id")
+}
+
+func decode[T any](r *http.Request) (T, error) {
+	var t T
+	err := json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	return t, nil
+}
+
+func sendText(w http.ResponseWriter, text string, status int) {
+	w.WriteHeader(status)
+	contentTypeText(w.Header())
+	_, err := w.Write([]byte(text))
+	if err != nil {
+		slog.Error("error writing to response", "error", err)
+	}
+}
+
+// sendJSON calls replyJsonError, and on non-nil error, writes 500 response
+func sendJSON(w http.ResponseWriter, data any, status int) {
+	err := replyJSON(w, data, status)
+	if err != nil {
+		errInternalError(w, err.Error())
+	}
+}
+
+// replyJSON marshals data into JSON string before writing response.
+// If marshaling failed, the response is left untouched and the error is returned.
+func replyJSON(w http.ResponseWriter, data any, status int) error {
+	j, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshal json error: %w", err)
+	}
+
+	w.WriteHeader(status)
+	contentTypeJSON(w.Header())
+	_, err = w.Write(j)
+	if err != nil {
+		slog.Error("error writing to response", "error", err)
+		return fmt.Errorf("write to response error: %w", err)
+	}
+	return nil
 }
 
 func errNotFound(w http.ResponseWriter, id string) {

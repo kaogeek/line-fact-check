@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
@@ -14,6 +15,10 @@ type Topics interface {
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
+	ListFiltered(ctx context.Context, ids []string, messageText string) ([]factcheck.Topic, error)
+	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
+	ListByMessageText(ctx context.Context, substring string) ([]factcheck.Topic, error)
+	ListInIDsAndMessageText(ctx context.Context, ids []string, substring string) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
@@ -77,6 +82,86 @@ func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
 // ListByStatus retrieves topics by status using the topicDomain adapter
 func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error) {
 	dbTopics, err := t.queries.ListTopicsByStatus(ctx, string(status))
+	if err != nil {
+		return nil, err
+	}
+	topics := make([]factcheck.Topic, len(dbTopics))
+	for i, dbTopic := range dbTopics {
+		topics[i] = topicDomain(dbTopic)
+	}
+	return topics, nil
+}
+
+// ListFiltered retrieves topics with optional filtering by IDs and/or message text
+func (t *topics) ListFiltered(ctx context.Context, ids []string, messageText string) ([]factcheck.Topic, error) {
+	if len(ids) > 0 && messageText != "" {
+		return t.ListInIDsAndMessageText(ctx, ids, messageText)
+	}
+	if len(ids) > 0 {
+		return t.ListInIDs(ctx, ids)
+	}
+	if messageText != "" {
+		return t.ListByMessageText(ctx, messageText)
+	}
+	return t.List(ctx)
+}
+
+// ListInIDs retrieves topics by IDs using the topicDomain adapter
+func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	uuidIDs := make([]pgtype.UUID, len(ids))
+	for i, id := range ids {
+		uuidID, err := uuid(id)
+		if err != nil {
+			return nil, err
+		}
+		uuidIDs[i] = uuidID
+	}
+	dbTopics, err := t.queries.ListTopicsInIDs(ctx, uuidIDs)
+	if err != nil {
+		return nil, err
+	}
+	topics := make([]factcheck.Topic, len(dbTopics))
+	for i, dbTopic := range dbTopics {
+		topics[i] = topicDomain(dbTopic)
+	}
+	return topics, nil
+}
+
+// ListByMessageText retrieves topics that have messages containing the given substring
+func (t *topics) ListByMessageText(ctx context.Context, substring string) ([]factcheck.Topic, error) {
+	likePattern := "%" + substring + "%"
+	dbTopics, err := t.queries.ListTopicsByMessageText(ctx, likePattern)
+	if err != nil {
+		return nil, err
+	}
+	topics := make([]factcheck.Topic, len(dbTopics))
+	for i, dbTopic := range dbTopics {
+		topics[i] = topicDomain(dbTopic)
+	}
+	return topics, nil
+}
+
+// ListInIDsAndMessageText retrieves topics by IDs that also have messages containing the given substring
+func (t *topics) ListInIDsAndMessageText(ctx context.Context, ids []string, substring string) ([]factcheck.Topic, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	uuidIDs := make([]pgtype.UUID, len(ids))
+	for i, id := range ids {
+		uuidID, err := uuid(id)
+		if err != nil {
+			return nil, err
+		}
+		uuidIDs[i] = uuidID
+	}
+	likePattern := "%" + substring + "%"
+	dbTopics, err := t.queries.ListTopicsInIDsAndMessageText(ctx, postgres.ListTopicsInIDsAndMessageTextParams{
+		Column1: uuidIDs,
+		Text:    likePattern,
+	})
 	if err != nil {
 		return nil, err
 	}

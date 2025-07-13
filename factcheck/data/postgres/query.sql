@@ -14,6 +14,23 @@ SELECT * FROM topics ORDER BY created_at DESC;
 -- name: ListTopicsByStatus :many
 SELECT * FROM topics WHERE status = $1 ORDER BY created_at DESC;
 
+-- name: ListTopicsInIDs :many
+SELECT DISTINCT t.* FROM topics t 
+WHERE t.id = ANY($1::uuid[]) 
+ORDER BY t.created_at DESC;
+
+-- name: ListTopicsByMessageText :many
+SELECT DISTINCT t.* FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE m.text LIKE $1 
+ORDER BY t.created_at DESC;
+
+-- name: ListTopicsInIDsAndMessageText :many
+SELECT DISTINCT t.* FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id = ANY($1::uuid[]) AND m.text LIKE $2 
+ORDER BY t.created_at DESC;
+
 -- name: UpdateTopicStatus :one
 UPDATE topics SET 
     status = $2,

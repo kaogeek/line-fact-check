@@ -320,12 +320,124 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 	return items, nil
 }
 
+const listTopicsByMessageText = `-- name: ListTopicsByMessageText :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE m.text LIKE $1 
+ORDER BY t.created_at DESC
+`
+
+func (q *Queries) ListTopicsByMessageText(ctx context.Context, text string) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsByMessageText, text)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTopicsByStatus = `-- name: ListTopicsByStatus :many
 SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics WHERE status = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListTopicsByStatus(ctx context.Context, status string) ([]Topic, error) {
 	rows, err := q.db.Query(ctx, listTopicsByStatus, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopicsInIDs = `-- name: ListTopicsInIDs :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
+WHERE t.id = ANY($1::uuid[]) 
+ORDER BY t.created_at DESC
+`
+
+func (q *Queries) ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsInIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopicsInIDsAndMessageText = `-- name: ListTopicsInIDsAndMessageText :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id = ANY($1::uuid[]) AND m.text LIKE $2 
+ORDER BY t.created_at DESC
+`
+
+type ListTopicsInIDsAndMessageTextParams struct {
+	Column1 []pgtype.UUID `json:"column_1"`
+	Text    string        `json:"text"`
+}
+
+func (q *Queries) ListTopicsInIDsAndMessageText(ctx context.Context, arg ListTopicsInIDsAndMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsInIDsAndMessageText, arg.Column1, arg.Text)
 	if err != nil {
 		return nil, err
 	}

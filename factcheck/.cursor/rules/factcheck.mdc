@@ -16,3 +16,26 @@ HTTP server routing is composed with go-chi to keep dependencies to minimum.
 The following code generation tools are used:
 - sqlc for database interactions, see [sqlc.yaml](/factcheck/sqlc.yaml) and [/data/](/factcheck/data)
 - wire for dependency injection, lives inside [internal/di](/factcheck/cmd/api/di)
+
+# Models
+- UserMessage
+    UserMessage is received by our system via some gateway service, e.g. LINE or Telegram chatbot server.
+    The idea is that users send a chat message to our bot, which then forwards the user message to factcheck-api.
+    When our API receives the user message, it saves this to user_messages and messages table.
+
+- Message
+    Message is a "statement", or some "truth" that needs to be fact-checked.
+    Messages enter our system via UserMessage.
+
+- Topic
+    Topic groups multiple similar/matching messages together.
+    One topic has many messages, and one message has exactly one topic.
+    Admins will create a new topic for new user messages if the new messages do not belong to any other existing topics. If the new messages fall under the some existing topic, admin can assign the message to existing topic.
+    
+    In the future, we'd like to use some LLMs or other tools to automatically compute similarity score
+    of the new messages
+
+# Flow
+- (not-implemented) Users will send a message into our system via chat app like Telegram to our chatbot service (not implemented), and that service will make some calls to us to create user_messages and messages.
+- Admins review new messages, and if needed, create a new topic for the new message. Otherwise the admin will just assign the message to some existing topic.
+- Admins verify fake-news result, and update the topic to include fact results.

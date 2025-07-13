@@ -1,19 +1,39 @@
-import { Link, Outlet } from 'react-router';
+import NavigatorBar from '@/components/navigator/NavigatorBar';
+import SideBar from '@/components/navigator/SideBar';
+import { APP_NAME } from '@/constants/app';
+import { useState } from 'react';
+import { Outlet } from 'react-router';
 
 export default function RootLayout() {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <>
-      <header style={{ padding: '1rem', backgroundColor: '#ddd' }}>
-        <nav>
-          <Link to="/">Home</Link> | <Link to="/dashboard">Dashboard</Link>
-        </nav>
-      </header>
+    <div className="flex h-screen">
+      <SideBar
+        brand={APP_NAME}
+        menuList={[
+          {
+            label: 'Topic',
+            link: '/topic',
+          },
+          {
+            label: 'Dashboard',
+            link: '/dashboard',
+          },
+          {
+            label: 'Logout',
+            onClick: () => {
+              console.log('Logout');
+            },
+          },
+        ]}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+      />
 
-      <main style={{ padding: '1rem' }}>
+      <main className="flex-1">
+        <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} className="md:hidden" />
         <Outlet />
       </main>
-
-      <footer style={{ padding: '1rem', backgroundColor: '#eee', marginTop: 'auto' }}>&copy; 2025 My App</footer>
-    </>
+    </div>
   );
 }

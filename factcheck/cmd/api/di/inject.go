@@ -9,7 +9,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 )
 
-// InitializeHandler returns our HTTP API server.
+// InitializeServer returns our HTTP API server.
 func InitializeServer() (server.Server, func(), error) {
 	wire.Build(ProviderSet)
 	return nil, nil, nil
@@ -22,7 +22,7 @@ func InitializeContainer() (Container, func(), error) {
 	return Container{}, nil, nil
 }
 
-func InitializeContainerTest() (Container, func(), error) {
+func InitializeContainerTest() (ContainerTest, func(), error) {
 	wire.Build(ProviderSetTest)
-	return Container{}, nil, nil
+	return ContainerTest{}, nil, nil
 }

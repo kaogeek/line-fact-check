@@ -2,6 +2,9 @@
 package di
 
 import (
+	"context"
+	"log/slog"
+
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
@@ -17,6 +20,8 @@ type Container struct {
 	Handler         handler.Handler
 	Server          server.Server
 }
+
+type ContainerTest Container
 
 func New(
 	conf config.Config,
@@ -34,4 +39,38 @@ func New(
 		Handler:         handler,
 		Server:          server,
 	}
+}
+
+func NewTest(
+	conf config.Config,
+	conn postgres.DBTX,
+	querier postgres.Querier,
+	repo repo.Repository,
+	handler handler.Handler,
+	server server.Server,
+) ContainerTest {
+	slog.Warn("Clearing all data from database")
+	ctx := context.Background()
+	_, err := conn.Exec(ctx, "DELETE FROM topics")
+	if err != nil {
+		panic(err)
+	}
+	_, err = conn.Exec(ctx, "DELETE FROM messages")
+	if err != nil {
+		panic(err)
+	}
+	_, err = conn.Exec(ctx, "DELETE FROM user_messages")
+	if err != nil {
+		panic(err)
+	}
+	slog.Warn("Cleared all data from database")
+
+	return ContainerTest(New(
+		conf,
+		conn,
+		querier,
+		repo,
+		handler,
+		server,
+	))
 }

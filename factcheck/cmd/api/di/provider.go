@@ -28,7 +28,7 @@ var ProviderSetTest = wire.NewSet(
 	handler.New,
 	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,
-	New,
+	NewTest,
 )
 
 var ProviderSetBase = wire.NewSet(

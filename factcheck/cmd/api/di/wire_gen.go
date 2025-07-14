@@ -16,7 +16,7 @@ import (
 
 // Injectors from inject.go:
 
-// InitializeHandler returns our HTTP API server.
+// InitializeServer returns our HTTP API server.
 func InitializeServer() (server.Server, func(), error) {
 	configConfig, err := config.New()
 	if err != nil {
@@ -56,21 +56,21 @@ func InitializeContainer() (Container, func(), error) {
 	}, nil
 }
 
-func InitializeContainerTest() (Container, func(), error) {
+func InitializeContainerTest() (ContainerTest, func(), error) {
 	configConfig, err := config.NewTest()
 	if err != nil {
-		return Container{}, nil, err
+		return ContainerTest{}, nil, err
 	}
 	conn, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
-		return Container{}, nil, err
+		return ContainerTest{}, nil, err
 	}
 	queries := postgres.New(conn)
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	container := New(configConfig, conn, queries, repository, handlerHandler, httpServer)
-	return container, func() {
+	containerTest := NewTest(configConfig, conn, queries, repository, handlerHandler, httpServer)
+	return containerTest, func() {
 		cleanup()
 	}, nil
 }

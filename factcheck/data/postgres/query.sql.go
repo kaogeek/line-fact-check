@@ -491,6 +491,82 @@ func (q *Queries) ListTopicsInIDsAndMessageText(ctx context.Context, arg ListTop
 	return items, nil
 }
 
+const listTopicsLikeID = `-- name: ListTopicsLikeID :many
+SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics t 
+WHERE t.id::text LIKE $1::text 
+ORDER BY t.created_at DESC
+`
+
+func (q *Queries) ListTopicsLikeID(ctx context.Context, dollar_1 string) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsLikeID, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopicsLikeIDAndMessageText = `-- name: ListTopicsLikeIDAndMessageText :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+ORDER BY t.created_at DESC
+`
+
+type ListTopicsLikeIDAndMessageTextParams struct {
+	Column1 string `json:"column_1"`
+	Text    string `json:"text"`
+}
+
+func (q *Queries) ListTopicsLikeIDAndMessageText(ctx context.Context, arg ListTopicsLikeIDAndMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsLikeIDAndMessageText, arg.Column1, arg.Text)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserMessagesByMessage = `-- name: ListUserMessagesByMessage :many
 SELECT id, replied_at, message_id, metadata, created_at, updated_at FROM user_messages WHERE message_id = $1 ORDER BY created_at ASC
 `

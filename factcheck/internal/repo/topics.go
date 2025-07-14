@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -20,6 +21,8 @@ type Topics interface {
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
 	ListByMessageText(ctx context.Context, substring string) ([]factcheck.Topic, error)
 	ListInIDsAndMessageText(ctx context.Context, ids []string, substring string) ([]factcheck.Topic, error)
+	ListLikeID(ctx context.Context, idPattern string) ([]factcheck.Topic, error)
+	ListLikeIDAndMessageText(ctx context.Context, idPattern string, messageText string) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
@@ -162,6 +165,49 @@ func (t *topics) ListInIDsAndMessageText(ctx context.Context, ids []string, subs
 	dbTopics, err := t.queries.ListTopicsInIDsAndMessageText(ctx, postgres.ListTopicsInIDsAndMessageTextParams{
 		Column1: uuidIDs,
 		Text:    likePattern,
+	})
+	if err != nil {
+		return nil, err
+	}
+	topics := make([]factcheck.Topic, len(dbTopics))
+	for i, dbTopic := range dbTopics {
+		topics[i] = topicDomain(dbTopic)
+	}
+	return topics, nil
+}
+
+// ListLikeID retrieves topics by ID pattern matching using SQL LIKE
+func (t *topics) ListLikeID(ctx context.Context, idPattern string) ([]factcheck.Topic, error) {
+	// Add wildcards for LIKE query if not already present
+	likePattern := idPattern
+	if !strings.Contains(likePattern, "%") {
+		likePattern = "%" + idPattern + "%"
+	}
+
+	dbTopics, err := t.queries.ListTopicsLikeID(ctx, likePattern)
+	if err != nil {
+		return nil, err
+	}
+	topics := make([]factcheck.Topic, len(dbTopics))
+	for i, dbTopic := range dbTopics {
+		topics[i] = topicDomain(dbTopic)
+	}
+	return topics, nil
+}
+
+// ListLikeIDAndMessageText retrieves topics by ID pattern and message text using SQL LIKE
+func (t *topics) ListLikeIDAndMessageText(ctx context.Context, idPattern string, messageText string) ([]factcheck.Topic, error) {
+	// Add wildcards for LIKE queries if not already present
+	idLikePattern := idPattern
+	if !strings.Contains(idLikePattern, "%") {
+		idLikePattern = "%" + idPattern + "%"
+	}
+
+	messageLikePattern := "%" + messageText + "%"
+
+	dbTopics, err := t.queries.ListTopicsLikeIDAndMessageText(ctx, postgres.ListTopicsLikeIDAndMessageTextParams{
+		Column1: idLikePattern,
+		Text:    messageLikePattern,
 	})
 	if err != nil {
 		return nil, err

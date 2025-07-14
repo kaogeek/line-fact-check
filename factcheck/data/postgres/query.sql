@@ -31,6 +31,17 @@ INNER JOIN messages m ON t.id = m.topic_id
 WHERE t.id = ANY($1::uuid[]) AND m.text LIKE $2 
 ORDER BY t.created_at DESC;
 
+-- name: ListTopicsLikeID :many
+SELECT * FROM topics t 
+WHERE t.id::text LIKE $1::text 
+ORDER BY t.created_at DESC;
+
+-- name: ListTopicsLikeIDAndMessageText :many
+SELECT DISTINCT t.* FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+ORDER BY t.created_at DESC;
+
 -- name: UpdateTopicStatus :one
 UPDATE topics SET 
     status = $2,

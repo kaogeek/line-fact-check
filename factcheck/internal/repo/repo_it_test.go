@@ -281,6 +281,98 @@ func TestRepository_TopicFiltering(t *testing.T) {
 			t.Fatalf("Expected 1 topic with COVID messages, got %d", len(topics))
 		}
 	})
+
+	t.Run("ListLikeID", func(t *testing.T) {
+		// Test filtering by ID pattern - look for topics with "001" in their ID
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "001")
+		if err != nil {
+			t.Fatalf("ListLikeID failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with '001' in ID, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (ID contains '001'), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListLikeID - multiple matches", func(t *testing.T) {
+		// Test filtering by ID pattern - look for topics with "550e8400" in their ID
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "550e8400")
+		if err != nil {
+			t.Fatalf("ListLikeID with multiple matches failed: %v", err)
+		}
+
+		if len(topics) != 3 {
+			t.Fatalf("Expected 3 topics with '550e8400' in ID, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListLikeID - no matches", func(t *testing.T) {
+		// Test filtering by ID pattern that doesn't match any topics
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "nonexistent")
+		if err != nil {
+			t.Fatalf("ListLikeID with no matches failed: %v", err)
+		}
+
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics with 'nonexistent' in ID, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListLikeIDAndMessageText", func(t *testing.T) {
+		// Test filtering by both ID pattern and message text
+		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "COVID")
+		if err != nil {
+			t.Fatalf("ListLikeIDAndMessageText failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with '001' in ID and COVID messages, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (ID contains '001' and has COVID messages), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListLikeIDAndMessageText - no ID matches", func(t *testing.T) {
+		// Test filtering by ID pattern that doesn't match and message text that does
+		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "nonexistent", "COVID")
+		if err != nil {
+			t.Fatalf("ListLikeIDAndMessageText with no ID matches failed: %v", err)
+		}
+
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics with 'nonexistent' in ID and COVID messages, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListLikeIDAndMessageText - no message matches", func(t *testing.T) {
+		// Test filtering by ID pattern that matches and message text that doesn't
+		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "nonexistent")
+		if err != nil {
+			t.Fatalf("ListLikeIDAndMessageText with no message matches failed: %v", err)
+		}
+
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics with '001' in ID and 'nonexistent' messages, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListLikeIDAndMessageText - both patterns match different topics", func(t *testing.T) {
+		// Test filtering by ID pattern that matches topic1 and message text that matches topic2
+		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "Election")
+		if err != nil {
+			t.Fatalf("ListLikeIDAndMessageText with different topic matches failed: %v", err)
+		}
+
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics when ID pattern and message text match different topics, got %d", len(topics))
+		}
+	})
 }
 
 func TestRepository_AssignMessageToTopic(t *testing.T) {

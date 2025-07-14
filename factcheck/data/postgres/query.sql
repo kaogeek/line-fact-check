@@ -22,13 +22,13 @@ ORDER BY t.created_at DESC;
 -- name: ListTopicsByMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text LIKE $1 
+WHERE m.text ILIKE $1 
 ORDER BY t.created_at DESC;
 
 -- name: ListTopicsInIDsAndMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id = ANY($1::uuid[]) AND m.text LIKE $2 
+WHERE t.id = ANY($1::uuid[]) AND m.text ILIKE $2 
 ORDER BY t.created_at DESC;
 
 -- name: ListTopicsLikeID :many
@@ -39,13 +39,13 @@ ORDER BY t.created_at DESC;
 -- name: ListTopicsLikeIDAndMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 ORDER BY t.created_at DESC;
 
 -- name: ListTopicsByStatusAndMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND m.text LIKE $2 
+WHERE t.status = $1 AND m.text ILIKE $2 
 ORDER BY t.created_at DESC;
 
 -- name: ListTopicsByStatusAndLikeID :many
@@ -56,7 +56,7 @@ ORDER BY t.created_at DESC;
 -- name: ListTopicsByStatusAndLikeIDAndMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text LIKE $3 
+WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3 
 ORDER BY t.created_at DESC;
 
 -- name: UpdateTopicStatus :one
@@ -95,14 +95,14 @@ GROUP BY status;
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text LIKE $1 
+WHERE m.text ILIKE $1 
 GROUP BY t.status;
 
 -- name: CountTopicsByStatusLikeIDLikeMessageText :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 GROUP BY t.status;
 
 -- name: DeleteTopic :exec

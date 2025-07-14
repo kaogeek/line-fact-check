@@ -84,7 +84,7 @@ const countTopicsByStatusLikeIDLikeMessageText = `-- name: CountTopicsByStatusLi
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 GROUP BY t.status
 `
 
@@ -122,7 +122,7 @@ const countTopicsByStatusLikeMessageText = `-- name: CountTopicsByStatusLikeMess
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text LIKE $1 
+WHERE m.text ILIKE $1 
 GROUP BY t.status
 `
 
@@ -452,7 +452,7 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 const listTopicsByMessageText = `-- name: ListTopicsByMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text LIKE $1 
+WHERE m.text ILIKE $1 
 ORDER BY t.created_at DESC
 `
 
@@ -561,7 +561,7 @@ func (q *Queries) ListTopicsByStatusAndLikeID(ctx context.Context, arg ListTopic
 const listTopicsByStatusAndLikeIDAndMessageText = `-- name: ListTopicsByStatusAndLikeIDAndMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text LIKE $3 
+WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3 
 ORDER BY t.created_at DESC
 `
 
@@ -603,7 +603,7 @@ func (q *Queries) ListTopicsByStatusAndLikeIDAndMessageText(ctx context.Context,
 const listTopicsByStatusAndMessageText = `-- name: ListTopicsByStatusAndMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND m.text LIKE $2 
+WHERE t.status = $1 AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 
@@ -679,7 +679,7 @@ func (q *Queries) ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) (
 const listTopicsInIDsAndMessageText = `-- name: ListTopicsInIDsAndMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id = ANY($1::uuid[]) AND m.text LIKE $2 
+WHERE t.id = ANY($1::uuid[]) AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 
@@ -755,7 +755,7 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, dollar_1 string) ([]Topi
 const listTopicsLikeIDAndMessageText = `-- name: ListTopicsLikeIDAndMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 

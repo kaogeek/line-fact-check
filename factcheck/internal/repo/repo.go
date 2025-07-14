@@ -1,9 +1,12 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
@@ -13,6 +16,12 @@ type Repository struct {
 	Topics       Topics
 	Messages     Messages
 	UserMessages UserMessages
+	TxnManager   postgres.TxnManager
+}
+
+type Tx interface {
+	Commit(context.Context) error
+	Rollback(context.Context) error
 }
 
 // ErrNotFound is returned when a requested resource is not found
@@ -22,12 +31,17 @@ type ErrNotFound struct {
 }
 
 // New creates a new repository with all implementations
-func New(queries *postgres.Queries) Repository {
+func New(queries *postgres.Queries, conn *pgx.Conn) Repository {
 	return Repository{
 		Topics:       NewTopics(queries),
 		Messages:     NewMessages(queries),
 		UserMessages: NewUserMessages(queries),
+		TxnManager:   postgres.NewTxnManager(conn),
 	}
+}
+
+func (r *Repository) Begin(ctx context.Context) (Tx, error) {
+	return r.TxnManager.Begin(ctx)
 }
 
 // IsNotFound checks if the error is a not found error

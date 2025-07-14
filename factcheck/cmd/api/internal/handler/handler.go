@@ -29,6 +29,7 @@ type Handler interface {
 }
 
 type handler struct {
+	repository   repo.Repository
 	topics       repo.Topics
 	messages     repo.Messages
 	userMessages repo.UserMessages
@@ -36,6 +37,7 @@ type handler struct {
 
 func New(repo repo.Repository) Handler {
 	return &handler{
+		repository:   repo,
 		topics:       repo.Topics,
 		messages:     repo.Messages,
 		userMessages: repo.UserMessages,

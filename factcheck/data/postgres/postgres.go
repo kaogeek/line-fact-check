@@ -12,6 +12,20 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 )
 
+type Tx pgx.Tx
+
+type TxnManager struct {
+	c *pgx.Conn
+}
+
+func (t TxnManager) Begin(ctx context.Context) (Tx, error) {
+	return t.c.Begin(ctx)
+}
+
+func NewTxnManager(conn *pgx.Conn) TxnManager {
+	return TxnManager{c: conn}
+}
+
 func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 	slog.Info("connecting to postgres",
 		"host", c.Postgres.Host,

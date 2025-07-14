@@ -74,7 +74,15 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:     nil,
 	}
 
-	// TODO: create both in a txn
+	tx, err := h.repository.Begin(r.Context())
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	// As per doc, they defer rollback
+	// https://docs.sqlc.dev/en/stable/howto/transactions.html
+	defer tx.Rollback(r.Context())
+
 	createdUserMessage, err := h.userMessages.Create(r.Context(), userMessage)
 	if err != nil {
 		errInternalError(w, fmt.Sprintf("error creating user_messages: %s", err.Error()))
@@ -85,6 +93,8 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		errInternalError(w, fmt.Sprintf("error creating messages: %s", err.Error()))
 		return
 	}
+
+	tx.Commit(r.Context())
 
 	sendJSON(w, map[string]any{
 		"user_message": createdUserMessage,

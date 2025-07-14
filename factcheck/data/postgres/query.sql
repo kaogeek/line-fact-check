@@ -147,9 +147,6 @@ INSERT INTO user_messages (
 -- name: GetUserMessage :one
 SELECT * FROM user_messages WHERE id = $1;
 
--- name: ListUserMessagesByMessage :many
-SELECT * FROM user_messages WHERE message_id = $1 ORDER BY created_at ASC;
-
 -- name: UpdateUserMessage :one
 UPDATE user_messages SET 
     replied_at = $2,

@@ -37,7 +37,6 @@ type Querier interface {
 	ListTopicsLikeID(ctx context.Context, dollar_1 string) ([]Topic, error)
 	ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]Topic, error)
 	ListTopicsLikeMessageText(ctx context.Context, text string) ([]Topic, error)
-	ListUserMessagesByMessage(ctx context.Context, messageID pgtype.UUID) ([]UserMessage, error)
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error)
 	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
 	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)

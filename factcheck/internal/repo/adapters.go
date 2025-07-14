@@ -136,13 +136,9 @@ func messageDomain(dbMessage postgres.Message) factcheck.Message {
 	return message
 }
 
-func userMessage(u factcheck.UserMessage[json.RawMessage]) (postgres.CreateUserMessageParams, error) {
+func userMessage(u factcheck.UserMessage) (postgres.CreateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
 	if err := userMessageID.Scan(u.ID); err != nil {
-		return postgres.CreateUserMessageParams{}, err
-	}
-	var messageID pgtype.UUID
-	if err := messageID.Scan(u.MessageID); err != nil {
 		return postgres.CreateUserMessageParams{}, err
 	}
 	createdAt, err := timestamptz(u.CreatedAt)
@@ -164,14 +160,13 @@ func userMessage(u factcheck.UserMessage[json.RawMessage]) (postgres.CreateUserM
 	return postgres.CreateUserMessageParams{
 		ID:        userMessageID,
 		RepliedAt: repliedAt,
-		MessageID: messageID,
 		Metadata:  metadata,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}, nil
 }
 
-func userMessageUpdate(userMessage factcheck.UserMessage[json.RawMessage]) (postgres.UpdateUserMessageParams, error) {
+func userMessageUpdate(userMessage factcheck.UserMessage) (postgres.UpdateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
 	if err := userMessageID.Scan(userMessage.ID); err != nil {
 		return postgres.UpdateUserMessageParams{}, err
@@ -196,13 +191,10 @@ func userMessageUpdate(userMessage factcheck.UserMessage[json.RawMessage]) (post
 	}, nil
 }
 
-func userMessageDomain(dbUserMessage postgres.UserMessage) (factcheck.UserMessage[json.RawMessage], error) {
-	userMessage := factcheck.UserMessage[json.RawMessage]{}
+func userMessageDomain(dbUserMessage postgres.UserMessage) (factcheck.UserMessage, error) {
+	userMessage := factcheck.UserMessage{}
 	if dbUserMessage.ID.Valid {
 		userMessage.ID = dbUserMessage.ID.String()
-	}
-	if dbUserMessage.MessageID.Valid {
-		userMessage.MessageID = dbUserMessage.MessageID.String()
 	}
 	if dbUserMessage.CreatedAt.Valid {
 		userMessage.CreatedAt = dbUserMessage.CreatedAt.Time

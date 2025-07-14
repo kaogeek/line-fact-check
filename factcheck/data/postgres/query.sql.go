@@ -793,37 +793,6 @@ func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, text string) ([
 	return items, nil
 }
 
-const listUserMessagesByMessage = `-- name: ListUserMessagesByMessage :many
-SELECT id, replied_at, message_id, metadata, created_at, updated_at FROM user_messages WHERE message_id = $1 ORDER BY created_at ASC
-`
-
-func (q *Queries) ListUserMessagesByMessage(ctx context.Context, messageID pgtype.UUID) ([]UserMessage, error) {
-	rows, err := q.db.Query(ctx, listUserMessagesByMessage, messageID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []UserMessage
-	for rows.Next() {
-		var i UserMessage
-		if err := rows.Scan(
-			&i.ID,
-			&i.RepliedAt,
-			&i.MessageID,
-			&i.Metadata,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateMessage = `-- name: UpdateMessage :one
 UPDATE messages SET 
     text = $2,

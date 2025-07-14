@@ -107,7 +107,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 	case empty(f.likeID):
 		// Status + message text filter
 		likePattern := substring(f.likeMessageText)
-		topics, err := t.queries.ListTopicsByStatusAndMessageText(ctx, postgres.ListTopicsByStatusAndMessageTextParams{
+		topics, err := t.queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
 			Status: string(f.status),
 			Text:   likePattern,
 		})
@@ -122,7 +122,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
-		topics, err := t.queries.ListTopicsByStatusAndLikeID(ctx, postgres.ListTopicsByStatusAndLikeIDParams{
+		topics, err := t.queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
 			Status:  string(f.status),
 			Column2: idPattern,
 		})
@@ -142,7 +142,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		idPattern = substring(idPattern)
 	}
 	messageLikePattern := substring(f.likeMessageText)
-	topics, err := t.queries.ListTopicsByStatusAndLikeIDAndMessageText(ctx, postgres.ListTopicsByStatusAndLikeIDAndMessageTextParams{
+	topics, err := t.queries.ListTopicsByStatusLikeIDLikeMessageText(ctx, postgres.ListTopicsByStatusLikeIDLikeMessageTextParams{
 		Status:  string(f.status),
 		Column2: idPattern,
 		Text:    messageLikePattern,
@@ -167,7 +167,7 @@ func (t *topics) CountByStatusesHomePage(ctx context.Context, f FilterCountTopic
 
 	case empty(f.LikeID):
 		likePattern := substring(f.LikeMessageText)
-		result, err := t.queries.CountTopicsByStatusLikeMessageText(ctx, likePattern)
+		result, err := t.queries.CountTopicsGroupByStatusLikeMessageText(ctx, likePattern)
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +182,7 @@ func (t *topics) CountByStatusesHomePage(ctx context.Context, f FilterCountTopic
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
-		result, err := t.queries.CountTopicsByStatusLikeID(ctx, idPattern)
+		result, err := t.queries.CountTopicsGroupByStatusLikeID(ctx, idPattern)
 		if err != nil {
 			return nil, err
 		}
@@ -197,7 +197,7 @@ func (t *topics) CountByStatusesHomePage(ctx context.Context, f FilterCountTopic
 		idPattern = substring(idPattern)
 	}
 	messageLikePattern := substring(f.LikeMessageText)
-	result, err := t.queries.CountTopicsByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsByStatusLikeIDLikeMessageTextParams{
+	result, err := t.queries.CountTopicsGroupByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsGroupByStatusLikeIDLikeMessageTextParams{
 		Column1: idPattern,
 		Text:    messageLikePattern,
 	})
@@ -278,7 +278,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 // ListLikeMessageText retrieves topics that have messages containing the given substring
 func (t *topics) ListLikeMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error) {
 	likePattern := substring(pattern)
-	dbTopics, err := t.queries.ListTopicsByMessageText(ctx, likePattern)
+	dbTopics, err := t.queries.ListTopicsLikeMessageText(ctx, likePattern)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 
 	messageLikePattern := substring(pattern)
 
-	dbTopics, err := t.queries.ListTopicsLikeIDAndMessageText(ctx, postgres.ListTopicsLikeIDAndMessageTextParams{
+	dbTopics, err := t.queries.ListTopicsLikeIDLikeMessageText(ctx, postgres.ListTopicsLikeIDLikeMessageTextParams{
 		Column1: idLikePattern,
 		Text:    messageLikePattern,
 	})

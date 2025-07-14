@@ -48,27 +48,27 @@ func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64
 	return count, err
 }
 
-const countTopicsByStatusLikeID = `-- name: CountTopicsByStatusLikeID :many
+const countTopicsGroupByStatusLikeID = `-- name: CountTopicsGroupByStatusLikeID :many
 SELECT status, COUNT(*) as count 
 FROM topics t 
 WHERE t.id::text LIKE $1::text 
 GROUP BY status
 `
 
-type CountTopicsByStatusLikeIDRow struct {
+type CountTopicsGroupByStatusLikeIDRow struct {
 	Status string `json:"status"`
 	Count  int64  `json:"count"`
 }
 
-func (q *Queries) CountTopicsByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsByStatusLikeIDRow, error) {
-	rows, err := q.db.Query(ctx, countTopicsByStatusLikeID, dollar_1)
+func (q *Queries) CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsGroupByStatusLikeIDRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusLikeID, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CountTopicsByStatusLikeIDRow
+	var items []CountTopicsGroupByStatusLikeIDRow
 	for rows.Next() {
-		var i CountTopicsByStatusLikeIDRow
+		var i CountTopicsGroupByStatusLikeIDRow
 		if err := rows.Scan(&i.Status, &i.Count); err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (q *Queries) CountTopicsByStatusLikeID(ctx context.Context, dollar_1 string
 	return items, nil
 }
 
-const countTopicsByStatusLikeIDLikeMessageText = `-- name: CountTopicsByStatusLikeIDLikeMessageText :many
+const countTopicsGroupByStatusLikeIDLikeMessageText = `-- name: CountTopicsGroupByStatusLikeIDLikeMessageText :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
@@ -88,25 +88,25 @@ WHERE t.id::text LIKE $1::text AND m.text ILIKE $2
 GROUP BY t.status
 `
 
-type CountTopicsByStatusLikeIDLikeMessageTextParams struct {
+type CountTopicsGroupByStatusLikeIDLikeMessageTextParams struct {
 	Column1 string `json:"column_1"`
 	Text    string `json:"text"`
 }
 
-type CountTopicsByStatusLikeIDLikeMessageTextRow struct {
+type CountTopicsGroupByStatusLikeIDLikeMessageTextRow struct {
 	Status string `json:"status"`
 	Count  int64  `json:"count"`
 }
 
-func (q *Queries) CountTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsByStatusLikeIDLikeMessageTextParams) ([]CountTopicsByStatusLikeIDLikeMessageTextRow, error) {
-	rows, err := q.db.Query(ctx, countTopicsByStatusLikeIDLikeMessageText, arg.Column1, arg.Text)
+func (q *Queries) CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsGroupByStatusLikeIDLikeMessageTextParams) ([]CountTopicsGroupByStatusLikeIDLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusLikeIDLikeMessageText, arg.Column1, arg.Text)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CountTopicsByStatusLikeIDLikeMessageTextRow
+	var items []CountTopicsGroupByStatusLikeIDLikeMessageTextRow
 	for rows.Next() {
-		var i CountTopicsByStatusLikeIDLikeMessageTextRow
+		var i CountTopicsGroupByStatusLikeIDLikeMessageTextRow
 		if err := rows.Scan(&i.Status, &i.Count); err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (q *Queries) CountTopicsByStatusLikeIDLikeMessageText(ctx context.Context, 
 	return items, nil
 }
 
-const countTopicsByStatusLikeMessageText = `-- name: CountTopicsByStatusLikeMessageText :many
+const countTopicsGroupByStatusLikeMessageText = `-- name: CountTopicsGroupByStatusLikeMessageText :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
@@ -126,20 +126,20 @@ WHERE m.text ILIKE $1
 GROUP BY t.status
 `
 
-type CountTopicsByStatusLikeMessageTextRow struct {
+type CountTopicsGroupByStatusLikeMessageTextRow struct {
 	Status string `json:"status"`
 	Count  int64  `json:"count"`
 }
 
-func (q *Queries) CountTopicsByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsByStatusLikeMessageTextRow, error) {
-	rows, err := q.db.Query(ctx, countTopicsByStatusLikeMessageText, text)
+func (q *Queries) CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusLikeMessageText, text)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CountTopicsByStatusLikeMessageTextRow
+	var items []CountTopicsGroupByStatusLikeMessageTextRow
 	for rows.Next() {
-		var i CountTopicsByStatusLikeMessageTextRow
+		var i CountTopicsGroupByStatusLikeMessageTextRow
 		if err := rows.Scan(&i.Status, &i.Count); err != nil {
 			return nil, err
 		}
@@ -449,42 +449,6 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 	return items, nil
 }
 
-const listTopicsByMessageText = `-- name: ListTopicsByMessageText :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text ILIKE $1 
-ORDER BY t.created_at DESC
-`
-
-func (q *Queries) ListTopicsByMessageText(ctx context.Context, text string) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByMessageText, text)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Topic
-	for rows.Next() {
-		var i Topic
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Status,
-			&i.Result,
-			&i.ResultStatus,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listTopicsByStatus = `-- name: ListTopicsByStatus :many
 SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics WHERE status = $1 ORDER BY created_at DESC
 `
@@ -518,19 +482,19 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, status string) ([]Topi
 	return items, nil
 }
 
-const listTopicsByStatusAndLikeID = `-- name: ListTopicsByStatusAndLikeID :many
+const listTopicsByStatusLikeID = `-- name: ListTopicsByStatusLikeID :many
 SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics t 
 WHERE t.status = $1 AND t.id::text LIKE $2::text 
 ORDER BY t.created_at DESC
 `
 
-type ListTopicsByStatusAndLikeIDParams struct {
+type ListTopicsByStatusLikeIDParams struct {
 	Status  string `json:"status"`
 	Column2 string `json:"column_2"`
 }
 
-func (q *Queries) ListTopicsByStatusAndLikeID(ctx context.Context, arg ListTopicsByStatusAndLikeIDParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusAndLikeID, arg.Status, arg.Column2)
+func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsByStatusLikeIDParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeID, arg.Status, arg.Column2)
 	if err != nil {
 		return nil, err
 	}
@@ -558,21 +522,21 @@ func (q *Queries) ListTopicsByStatusAndLikeID(ctx context.Context, arg ListTopic
 	return items, nil
 }
 
-const listTopicsByStatusAndLikeIDAndMessageText = `-- name: ListTopicsByStatusAndLikeIDAndMessageText :many
+const listTopicsByStatusLikeIDLikeMessageText = `-- name: ListTopicsByStatusLikeIDLikeMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3 
 ORDER BY t.created_at DESC
 `
 
-type ListTopicsByStatusAndLikeIDAndMessageTextParams struct {
+type ListTopicsByStatusLikeIDLikeMessageTextParams struct {
 	Status  string `json:"status"`
 	Column2 string `json:"column_2"`
 	Text    string `json:"text"`
 }
 
-func (q *Queries) ListTopicsByStatusAndLikeIDAndMessageText(ctx context.Context, arg ListTopicsByStatusAndLikeIDAndMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusAndLikeIDAndMessageText, arg.Status, arg.Column2, arg.Text)
+func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeIDLikeMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeIDLikeMessageText, arg.Status, arg.Column2, arg.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -600,20 +564,20 @@ func (q *Queries) ListTopicsByStatusAndLikeIDAndMessageText(ctx context.Context,
 	return items, nil
 }
 
-const listTopicsByStatusAndMessageText = `-- name: ListTopicsByStatusAndMessageText :many
+const listTopicsByStatusLikeMessageText = `-- name: ListTopicsByStatusLikeMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.status = $1 AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 
-type ListTopicsByStatusAndMessageTextParams struct {
+type ListTopicsByStatusLikeMessageTextParams struct {
 	Status string `json:"status"`
 	Text   string `json:"text"`
 }
 
-func (q *Queries) ListTopicsByStatusAndMessageText(ctx context.Context, arg ListTopicsByStatusAndMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusAndMessageText, arg.Status, arg.Text)
+func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeMessageText, arg.Status, arg.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -676,20 +640,20 @@ func (q *Queries) ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) (
 	return items, nil
 }
 
-const listTopicsInIDsAndMessageText = `-- name: ListTopicsInIDsAndMessageText :many
+const listTopicsInIDsLikeMessageText = `-- name: ListTopicsInIDsLikeMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.id = ANY($1::uuid[]) AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 
-type ListTopicsInIDsAndMessageTextParams struct {
+type ListTopicsInIDsLikeMessageTextParams struct {
 	Column1 []pgtype.UUID `json:"column_1"`
 	Text    string        `json:"text"`
 }
 
-func (q *Queries) ListTopicsInIDsAndMessageText(ctx context.Context, arg ListTopicsInIDsAndMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsInIDsAndMessageText, arg.Column1, arg.Text)
+func (q *Queries) ListTopicsInIDsLikeMessageText(ctx context.Context, arg ListTopicsInIDsLikeMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsInIDsLikeMessageText, arg.Column1, arg.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -752,20 +716,56 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, dollar_1 string) ([]Topi
 	return items, nil
 }
 
-const listTopicsLikeIDAndMessageText = `-- name: ListTopicsLikeIDAndMessageText :many
+const listTopicsLikeIDLikeMessageText = `-- name: ListTopicsLikeIDLikeMessageText :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 ORDER BY t.created_at DESC
 `
 
-type ListTopicsLikeIDAndMessageTextParams struct {
+type ListTopicsLikeIDLikeMessageTextParams struct {
 	Column1 string `json:"column_1"`
 	Text    string `json:"text"`
 }
 
-func (q *Queries) ListTopicsLikeIDAndMessageText(ctx context.Context, arg ListTopicsLikeIDAndMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsLikeIDAndMessageText, arg.Column1, arg.Text)
+func (q *Queries) ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsLikeIDLikeMessageText, arg.Column1, arg.Text)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopicsLikeMessageText = `-- name: ListTopicsLikeMessageText :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE m.text ILIKE $1 
+ORDER BY t.created_at DESC
+`
+
+func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, text string) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsLikeMessageText, text)
 	if err != nil {
 		return nil, err
 	}

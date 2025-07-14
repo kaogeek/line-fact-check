@@ -19,13 +19,13 @@ SELECT DISTINCT t.* FROM topics t
 WHERE t.id = ANY($1::uuid[]) 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsByMessageText :many
+-- name: ListTopicsLikeMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE m.text ILIKE $1 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsInIDsAndMessageText :many
+-- name: ListTopicsInIDsLikeMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.id = ANY($1::uuid[]) AND m.text ILIKE $2 
@@ -36,24 +36,24 @@ SELECT * FROM topics t
 WHERE t.id::text LIKE $1::text 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsLikeIDAndMessageText :many
+-- name: ListTopicsLikeIDLikeMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsByStatusAndMessageText :many
+-- name: ListTopicsByStatusLikeMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.status = $1 AND m.text ILIKE $2 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsByStatusAndLikeID :many
+-- name: ListTopicsByStatusLikeID :many
 SELECT * FROM topics t 
 WHERE t.status = $1 AND t.id::text LIKE $2::text 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsByStatusAndLikeIDAndMessageText :many
+-- name: ListTopicsByStatusLikeIDLikeMessageText :many
 SELECT DISTINCT t.* FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3 
@@ -85,20 +85,20 @@ SELECT status, COUNT(*) as count
 FROM topics 
 GROUP BY status;
 
--- name: CountTopicsByStatusLikeID :many
+-- name: CountTopicsGroupByStatusLikeID :many
 SELECT status, COUNT(*) as count 
 FROM topics t 
 WHERE t.id::text LIKE $1::text 
 GROUP BY status;
 
--- name: CountTopicsByStatusLikeMessageText :many
+-- name: CountTopicsGroupByStatusLikeMessageText :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 
 WHERE m.text ILIKE $1 
 GROUP BY t.status;
 
--- name: CountTopicsByStatusLikeIDLikeMessageText :many
+-- name: CountTopicsGroupByStatusLikeIDLikeMessageText :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 
 FROM topics t 
 INNER JOIN messages m ON t.id = m.topic_id 

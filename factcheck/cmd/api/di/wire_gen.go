@@ -69,8 +69,9 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 	repository := repo.New(queries)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	containerTest := NewTest(configConfig, conn, queries, repository, handlerHandler, httpServer)
+	containerTest, cleanup2 := NewTest(configConfig, conn, queries, repository, handlerHandler, httpServer)
 	return containerTest, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }

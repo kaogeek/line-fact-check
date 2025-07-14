@@ -48,8 +48,27 @@ func NewTest(
 	repo repo.Repository,
 	handler handler.Handler,
 	server server.Server,
-) ContainerTest {
-	slog.Warn("Clearing all data from database")
+) (
+	ContainerTest,
+	func(),
+) {
+	clearData(conn, "init")
+	cleanup := func() {
+		clearData(conn, "teardown")
+	}
+	return ContainerTest(New(
+		conf,
+		conn,
+		querier,
+		repo,
+		handler,
+		server,
+	)), cleanup
+}
+
+func clearData(conn postgres.DBTX, stage string) {
+	slog.Warn("Clearing all data from database", "stage", stage)
+
 	ctx := context.Background()
 	_, err := conn.Exec(ctx, "DELETE FROM topics")
 	if err != nil {
@@ -63,14 +82,6 @@ func NewTest(
 	if err != nil {
 		panic(err)
 	}
-	slog.Warn("Cleared all data from database")
 
-	return ContainerTest(New(
-		conf,
-		conn,
-		querier,
-		repo,
-		handler,
-		server,
-	))
+	slog.Warn("Cleared all data from database", "stage", stage)
 }

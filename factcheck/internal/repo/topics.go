@@ -22,9 +22,9 @@ type Topics interface {
 	ListLikeMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error)
 	ListLikeID(ctx context.Context, idPattern string) ([]factcheck.Topic, error)
 	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error)
-	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
-	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusesHomePage(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
+	CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
+	CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusHome(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -160,10 +160,10 @@ type FilterCountTopicByStatus struct {
 	LikeMessageText string
 }
 
-func (t *topics) CountByStatusesHomePage(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
+func (t *topics) CountByStatusHome(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
 	switch {
 	case empty(f.LikeID) && empty(f.LikeMessageText):
-		return t.CountByStatuses(ctx)
+		return t.CountByStatus(ctx)
 
 	case empty(f.LikeID):
 		likePattern := substring(f.LikeMessageText)
@@ -332,11 +332,11 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 	return topics, nil
 }
 
-func (t *topics) CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
+func (t *topics) CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
 	return t.queries.CountTopicsByStatus(ctx, string(status))
 }
 
-func (t *topics) CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
+func (t *topics) CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
 	rows, err := t.queries.CountTopicsGroupedByStatus(ctx)
 	if err != nil {
 		return nil, err

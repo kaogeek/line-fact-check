@@ -22,21 +22,6 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Clear all data
-	t.Log("Clearing all data from database")
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
-	if err != nil {
-		t.Fatalf("Failed to clear user_messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
-	if err != nil {
-		t.Fatalf("Failed to clear messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
-	if err != nil {
-		t.Fatalf("Failed to clear topics: %v", err)
-	}
-
 	// Create test data
 	now := utils.TimeNow().Round(0)
 	utils.TimeFreeze(now)
@@ -298,21 +283,6 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Clear all data
-	t.Log("Clearing all data from database")
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
-	if err != nil {
-		t.Fatalf("Failed to clear user_messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
-	if err != nil {
-		t.Fatalf("Failed to clear messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
-	if err != nil {
-		t.Fatalf("Failed to clear topics: %v", err)
-	}
-
 	// Create test data
 	now := utils.TimeNow().Round(0)
 	utils.TimeFreeze(now)
@@ -477,21 +447,6 @@ func TestRepository_ListHomePage(t *testing.T) {
 	defer cleanup()
 
 	ctx := context.Background()
-
-	// Clear all data
-	t.Log("Clearing all data from database")
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
-	if err != nil {
-		t.Fatalf("Failed to clear user_messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
-	if err != nil {
-		t.Fatalf("Failed to clear messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
-	if err != nil {
-		t.Fatalf("Failed to clear topics: %v", err)
-	}
 
 	// Create test data
 	now := utils.TimeNow().Round(0)
@@ -794,21 +749,6 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	defer cleanup()
 
 	ctx := context.Background()
-
-	// Clear all data
-	t.Log("Clearing all data from database")
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
-	if err != nil {
-		t.Fatalf("Failed to clear user_messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
-	if err != nil {
-		t.Fatalf("Failed to clear messages: %v", err)
-	}
-	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
-	if err != nil {
-		t.Fatalf("Failed to clear topics: %v", err)
-	}
 
 	// Create test data
 	now := utils.TimeNow().Round(0)

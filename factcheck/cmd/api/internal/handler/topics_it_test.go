@@ -29,22 +29,6 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
 	defer testServer.Close()
 
-	// Clear all data
-	t.Log("WARN: Clearing all data from database")
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
-	if err != nil {
-		panic(err)
-	}
-	t.Log("WARN: Cleared all data from database")
-
 	t.Run("CRUD 1 topic", func(t *testing.T) {
 		now := utils.TimeNow().Round(0) // Postgres timestampz will not preserve monotonic clock
 		utils.TimeFreeze(now)
@@ -345,22 +329,6 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
 	defer testServer.Close()
 
-	// Clear all data
-	t.Log("WARN: Clearing all data from database")
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
-	if err != nil {
-		panic(err)
-	}
-	t.Log("WARN: Cleared all data from database")
-
 	// Create test data
 	now := utils.TimeNow().Round(0)
 	utils.TimeFreeze(now)
@@ -645,22 +613,6 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 	// Create test server
 	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
 	defer testServer.Close()
-
-	// Clear all data
-	t.Log("WARN: Clearing all data from database")
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
-	if err != nil {
-		panic(err)
-	}
-	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
-	if err != nil {
-		panic(err)
-	}
-	t.Log("WARN: Cleared all data from database")
 
 	// Create test data
 	now := utils.TimeNow().Round(0)

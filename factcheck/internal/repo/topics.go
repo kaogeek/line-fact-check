@@ -24,7 +24,7 @@ type Topics interface {
 	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error)
 	CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusHome(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusHome(ctx context.Context, opts ...OptionCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -156,17 +156,36 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 type OptionCountTopicByStatus func(f FilterCountTopicByStatus) FilterCountTopicByStatus
 
 type FilterCountTopicByStatus struct {
-	LikeID          string
-	LikeMessageText string
+	likeID          string
+	likeMessageText string
 }
 
-func (t *topics) CountByStatusHome(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
+func CountTopicByStatusLikeID(id string) OptionCountTopicByStatus {
+	return func(f FilterCountTopicByStatus) FilterCountTopicByStatus {
+		f.likeID = id
+		return f
+	}
+}
+
+func CountTopicByStatusLikeMessageText(text string) OptionCountTopicByStatus {
+	return func(f FilterCountTopicByStatus) FilterCountTopicByStatus {
+		f.likeMessageText = text
+		return f
+	}
+}
+
+func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
+	f := FilterCountTopicByStatus{}
+	for i := range opts {
+		f = opts[i](f)
+	}
+
 	switch {
-	case empty(f.LikeID) && empty(f.LikeMessageText):
+	case empty(f.likeID) && empty(f.likeMessageText):
 		return t.CountByStatus(ctx)
 
-	case empty(f.LikeID):
-		likePattern := substring(f.LikeMessageText)
+	case empty(f.likeID):
+		likePattern := substring(f.likeMessageText)
 		result, err := t.queries.CountTopicsGroupByStatusLikeMessageText(ctx, likePattern)
 		if err != nil {
 			return nil, err
@@ -177,8 +196,8 @@ func (t *topics) CountByStatusHome(ctx context.Context, f FilterCountTopicByStat
 		}
 		return m, nil
 
-	case empty(f.LikeMessageText):
-		idPattern := f.LikeID
+	case empty(f.likeMessageText):
+		idPattern := f.likeID
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
@@ -192,11 +211,11 @@ func (t *topics) CountByStatusHome(ctx context.Context, f FilterCountTopicByStat
 		}
 		return m, nil
 	}
-	idPattern := f.LikeID
+	idPattern := f.likeID
 	if !strings.Contains(idPattern, "%") {
 		idPattern = substring(idPattern)
 	}
-	messageLikePattern := substring(f.LikeMessageText)
+	messageLikePattern := substring(f.likeMessageText)
 	result, err := t.queries.CountTopicsGroupByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsGroupByStatusLikeIDLikeMessageTextParams{
 		Column1: idPattern,
 		Text:    messageLikePattern,

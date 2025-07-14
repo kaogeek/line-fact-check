@@ -940,8 +940,7 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	}
 
 	t.Run("CountByStatusesHomePage - no filters (all topics)", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with no filters failed: %v", err)
 		}
@@ -958,10 +957,9 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - ID pattern filter only", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID: "550e8400",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID("550e8400"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with ID pattern filter failed: %v", err)
 		}
@@ -978,10 +976,9 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - message text filter only", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeMessageText: "COVID",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeMessageText("COVID"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with message text filter failed: %v", err)
 		}
@@ -998,11 +995,10 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - ID pattern and message text filters", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID:          "550e8400",
-			LikeMessageText: "COVID",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID("550e8400"),
+			repo.CountTopicByStatusLikeMessageText("COVID"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with ID pattern and message text filters failed: %v", err)
 		}
@@ -1019,10 +1015,9 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - message text filter for resolved topics", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeMessageText: "Election",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeMessageText("Election"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with Election message filter failed: %v", err)
 		}
@@ -1039,10 +1034,9 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - ID pattern filter for different prefix", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID: "660e8400",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID("660e8400"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with '660e8400' ID filter failed: %v", err)
 		}
@@ -1059,11 +1053,10 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - combined filters for technology topics", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID:          "660e8400",
-			LikeMessageText: "technology",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID("660e8400"),
+			repo.CountTopicByStatusLikeMessageText("technology"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with technology filters failed: %v", err)
 		}
@@ -1080,11 +1073,10 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - no matches for combined filters", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID:          "550e8400",
-			LikeMessageText: "technology",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID("550e8400"),
+			repo.CountTopicByStatusLikeMessageText("techonology"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with no matches filter failed: %v", err)
 		}
@@ -1101,11 +1093,10 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - empty string filters", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeID:          "",
-			LikeMessageText: "",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeID(""),
+			repo.CountTopicByStatusLikeMessageText(""),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with empty string filters failed: %v", err)
 		}
@@ -1122,10 +1113,9 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 	})
 
 	t.Run("CountByStatusesHomePage - case insensitive message text filter", func(t *testing.T) {
-		filter := repo.FilterCountTopicByStatus{
-			LikeMessageText: "covid",
-		}
-		counts, err := app.Repository.Topics.CountByStatusHome(ctx, filter)
+		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
+			repo.CountTopicByStatusLikeMessageText("covid"),
+		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHomePage with lowercase COVID filter failed: %v", err)
 		}

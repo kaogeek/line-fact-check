@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
@@ -20,6 +21,47 @@ func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
 	deleteByID[factcheck.Topic](w, r, h.topics.Delete)
+}
+
+func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
+	opts := []repo.OptionListTopicHome{}
+	query := r.URL.Query().Get
+	id, text := query("like_id"), query("like_message_text")
+	if id != "" {
+		opts = append(opts, repo.LikeTopicID(id))
+	}
+	if text != "" {
+		opts = append(opts, repo.LikeTopicMessageText(text))
+	}
+	topics, err := h.topics.ListHome(r.Context(), opts...)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topics, http.StatusOK)
+}
+
+func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
+	opts := []repo.OptionCountTopicByStatus{}
+	query := r.URL.Query().Get
+	id, text := query("like_id"), query("like_message_text")
+	if id != "" {
+		opts = append(opts, repo.CountTopicByStatusLikeID(id))
+	}
+	if text != "" {
+		opts = append(opts, repo.CountTopicByStatusLikeMessageText(text))
+	}
+	counts, err := h.topics.CountByStatusHome(r.Context(), opts...)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	result := make(map[string]int64)
+	for k, v := range counts {
+		result[string(k)] = v
+		result["total"] += v
+	}
+	sendJSON(w, result, http.StatusOK)
 }
 
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {

@@ -334,6 +334,685 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 	})
 }
 
+func TestHandlerTopic_ListTopicsHome(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
+
+	// Create test server
+	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
+	defer testServer.Close()
+
+	// Clear all data
+	t.Log("WARN: Clearing all data from database")
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
+	if err != nil {
+		panic(err)
+	}
+	t.Log("WARN: Cleared all data from database")
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create topics with different statuses
+	topic1 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440001",
+		Name:         "Topic 1 - COVID Pending",
+		Description:  "COVID-19 related news (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic2 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440002",
+		Name:         "Topic 2 - Politics Resolved",
+		Description:  "Political news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as true",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic3 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440003",
+		Name:         "Topic 3 - Technology Pending",
+		Description:  "Technology news and updates (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	// Create topics in database
+	createdTopic1, err := app.Repository.Topics.Create(t.Context(), topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+
+	createdTopic2, err := app.Repository.Topics.Create(t.Context(), topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+
+	createdTopic3, err := app.Repository.Topics.Create(t.Context(), topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Text:      "COVID-19 vaccine is effective against new variants",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Text:      "Election results show clear victory",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message3 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Text:      "New AI technology breakthrough",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create messages in database
+	_, err = app.Repository.Messages.Create(t.Context(), message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(t.Context(), message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(t.Context(), message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	t.Run("ListTopicsHome - no query parameters (all topics)", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 3)
+	})
+
+	t.Run("ListTopicsHome - like_id filter only", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 2)
+
+		// Verify we got the expected topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 to be in results")
+		}
+		if !topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 to be in results")
+		}
+		if topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 to NOT be in results (different ID prefix)")
+		}
+	})
+
+	t.Run("ListTopicsHome - like_message_text filter only", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=COVID", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 1)
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (COVID topic), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListTopicsHome - both filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400&like_message_text=COVID", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 1)
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (matches both filters), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListTopicsHome - case insensitive message text filter", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=covid", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 1)
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (case insensitive COVID match), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListTopicsHome - no matches for filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=99999999&like_message_text=nonexistent", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 0)
+	})
+
+	t.Run("ListTopicsHome - empty string filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=&like_message_text=", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 3)
+	})
+
+	t.Run("ListTopicsHome - partial message text match", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=technology", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 1)
+
+		if topics[0].ID != createdTopic3.ID {
+			t.Errorf("Expected topic3 (technology topic), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListTopicsHome - ID pattern with wildcards", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400%25", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var topics []factcheck.Topic
+		err = json.NewDecoder(resp.Body).Decode(&topics)
+		assertEq(t, err, nil)
+		assertEq(t, len(topics), 2)
+
+		// Verify we got the expected topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 to be in results")
+		}
+		if !topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 to be in results")
+		}
+		if topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 to NOT be in results (different ID prefix)")
+		}
+	})
+}
+
+func TestHandlerTopic_CountTopicsHome(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		panic(err)
+	}
+	defer cleanup()
+
+	// Create test server
+	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
+	defer testServer.Close()
+
+	// Clear all data
+	t.Log("WARN: Clearing all data from database")
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM topics")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM messages")
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.PostgresConn.Exec(t.Context(), "DELETE FROM user_messages")
+	if err != nil {
+		panic(err)
+	}
+	t.Log("WARN: Cleared all data from database")
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create topics with different statuses
+	topic1 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440001",
+		Name:         "Topic 1 - COVID Pending",
+		Description:  "COVID-19 related news (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic2 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440002",
+		Name:         "Topic 2 - Politics Resolved",
+		Description:  "Political news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as true",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic3 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440003",
+		Name:         "Topic 3 - Technology Pending",
+		Description:  "Technology news and updates (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic4 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440004",
+		Name:         "Topic 4 - Sports Resolved",
+		Description:  "Sports news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as false",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	// Create topics in database
+	createdTopic1, err := app.Repository.Topics.Create(t.Context(), topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+
+	createdTopic2, err := app.Repository.Topics.Create(t.Context(), topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+
+	createdTopic3, err := app.Repository.Topics.Create(t.Context(), topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	createdTopic4, err := app.Repository.Topics.Create(t.Context(), topic4)
+	if err != nil {
+		t.Fatalf("Failed to create topic4: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Text:      "COVID-19 vaccine is effective against new variants",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Text:      "Election results show clear victory",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message3 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Text:      "New AI technology breakthrough",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message4 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440004",
+		TopicID:   createdTopic4.ID,
+		Text:      "World Cup final results announced",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create messages in database
+	_, err = app.Repository.Messages.Create(t.Context(), message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(t.Context(), message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(t.Context(), message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(t.Context(), message4)
+	if err != nil {
+		t.Fatalf("Failed to create message4: %v", err)
+	}
+
+	t.Run("CountTopicsHome - no query parameters (all topics)", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		// Debug: read the response body to see what we're getting
+		respBody, err := io.ReadAll(resp.Body)
+		assertEq(t, err, nil)
+		t.Logf("Response body: %s", string(respBody))
+
+		var result map[string]int64
+		err = json.NewDecoder(bytes.NewReader(respBody)).Decode(&result)
+		assertEq(t, err, nil)
+
+		t.Logf("Parsed result: %+v", result)
+
+		// Should have counts for each status plus total
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(2))
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(2))
+		assertEq(t, result["total"], int64(4))
+	})
+
+	t.Run("CountTopicsHome - like_id filter only", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_id=550e8400", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with '550e8400' in ID
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(1)) // topic2
+		assertEq(t, result["total"], int64(2))
+	})
+
+	t.Run("CountTopicsHome - like_message_text filter only", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_message_text=COVID", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with COVID messages
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
+		assertEq(t, result["total"], int64(1))
+	})
+
+	t.Run("CountTopicsHome - both filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_id=550e8400&like_message_text=COVID", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with both filters
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
+		assertEq(t, result["total"], int64(1))
+	})
+
+	t.Run("CountTopicsHome - case insensitive message text filter", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_message_text=covid", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with COVID messages (case insensitive)
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
+		assertEq(t, result["total"], int64(1))
+	})
+
+	t.Run("CountTopicsHome - no matches for filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_id=99999999&like_message_text=nonexistent", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have zero counts
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(0))
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0))
+		assertEq(t, result["total"], int64(0))
+	})
+
+	t.Run("CountTopicsHome - empty string filters", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_id=&like_message_text=", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for all topics (empty filters ignored)
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(2))
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(2))
+		assertEq(t, result["total"], int64(4))
+	})
+
+	t.Run("CountTopicsHome - partial message text match", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_message_text=technology", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with technology messages
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic3
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
+		assertEq(t, result["total"], int64(1))
+	})
+
+	t.Run("CountTopicsHome - ID pattern with wildcards", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_id=550e8400%25", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with '550e8400' prefix in ID
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(1)) // topic2
+		assertEq(t, result["total"], int64(2))
+	})
+
+	t.Run("CountTopicsHome - multiple status counts", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count?like_message_text=results", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Should have counts for topics with "results" in messages (topic2 and topic4)
+		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(0))  // none
+		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(2)) // topic2, topic4
+		assertEq(t, result["total"], int64(2))
+	})
+
+	t.Run("CountTopicsHome - response structure validation", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/count", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+
+		// Verify response structure
+		_, hasPending := result[string(factcheck.StatusTopicPending)]
+		_, hasResolved := result[string(factcheck.StatusTopicResolved)]
+		_, hasTotal := result["total"]
+
+		if !hasPending {
+			t.Errorf("Expected 'pending' key in response")
+		}
+		if !hasResolved {
+			t.Errorf("Expected 'resolved' key in response")
+		}
+		if !hasTotal {
+			t.Errorf("Expected 'total' key in response")
+		}
+
+		// Verify total is sum of individual counts
+		expectedTotal := result[string(factcheck.StatusTopicPending)] + result[string(factcheck.StatusTopicResolved)]
+		if result["total"] != expectedTotal {
+			t.Errorf("Expected total to be sum of pending and resolved, got total=%d, sum=%d", result["total"], expectedTotal)
+		}
+	})
+}
+
 func assertEq[X comparable](t *testing.T, actual, expected X) {
 	if actual != expected {
 		t.Logf("actual: %+v", actual)

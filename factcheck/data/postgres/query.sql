@@ -42,6 +42,23 @@ INNER JOIN messages m ON t.id = m.topic_id
 WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
 ORDER BY t.created_at DESC;
 
+-- name: ListTopicsByStatusAndMessageText :many
+SELECT DISTINCT t.* FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.status = $1 AND m.text LIKE $2 
+ORDER BY t.created_at DESC;
+
+-- name: ListTopicsByStatusAndLikeID :many
+SELECT * FROM topics t 
+WHERE t.status = $1 AND t.id::text LIKE $2::text 
+ORDER BY t.created_at DESC;
+
+-- name: ListTopicsByStatusAndLikeIDAndMessageText :many
+SELECT DISTINCT t.* FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text LIKE $3 
+ORDER BY t.created_at DESC;
+
 -- name: UpdateTopicStatus :one
 UPDATE topics SET 
     status = $2,

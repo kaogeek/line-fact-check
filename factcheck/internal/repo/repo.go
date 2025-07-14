@@ -58,3 +58,8 @@ func handleNotFound(err error, filter map[string]string) error {
 	}
 	return err
 }
+
+// substring surrounds the pattern with % for LIKE queries
+func substring(pattern string) string {
+	return "%" + pattern + "%"
+}

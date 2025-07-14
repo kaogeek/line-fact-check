@@ -9,6 +9,7 @@ import (
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
@@ -192,93 +193,6 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 		if topics[0].ID != createdTopic1.ID {
 			t.Errorf("Expected topic1 (COVID topic), got topic with ID %s", topics[0].ID)
-		}
-	})
-
-	t.Run("ListInIDsAndMessageText", func(t *testing.T) {
-		// Test filtering by both IDs and message text
-		ids := []string{createdTopic1.ID, createdTopic2.ID, createdTopic3.ID}
-		topics, err := app.Repository.Topics.ListInIDsAndMessageText(ctx, ids, "COVID")
-		if err != nil {
-			t.Fatalf("ListInIDsAndMessageText failed: %v", err)
-		}
-
-		if len(topics) != 1 {
-			t.Fatalf("Expected 1 topic with COVID messages from the specified IDs, got %d", len(topics))
-		}
-
-		if topics[0].ID != createdTopic1.ID {
-			t.Errorf("Expected topic1 (COVID topic), got topic with ID %s", topics[0].ID)
-		}
-	})
-
-	t.Run("ListFiltered - IDs only", func(t *testing.T) {
-		// Test wrapper method with IDs only
-		ids := []string{createdTopic1.ID, createdTopic2.ID}
-		topics, err := app.Repository.Topics.ListFiltered(ctx, ids, "")
-		if err != nil {
-			t.Fatalf("ListFiltered with IDs only failed: %v", err)
-		}
-
-		if len(topics) != 2 {
-			t.Fatalf("Expected 2 topics, got %d", len(topics))
-		}
-	})
-
-	t.Run("ListFiltered - message text only", func(t *testing.T) {
-		// Test wrapper method with message text only
-		topics, err := app.Repository.Topics.ListFiltered(ctx, nil, "Election")
-		if err != nil {
-			t.Fatalf("ListFiltered with message text only failed: %v", err)
-		}
-
-		if len(topics) != 1 {
-			t.Fatalf("Expected 1 topic with Election messages, got %d", len(topics))
-		}
-
-		if topics[0].ID != createdTopic2.ID {
-			t.Errorf("Expected topic2 (Politics topic), got topic with ID %s", topics[0].ID)
-		}
-	})
-
-	t.Run("ListFiltered - both filters", func(t *testing.T) {
-		// Test wrapper method with both filters
-		ids := []string{createdTopic1.ID, createdTopic2.ID, createdTopic3.ID}
-		topics, err := app.Repository.Topics.ListFiltered(ctx, ids, "COVID")
-		if err != nil {
-			t.Fatalf("ListFiltered with both filters failed: %v", err)
-		}
-
-		if len(topics) != 1 {
-			t.Fatalf("Expected 1 topic with COVID messages from the specified IDs, got %d", len(topics))
-		}
-
-		if topics[0].ID != createdTopic1.ID {
-			t.Errorf("Expected topic1 (COVID topic), got topic with ID %s", topics[0].ID)
-		}
-	})
-
-	t.Run("ListFiltered - no filters", func(t *testing.T) {
-		// Test wrapper method with no filters
-		topics, err := app.Repository.Topics.ListFiltered(ctx, nil, "")
-		if err != nil {
-			t.Fatalf("ListFiltered with no filters failed: %v", err)
-		}
-
-		if len(topics) != 3 {
-			t.Fatalf("Expected 3 topics (all), got %d", len(topics))
-		}
-	})
-
-	t.Run("ListFiltered - empty IDs", func(t *testing.T) {
-		// Test wrapper method with empty IDs
-		topics, err := app.Repository.Topics.ListFiltered(ctx, []string{}, "COVID")
-		if err != nil {
-			t.Fatalf("ListFiltered with empty IDs failed: %v", err)
-		}
-
-		if len(topics) != 1 {
-			t.Fatalf("Expected 1 topic with COVID messages, got %d", len(topics))
 		}
 	})
 
@@ -551,6 +465,323 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 		_, err = app.Repository.Messages.AssignTopic(ctx, createdMessage2.ID, "non-existent-topic-id")
 		if err == nil {
 			t.Fatalf("Expected error when assigning to non-existent topic")
+		}
+	})
+}
+
+func TestRepository_ListHomePage(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Clear all data
+	t.Log("Clearing all data from database")
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
+	if err != nil {
+		t.Fatalf("Failed to clear user_messages: %v", err)
+	}
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
+	if err != nil {
+		t.Fatalf("Failed to clear messages: %v", err)
+	}
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
+	if err != nil {
+		t.Fatalf("Failed to clear topics: %v", err)
+	}
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create topics with different statuses
+	topic1 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440001",
+		Name:         "Topic 1 - COVID Pending",
+		Description:  "COVID-19 related news (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic2 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440002",
+		Name:         "Topic 2 - Politics Resolved",
+		Description:  "Political news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as true",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic3 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440003",
+		Name:         "Topic 3 - Technology Pending",
+		Description:  "Technology news and updates (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	// Create topics in database
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Text:      "COVID-19 vaccine is effective against new variants",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Text:      "Election results show clear victory",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message3 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Text:      "New AI technology breakthrough",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create messages in database
+	_, err = app.Repository.Messages.Create(ctx, message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	t.Run("ListHomePage - no options (all topics)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx)
+		if err != nil {
+			t.Fatalf("ListHomePage with no options failed: %v", err)
+		}
+
+		if len(topics) != 3 {
+			t.Fatalf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHomePage - status filter only", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.WithTopicStatus(factcheck.StatusTopicPending))
+		if err != nil {
+			t.Fatalf("ListHomePage with status filter failed: %v", err)
+		}
+
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 pending topics, got %d", len(topics))
+		}
+
+		// Verify we got the pending topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 (pending) to be in results")
+		}
+		if !topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 (pending) to be in results")
+		}
+		if topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 (resolved) to NOT be in results")
+		}
+	})
+
+	t.Run("ListHomePage - message text filter only", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("ListHomePage with message text filter failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with COVID messages, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (COVID topic), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListHomePage - ID pattern filter only", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.LikeTopicID("550e8400"))
+		if err != nil {
+			t.Fatalf("ListHomePage with ID pattern filter failed: %v", err)
+		}
+
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 topics with '550e8400' in ID, got %d", len(topics))
+		}
+
+		// Verify we got the expected topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 to be in results")
+		}
+		if !topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 to be in results")
+		}
+		if topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 to NOT be in results (different ID prefix)")
+		}
+	})
+
+	t.Run("ListHomePage - ID pattern and message text filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("ListHomePage with ID pattern and message text filters failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with '550e8400' in ID and COVID messages, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (matches both filters), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListHomePage - status and message text filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.WithTopicStatus(factcheck.StatusTopicPending),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("ListHomePage with status and message text filters failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 pending topic with COVID messages, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (pending with COVID messages), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListHomePage - status and ID pattern filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.WithTopicStatus(factcheck.StatusTopicResolved),
+			repo.LikeTopicID("550e8400"))
+		if err != nil {
+			t.Fatalf("ListHomePage with status and ID pattern filters failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 resolved topic with '550e8400' in ID, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic2.ID {
+			t.Errorf("Expected topic2 (resolved with '550e8400' in ID), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListHomePage - all three filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.WithTopicStatus(factcheck.StatusTopicPending),
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("ListHomePage with all three filters failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 pending topic with '550e8400' in ID and COVID messages, got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 (matches all three filters), got topic with ID %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListHomePage - no matches for combined filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.WithTopicStatus(factcheck.StatusTopicResolved),
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("ListHomePage with no matches failed: %v", err)
+		}
+
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics (no resolved topics with '550e8400' in ID and COVID messages), got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHomePage - empty string filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.LikeTopicID(""),
+			repo.LikeTopicMessageText(""))
+		if err != nil {
+			t.Fatalf("ListHomePage with empty string filters failed: %v", err)
+		}
+
+		if len(topics) != 3 {
+			t.Fatalf("Expected 3 topics (empty filters should return all), got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHomePage - multiple options of same type (last one wins)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHomePage(ctx,
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicID("660e8400"))
+		if err != nil {
+			t.Fatalf("ListHomePage with multiple ID filters failed: %v", err)
+		}
+
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with '660e8400' in ID (last filter wins), got %d", len(topics))
+		}
+
+		if topics[0].ID != createdTopic3.ID {
+			t.Errorf("Expected topic3 (matches last ID filter), got topic with ID %s", topics[0].ID)
 		}
 	})
 }

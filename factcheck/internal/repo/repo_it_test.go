@@ -182,7 +182,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListByMessageText", func(t *testing.T) {
 		// Test filtering by message text containing "COVID"
-		topics, err := app.Repository.Topics.ListByMessageText(ctx, "COVID")
+		topics, err := app.Repository.Topics.ListLikeMessageText(ctx, "COVID")
 		if err != nil {
 			t.Fatalf("ListByMessageText failed: %v", err)
 		}
@@ -238,7 +238,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText", func(t *testing.T) {
 		// Test filtering by both ID pattern and message text
-		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "COVID")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "COVID")
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText failed: %v", err)
 		}
@@ -254,7 +254,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - no ID matches", func(t *testing.T) {
 		// Test filtering by ID pattern that doesn't match and message text that does
-		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "nonexistent", "COVID")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "nonexistent", "COVID")
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with no ID matches failed: %v", err)
 		}
@@ -266,7 +266,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - no message matches", func(t *testing.T) {
 		// Test filtering by ID pattern that matches and message text that doesn't
-		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "nonexistent")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "nonexistent")
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with no message matches failed: %v", err)
 		}
@@ -278,7 +278,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - both patterns match different topics", func(t *testing.T) {
 		// Test filtering by ID pattern that matches topic1 and message text that matches topic2
-		topics, err := app.Repository.Topics.ListLikeIDAndMessageText(ctx, "001", "Election")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "Election")
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with different topic matches failed: %v", err)
 		}

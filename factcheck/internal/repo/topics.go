@@ -19,9 +19,9 @@ type Topics interface {
 	ListHomePage(ctx context.Context, opts ...OptionListTopicHome) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
-	ListByMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error)
+	ListLikeMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error)
 	ListLikeID(ctx context.Context, idPattern string) ([]factcheck.Topic, error)
-	ListLikeIDAndMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error)
+	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
@@ -102,7 +102,7 @@ func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) 
 		return t.ListByStatus(ctx, f.status)
 
 	case empty(f.likeID) && empty(f.status):
-		return t.ListByMessageText(ctx, f.likeMessageText)
+		return t.ListLikeMessageText(ctx, f.likeMessageText)
 
 	case empty(f.likeMessageText) && empty(f.status):
 		return t.ListLikeID(ctx, f.likeID)
@@ -144,7 +144,7 @@ func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) 
 
 	case empty(f.status):
 		// ID pattern + message text filter
-		return t.ListLikeIDAndMessageText(ctx, f.likeID, f.likeMessageText)
+		return t.ListLikeIDLikeMessageText(ctx, f.likeID, f.likeMessageText)
 
 	default:
 		// All three filters
@@ -233,38 +233,10 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	return topics, nil
 }
 
-// ListByMessageText retrieves topics that have messages containing the given substring
-func (t *topics) ListByMessageText(ctx context.Context, text string) ([]factcheck.Topic, error) {
-	likePattern := substring(text)
+// ListLikeMessageText retrieves topics that have messages containing the given substring
+func (t *topics) ListLikeMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error) {
+	likePattern := substring(pattern)
 	dbTopics, err := t.queries.ListTopicsByMessageText(ctx, likePattern)
-	if err != nil {
-		return nil, err
-	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
-	}
-	return topics, nil
-}
-
-// ListInIDsAndMessageText retrieves topics by IDs that also have messages containing the given substring
-func (t *topics) ListInIDsAndMessageText(ctx context.Context, ids []string, text string) ([]factcheck.Topic, error) {
-	if len(ids) == 0 {
-		return nil, nil
-	}
-	uuidIDs := make([]pgtype.UUID, len(ids))
-	for i, id := range ids {
-		uuidID, err := uuid(id)
-		if err != nil {
-			return nil, err
-		}
-		uuidIDs[i] = uuidID
-	}
-	likePattern := substring(text)
-	dbTopics, err := t.queries.ListTopicsInIDsAndMessageText(ctx, postgres.ListTopicsInIDsAndMessageTextParams{
-		Column1: uuidIDs,
-		Text:    likePattern,
-	})
 	if err != nil {
 		return nil, err
 	}
@@ -294,15 +266,15 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string) ([]factcheck.
 	return topics, nil
 }
 
-// ListLikeIDAndMessageText retrieves topics by ID pattern and message text using SQL LIKE
-func (t *topics) ListLikeIDAndMessageText(ctx context.Context, idPattern string, messageText string) ([]factcheck.Topic, error) {
+// ListLikeIDLikeMessageText retrieves topics by ID pattern and message text using SQL LIKE
+func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error) {
 	// Add wildcards for LIKE queries if not already present
 	idLikePattern := idPattern
 	if !strings.Contains(idLikePattern, "%") {
 		idLikePattern = substring(idPattern)
 	}
 
-	messageLikePattern := substring(messageText)
+	messageLikePattern := substring(pattern)
 
 	dbTopics, err := t.queries.ListTopicsLikeIDAndMessageText(ctx, postgres.ListTopicsLikeIDAndMessageTextParams{
 		Column1: idLikePattern,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
@@ -65,6 +66,10 @@ func topicDomain(dbTopic postgres.Topic) factcheck.Topic {
 		topic.UpdatedAt = &dbTopic.UpdatedAt.Time
 	}
 	return topic
+}
+
+func topicsDomain(topics []postgres.Topic) []factcheck.Topic {
+	return utils.MapSlice(topics, topicDomain)
 }
 
 func message(m factcheck.Message) (postgres.CreateMessageParams, error) {

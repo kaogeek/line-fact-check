@@ -110,18 +110,14 @@ func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) 
 	case empty(f.likeID):
 		// Status + message text filter
 		likePattern := substring(f.likeMessageText)
-		dbTopics, err := t.queries.ListTopicsByStatusAndMessageText(ctx, postgres.ListTopicsByStatusAndMessageTextParams{
+		topics, err := t.queries.ListTopicsByStatusAndMessageText(ctx, postgres.ListTopicsByStatusAndMessageTextParams{
 			Status: string(f.status),
 			Text:   likePattern,
 		})
 		if err != nil {
 			return nil, err
 		}
-		topics := make([]factcheck.Topic, len(dbTopics))
-		for i, dbTopic := range dbTopics {
-			topics[i] = topicDomain(dbTopic)
-		}
-		return topics, nil
+		return topicsDomain(topics), nil
 
 	case empty(f.likeMessageText):
 		// Status + ID pattern filter
@@ -129,44 +125,35 @@ func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) 
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
-		dbTopics, err := t.queries.ListTopicsByStatusAndLikeID(ctx, postgres.ListTopicsByStatusAndLikeIDParams{
+		topics, err := t.queries.ListTopicsByStatusAndLikeID(ctx, postgres.ListTopicsByStatusAndLikeIDParams{
 			Status:  string(f.status),
 			Column2: idPattern,
 		})
 		if err != nil {
 			return nil, err
 		}
-		topics := make([]factcheck.Topic, len(dbTopics))
-		for i, dbTopic := range dbTopics {
-			topics[i] = topicDomain(dbTopic)
-		}
-		return topics, nil
+		return topicsDomain(topics), nil
 
 	case empty(f.status):
 		// ID pattern + message text filter
 		return t.ListLikeIDLikeMessageText(ctx, f.likeID, f.likeMessageText)
-
-	default:
-		// All three filters
-		idPattern := f.likeID
-		if !strings.Contains(idPattern, "%") {
-			idPattern = substring(idPattern)
-		}
-		messageLikePattern := substring(f.likeMessageText)
-		dbTopics, err := t.queries.ListTopicsByStatusAndLikeIDAndMessageText(ctx, postgres.ListTopicsByStatusAndLikeIDAndMessageTextParams{
-			Status:  string(f.status),
-			Column2: idPattern,
-			Text:    messageLikePattern,
-		})
-		if err != nil {
-			return nil, err
-		}
-		topics := make([]factcheck.Topic, len(dbTopics))
-		for i, dbTopic := range dbTopics {
-			topics[i] = topicDomain(dbTopic)
-		}
-		return topics, nil
 	}
+
+	// All three filters
+	idPattern := f.likeID
+	if !strings.Contains(idPattern, "%") {
+		idPattern = substring(idPattern)
+	}
+	messageLikePattern := substring(f.likeMessageText)
+	topics, err := t.queries.ListTopicsByStatusAndLikeIDAndMessageText(ctx, postgres.ListTopicsByStatusAndLikeIDAndMessageTextParams{
+		Status:  string(f.status),
+		Column2: idPattern,
+		Text:    messageLikePattern,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return topicsDomain(topics), nil
 }
 
 // Create creates a new topic using the topic adapter

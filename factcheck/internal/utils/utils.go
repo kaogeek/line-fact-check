@@ -20,3 +20,11 @@ func Ptr[T any](v T) *T {
 func NewID() interface{ String() string } {
 	return uuid.New()
 }
+
+func MapSlice[T any, U any](slice []T, fn func(T) U) []U {
+	result := make([]U, len(slice))
+	for i, v := range slice {
+		result[i] = fn(v)
+	}
+	return result
+}

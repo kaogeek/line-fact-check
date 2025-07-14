@@ -85,6 +85,26 @@ SELECT status, COUNT(*) as count
 FROM topics 
 GROUP BY status;
 
+-- name: CountTopicsByStatusLikeID :many
+SELECT status, COUNT(*) as count 
+FROM topics t 
+WHERE t.id::text LIKE $1::text 
+GROUP BY status;
+
+-- name: CountTopicsByStatusLikeMessageText :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE m.text LIKE $1 
+GROUP BY t.status;
+
+-- name: CountTopicsByStatusLikeIDLikeMessageText :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+GROUP BY t.status;
+
 -- name: DeleteTopic :exec
 DELETE FROM topics WHERE id = $1;
 

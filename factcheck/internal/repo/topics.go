@@ -16,7 +16,7 @@ type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context) ([]factcheck.Topic, error)
-	ListHomePage(ctx context.Context, opts ...OptionListTopicHome) ([]factcheck.Topic, error)
+	ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
 	ListLikeMessageText(ctx context.Context, pattern string) ([]factcheck.Topic, error)
@@ -24,6 +24,7 @@ type Topics interface {
 	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatuses(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusesHomePage(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -84,11 +85,7 @@ func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
 	return topics, nil
 }
 
-func empty[S ~string](s S) bool {
-	return s == ""
-}
-
-func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) ([]factcheck.Topic, error) {
+func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]factcheck.Topic, error) {
 	f := FilterListTopicsHome{}
 	for i := range opts {
 		f = opts[i](f)
@@ -154,6 +151,64 @@ func (t *topics) ListHomePage(ctx context.Context, opts ...OptionListTopicHome) 
 		return nil, err
 	}
 	return topicsDomain(topics), nil
+}
+
+type OptionCountTopicByStatus func(f FilterCountTopicByStatus) FilterCountTopicByStatus
+
+type FilterCountTopicByStatus struct {
+	LikeID          string
+	LikeMessageText string
+}
+
+func (t *topics) CountByStatusesHomePage(ctx context.Context, f FilterCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
+	switch {
+	case empty(f.LikeID) && empty(f.LikeMessageText):
+		return t.CountByStatuses(ctx)
+
+	case empty(f.LikeID):
+		likePattern := substring(f.LikeMessageText)
+		result, err := t.queries.CountTopicsByStatusLikeMessageText(ctx, likePattern)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[factcheck.StatusTopic]int64)
+		for i := range result {
+			m[factcheck.StatusTopic(result[i].Status)] = result[i].Count
+		}
+		return m, nil
+
+	case empty(f.LikeMessageText):
+		idPattern := f.LikeID
+		if !strings.Contains(idPattern, "%") {
+			idPattern = substring(idPattern)
+		}
+		result, err := t.queries.CountTopicsByStatusLikeID(ctx, idPattern)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[factcheck.StatusTopic]int64)
+		for i := range result {
+			m[factcheck.StatusTopic(result[i].Status)] = result[i].Count
+		}
+		return m, nil
+	}
+	idPattern := f.LikeID
+	if !strings.Contains(idPattern, "%") {
+		idPattern = substring(idPattern)
+	}
+	messageLikePattern := substring(f.LikeMessageText)
+	result, err := t.queries.CountTopicsByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsByStatusLikeIDLikeMessageTextParams{
+		Column1: idPattern,
+		Text:    messageLikePattern,
+	})
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[factcheck.StatusTopic]int64)
+	for i := range result {
+		m[factcheck.StatusTopic(result[i].Status)] = result[i].Count
+	}
+	return m, nil
 }
 
 // Create creates a new topic using the topic adapter
@@ -354,4 +409,8 @@ func (t *topics) UpdateName(ctx context.Context, id string, name string) (factch
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return topicDomain(dbTopic), nil
+}
+
+func empty[S ~string](s S) bool {
+	return s == ""
 }

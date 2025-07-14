@@ -13,6 +13,9 @@ import (
 type Querier interface {
 	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
+	CountTopicsByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsByStatusLikeIDRow, error)
+	CountTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsByStatusLikeIDLikeMessageTextParams) ([]CountTopicsByStatusLikeIDLikeMessageTextRow, error)
+	CountTopicsByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsByStatusLikeMessageTextRow, error)
 	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)

@@ -593,7 +593,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	}
 
 	t.Run("ListHomePage - no options (all topics)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx)
+		topics, err := app.Repository.Topics.ListHome(ctx)
 		if err != nil {
 			t.Fatalf("ListHomePage with no options failed: %v", err)
 		}
@@ -604,7 +604,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - status filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.WithTopicStatus(factcheck.StatusTopicPending))
+		topics, err := app.Repository.Topics.ListHome(ctx, repo.WithTopicStatus(factcheck.StatusTopicPending))
 		if err != nil {
 			t.Fatalf("ListHomePage with status filter failed: %v", err)
 		}
@@ -631,7 +631,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - message text filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.LikeTopicMessageText("COVID"))
+		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicMessageText("COVID"))
 		if err != nil {
 			t.Fatalf("ListHomePage with message text filter failed: %v", err)
 		}
@@ -646,7 +646,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - ID pattern filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx, repo.LikeTopicID("550e8400"))
+		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicID("550e8400"))
 		if err != nil {
 			t.Fatalf("ListHomePage with ID pattern filter failed: %v", err)
 		}
@@ -673,7 +673,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - ID pattern and message text filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
@@ -690,7 +690,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - status and message text filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
@@ -707,7 +707,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - status and ID pattern filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"))
 		if err != nil {
@@ -724,7 +724,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - all three filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
@@ -742,7 +742,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - no matches for combined filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
@@ -756,7 +756,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - empty string filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID(""),
 			repo.LikeTopicMessageText(""))
 		if err != nil {
@@ -769,7 +769,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 
 	t.Run("ListHomePage - multiple options of same type (last one wins)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHomePage(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicID("660e8400"))
 		if err != nil {
@@ -782,6 +782,362 @@ func TestRepository_ListHomePage(t *testing.T) {
 
 		if topics[0].ID != createdTopic3.ID {
 			t.Errorf("Expected topic3 (matches last ID filter), got topic with ID %s", topics[0].ID)
+		}
+	})
+}
+
+func TestRepository_CountByStatusesHomePage(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Clear all data
+	t.Log("Clearing all data from database")
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM user_messages")
+	if err != nil {
+		t.Fatalf("Failed to clear user_messages: %v", err)
+	}
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM messages")
+	if err != nil {
+		t.Fatalf("Failed to clear messages: %v", err)
+	}
+	_, err = app.PostgresConn.Exec(ctx, "DELETE FROM topics")
+	if err != nil {
+		t.Fatalf("Failed to clear topics: %v", err)
+	}
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create topics with different statuses
+	topic1 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440001",
+		Name:         "Topic 1 - COVID Pending",
+		Description:  "COVID-19 related news (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic2 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440002",
+		Name:         "Topic 2 - Politics Resolved",
+		Description:  "Political news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as true",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic3 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440003",
+		Name:         "Topic 3 - Technology Pending",
+		Description:  "Technology news and updates (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic4 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440004",
+		Name:         "Topic 4 - Sports Resolved",
+		Description:  "Sports news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as false",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	// Create topics in database
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	createdTopic4, err := app.Repository.Topics.Create(ctx, topic4)
+	if err != nil {
+		t.Fatalf("Failed to create topic4: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Text:      "COVID-19 vaccine is effective against new variants",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Text:      "Election results show clear victory",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message3 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Text:      "New AI technology breakthrough",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	message4 := factcheck.Message{
+		ID:        "660e8400-e29b-41d4-a716-446655440004",
+		TopicID:   createdTopic4.ID,
+		Text:      "World Cup final results announced",
+		Type:      factcheck.TypeMessageText,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create messages in database
+	_, err = app.Repository.Messages.Create(ctx, message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message4)
+	if err != nil {
+		t.Fatalf("Failed to create message4: %v", err)
+	}
+
+	t.Run("CountByStatusesHomePage - no filters (all topics)", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with no filters failed: %v", err)
+		}
+
+		expectedPending := int64(2)  // topic1, topic3
+		expectedResolved := int64(2) // topic2, topic4
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - ID pattern filter only", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID: "550e8400",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with ID pattern filter failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic1
+		expectedResolved := int64(1) // topic2
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with '550e8400' in ID, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with '550e8400' in ID, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - message text filter only", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeMessageText: "COVID",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with message text filter failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic1
+		expectedResolved := int64(0) // none
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with COVID messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with COVID messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - ID pattern and message text filters", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID:          "550e8400",
+			LikeMessageText: "COVID",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with ID pattern and message text filters failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic1
+		expectedResolved := int64(0) // none
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with '550e8400' in ID and COVID messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with '550e8400' in ID and COVID messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - message text filter for resolved topics", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeMessageText: "Election",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with Election message filter failed: %v", err)
+		}
+
+		expectedPending := int64(0)  // none
+		expectedResolved := int64(1) // topic2
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with Election messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with Election messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - ID pattern filter for different prefix", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID: "660e8400",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with '660e8400' ID filter failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic3
+		expectedResolved := int64(1) // topic4
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with '660e8400' in ID, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with '660e8400' in ID, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - combined filters for technology topics", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID:          "660e8400",
+			LikeMessageText: "technology",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with technology filters failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic3
+		expectedResolved := int64(0) // none
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with '660e8400' in ID and technology messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with '660e8400' in ID and technology messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - no matches for combined filters", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID:          "550e8400",
+			LikeMessageText: "technology",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with no matches filter failed: %v", err)
+		}
+
+		expectedPending := int64(0)  // none
+		expectedResolved := int64(0) // none
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with '550e8400' in ID and technology messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with '550e8400' in ID and technology messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - empty string filters", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeID:          "",
+			LikeMessageText: "",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with empty string filters failed: %v", err)
+		}
+
+		expectedPending := int64(2)  // topic1, topic3
+		expectedResolved := int64(2) // topic2, topic4
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics (empty filters should return all), got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics (empty filters should return all), got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusesHomePage - case insensitive message text filter", func(t *testing.T) {
+		filter := repo.FilterCountTopicByStatus{
+			LikeMessageText: "covid",
+		}
+		counts, err := app.Repository.Topics.CountByStatusesHomePage(ctx, filter)
+		if err != nil {
+			t.Fatalf("CountByStatusesHomePage with lowercase COVID filter failed: %v", err)
+		}
+
+		expectedPending := int64(1)  // topic1
+		expectedResolved := int64(0) // none
+
+		if counts[factcheck.StatusTopicPending] != expectedPending {
+			t.Errorf("Expected %d pending topics with lowercase COVID messages, got %d", expectedPending, counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != expectedResolved {
+			t.Errorf("Expected %d resolved topics with lowercase COVID messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
 		}
 	})
 }

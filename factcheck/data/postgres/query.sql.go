@@ -48,6 +48,109 @@ func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64
 	return count, err
 }
 
+const countTopicsByStatusLikeID = `-- name: CountTopicsByStatusLikeID :many
+SELECT status, COUNT(*) as count 
+FROM topics t 
+WHERE t.id::text LIKE $1::text 
+GROUP BY status
+`
+
+type CountTopicsByStatusLikeIDRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsByStatusLikeIDRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsByStatusLikeID, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsByStatusLikeIDRow
+	for rows.Next() {
+		var i CountTopicsByStatusLikeIDRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countTopicsByStatusLikeIDLikeMessageText = `-- name: CountTopicsByStatusLikeIDLikeMessageText :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE t.id::text LIKE $1::text AND m.text LIKE $2 
+GROUP BY t.status
+`
+
+type CountTopicsByStatusLikeIDLikeMessageTextParams struct {
+	Column1 string `json:"column_1"`
+	Text    string `json:"text"`
+}
+
+type CountTopicsByStatusLikeIDLikeMessageTextRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsByStatusLikeIDLikeMessageTextParams) ([]CountTopicsByStatusLikeIDLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsByStatusLikeIDLikeMessageText, arg.Column1, arg.Text)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsByStatusLikeIDLikeMessageTextRow
+	for rows.Next() {
+		var i CountTopicsByStatusLikeIDLikeMessageTextRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countTopicsByStatusLikeMessageText = `-- name: CountTopicsByStatusLikeMessageText :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+INNER JOIN messages m ON t.id = m.topic_id 
+WHERE m.text LIKE $1 
+GROUP BY t.status
+`
+
+type CountTopicsByStatusLikeMessageTextRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsByStatusLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsByStatusLikeMessageText, text)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsByStatusLikeMessageTextRow
+	for rows.Next() {
+		var i CountTopicsByStatusLikeMessageTextRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countTopicsGroupedByStatus = `-- name: CountTopicsGroupedByStatus :many
 SELECT status, COUNT(*) as count 
 FROM topics 

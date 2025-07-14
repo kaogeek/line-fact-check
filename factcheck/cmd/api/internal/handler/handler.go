@@ -14,7 +14,7 @@ import (
 
 type Handler interface {
 	CreateTopic(http.ResponseWriter, *http.Request)
-	ListTopics(http.ResponseWriter, *http.Request)
+	ListAllTopics(http.ResponseWriter, *http.Request)
 	ListTopicsHome(http.ResponseWriter, *http.Request)
 	CountTopicsHome(http.ResponseWriter, *http.Request)
 	GetTopicByID(http.ResponseWriter, *http.Request)

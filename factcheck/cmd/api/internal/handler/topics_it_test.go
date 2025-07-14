@@ -88,8 +88,8 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 		assertEq(t, err, nil)
 		assertEq(t, actualDB, expected)
 
-		t.Log("Testing ListTopics")
-		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/", nil)
+		t.Log("Testing ListAllTopics")
+		reqList, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/all", nil)
 		assertEq(t, err, nil)
 		respList, err := http.DefaultClient.Do(reqList)
 		assertEq(t, err, nil)
@@ -461,7 +461,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	}
 
 	t.Run("ListTopicsHome - no query parameters (all topics)", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -475,7 +475,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - like_id filter only", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_id=550e8400", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -505,7 +505,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - like_message_text filter only", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=COVID", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_message_text=COVID", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -523,7 +523,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - both filters", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400&like_message_text=COVID", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_id=550e8400&like_message_text=COVID", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -541,7 +541,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - case insensitive message text filter", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=covid", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_message_text=covid", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -559,7 +559,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - no matches for filters", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=99999999&like_message_text=nonexistent", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_id=99999999&like_message_text=nonexistent", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -573,7 +573,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - empty string filters", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=&like_message_text=", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_id=&like_message_text=", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -587,7 +587,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - partial message text match", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_message_text=technology", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_message_text=technology", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -605,7 +605,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 	})
 
 	t.Run("ListTopicsHome - ID pattern with wildcards", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/home?like_id=550e8400%25", nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/topics/?like_id=550e8400%25", nil)
 		assertEq(t, err, nil)
 		resp, err := http.DefaultClient.Do(req)
 		assertEq(t, err, nil)
@@ -799,16 +799,9 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		// Debug: read the response body to see what we're getting
-		respBody, err := io.ReadAll(resp.Body)
-		assertEq(t, err, nil)
-		t.Logf("Response body: %s", string(respBody))
-
 		var result map[string]int64
-		err = json.NewDecoder(bytes.NewReader(respBody)).Decode(&result)
+		err = json.NewDecoder(resp.Body).Decode(&result)
 		assertEq(t, err, nil)
-
-		t.Logf("Parsed result: %+v", result)
 
 		// Should have counts for each status plus total
 		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(2))
@@ -996,10 +989,10 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		_, hasTotal := result["total"]
 
 		if !hasPending {
-			t.Errorf("Expected 'pending' key in response")
+			t.Errorf("Expected '%s' key in response", string(factcheck.StatusTopicPending))
 		}
 		if !hasResolved {
-			t.Errorf("Expected 'resolved' key in response")
+			t.Errorf("Expected '%s' key in response", string(factcheck.StatusTopicResolved))
 		}
 		if !hasTotal {
 			t.Errorf("Expected 'total' key in response")

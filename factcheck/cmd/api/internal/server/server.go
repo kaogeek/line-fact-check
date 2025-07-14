@@ -22,8 +22,8 @@ type Server interface {
 
 func New(conf config.Config, h handler.Handler) *http.Server {
 	topics, messages := chi.NewMux(), chi.NewMux()
-	topics.Get("/", h.ListTopics)
-	topics.Get("/home", h.ListTopicsHome)
+	topics.Get("/all", h.ListAllTopics)
+	topics.Get("/", h.ListTopicsHome)
 	topics.Get("/count", h.CountTopicsHome)
 	topics.Get("/{id}", h.GetTopicByID)
 	topics.Post("/", h.CreateTopic)

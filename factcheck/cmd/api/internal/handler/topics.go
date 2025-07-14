@@ -11,7 +11,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
-func (h *handler) ListTopics(w http.ResponseWriter, r *http.Request) {
+func (h *handler) ListAllTopics(w http.ResponseWriter, r *http.Request) {
 	list(w, r, h.topics.List)
 }
 

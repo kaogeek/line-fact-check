@@ -555,25 +555,55 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatus
 }
 
 const listTopicsByStatusLikeID = `-- name: ListTopicsByStatusLikeID :many
-SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics t 
-WHERE t.status = $1 AND t.id::text LIKE $2::text 
-ORDER BY t.created_at DESC
+WITH numbered_topics AS (
+    SELECT id, name, description, status, result, result_status, created_at, updated_at, 
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
+           COUNT(*) OVER () as total_count
+    FROM topics t 
+    WHERE t.status = $1 AND t.id::text LIKE $2::text
+)
+SELECT id, name, description, status, result, result_status, created_at, updated_at
+FROM numbered_topics
+WHERE CASE 
+    WHEN $3 = 0 THEN true  -- No pagination
+    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
+    WHEN $3 < 0 THEN rn BETWEEN total_count + $3 + 1 AND total_count + $4  -- Negative pagination
+END
+ORDER BY created_at DESC
 `
 
 type ListTopicsByStatusLikeIDParams struct {
-	Status  string `json:"status"`
-	Column2 string `json:"column_2"`
+	Status  string      `json:"status"`
+	Column2 string      `json:"column_2"`
+	Column3 interface{} `json:"column_3"`
+	Column4 interface{} `json:"column_4"`
 }
 
-func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsByStatusLikeIDParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusLikeID, arg.Status, arg.Column2)
+type ListTopicsByStatusLikeIDRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Status       string             `json:"status"`
+	Result       pgtype.Text        `json:"result"`
+	ResultStatus pgtype.Text        `json:"result_status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsByStatusLikeIDParams) ([]ListTopicsByStatusLikeIDRow, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeID,
+		arg.Status,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Topic
+	var items []ListTopicsByStatusLikeIDRow
 	for rows.Next() {
-		var i Topic
+		var i ListTopicsByStatusLikeIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -595,27 +625,64 @@ func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsBy
 }
 
 const listTopicsByStatusLikeIDLikeMessageText = `-- name: ListTopicsByStatusLikeIDLikeMessageText :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3 
-ORDER BY t.created_at DESC
+WITH filtered_topics AS (
+    SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+    FROM topics t
+    INNER JOIN messages m ON t.id = m.topic_id
+    WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3
+),
+total_count AS (
+    SELECT COUNT(*) as total_count FROM filtered_topics
+),
+numbered_topics AS (
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
+    FROM filtered_topics
+)
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+FROM numbered_topics nt, total_count
+WHERE CASE 
+    WHEN $4 = 0 THEN true  -- No pagination
+    WHEN $4 > 0 THEN rn BETWEEN $5 + 1 AND $5 + $4  -- Normal pagination
+    WHEN $4 < 0 THEN rn BETWEEN total_count.total_count + $4 + 1 AND total_count.total_count + $5  -- Negative pagination
+END
+ORDER BY created_at DESC
 `
 
 type ListTopicsByStatusLikeIDLikeMessageTextParams struct {
-	Status  string `json:"status"`
-	Column2 string `json:"column_2"`
-	Text    string `json:"text"`
+	Status  string      `json:"status"`
+	Column2 string      `json:"column_2"`
+	Text    string      `json:"text"`
+	Column4 interface{} `json:"column_4"`
+	Column5 interface{} `json:"column_5"`
 }
 
-func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeIDLikeMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusLikeIDLikeMessageText, arg.Status, arg.Column2, arg.Text)
+type ListTopicsByStatusLikeIDLikeMessageTextRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Status       string             `json:"status"`
+	Result       pgtype.Text        `json:"result"`
+	ResultStatus pgtype.Text        `json:"result_status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeIDLikeMessageTextParams) ([]ListTopicsByStatusLikeIDLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeIDLikeMessageText,
+		arg.Status,
+		arg.Column2,
+		arg.Text,
+		arg.Column4,
+		arg.Column5,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Topic
+	var items []ListTopicsByStatusLikeIDLikeMessageTextRow
 	for rows.Next() {
-		var i Topic
+		var i ListTopicsByStatusLikeIDLikeMessageTextRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -637,26 +704,62 @@ func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, a
 }
 
 const listTopicsByStatusLikeMessageText = `-- name: ListTopicsByStatusLikeMessageText :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.status = $1 AND m.text ILIKE $2 
-ORDER BY t.created_at DESC
+WITH filtered_topics AS (
+    SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+    FROM topics t
+    INNER JOIN messages m ON t.id = m.topic_id
+    WHERE t.status = $1 AND m.text ILIKE $2
+),
+total_count AS (
+    SELECT COUNT(*) as total_count FROM filtered_topics
+),
+numbered_topics AS (
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
+    FROM filtered_topics
+)
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+FROM numbered_topics nt, total_count
+WHERE CASE 
+    WHEN $3 = 0 THEN true  -- No pagination
+    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
+    WHEN $3 < 0 THEN rn BETWEEN total_count.total_count + $3 + 1 AND total_count.total_count + $4  -- Negative pagination
+END
+ORDER BY created_at DESC
 `
 
 type ListTopicsByStatusLikeMessageTextParams struct {
-	Status string `json:"status"`
-	Text   string `json:"text"`
+	Status  string      `json:"status"`
+	Text    string      `json:"text"`
+	Column3 interface{} `json:"column_3"`
+	Column4 interface{} `json:"column_4"`
 }
 
-func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsByStatusLikeMessageText, arg.Status, arg.Text)
+type ListTopicsByStatusLikeMessageTextRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Status       string             `json:"status"`
+	Result       pgtype.Text        `json:"result"`
+	ResultStatus pgtype.Text        `json:"result_status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeMessageTextParams) ([]ListTopicsByStatusLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, listTopicsByStatusLikeMessageText,
+		arg.Status,
+		arg.Text,
+		arg.Column3,
+		arg.Column4,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Topic
+	var items []ListTopicsByStatusLikeMessageTextRow
 	for rows.Next() {
-		var i Topic
+		var i ListTopicsByStatusLikeMessageTextRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -777,26 +880,62 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDPara
 }
 
 const listTopicsLikeIDLikeMessageText = `-- name: ListTopicsLikeIDLikeMessageText :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
-ORDER BY t.created_at DESC
+WITH filtered_topics AS (
+    SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+    FROM topics t
+    INNER JOIN messages m ON t.id = m.topic_id
+    WHERE t.id::text LIKE $1::text AND m.text ILIKE $2
+),
+total_count AS (
+    SELECT COUNT(*) as total_count FROM filtered_topics
+),
+numbered_topics AS (
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
+    FROM filtered_topics
+)
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+FROM numbered_topics nt, total_count
+WHERE CASE 
+    WHEN $3 = 0 THEN true  -- No pagination
+    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
+    WHEN $3 < 0 THEN rn BETWEEN total_count.total_count + $3 + 1 AND total_count.total_count + $4  -- Negative pagination
+END
+ORDER BY created_at DESC
 `
 
 type ListTopicsLikeIDLikeMessageTextParams struct {
-	Column1 string `json:"column_1"`
-	Text    string `json:"text"`
+	Column1 string      `json:"column_1"`
+	Text    string      `json:"text"`
+	Column3 interface{} `json:"column_3"`
+	Column4 interface{} `json:"column_4"`
 }
 
-func (q *Queries) ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsLikeIDLikeMessageText, arg.Column1, arg.Text)
+type ListTopicsLikeIDLikeMessageTextRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Status       string             `json:"status"`
+	Result       pgtype.Text        `json:"result"`
+	ResultStatus pgtype.Text        `json:"result_status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]ListTopicsLikeIDLikeMessageTextRow, error) {
+	rows, err := q.db.Query(ctx, listTopicsLikeIDLikeMessageText,
+		arg.Column1,
+		arg.Text,
+		arg.Column3,
+		arg.Column4,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Topic
+	var items []ListTopicsLikeIDLikeMessageTextRow
 	for rows.Next() {
-		var i Topic
+		var i ListTopicsLikeIDLikeMessageTextRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

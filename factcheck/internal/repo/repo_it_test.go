@@ -289,7 +289,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText", func(t *testing.T) {
 		// Test filtering by both ID pattern and message text
-		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "COVID")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "COVID", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText failed: %v", err)
 		}
@@ -305,7 +305,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - no ID matches", func(t *testing.T) {
 		// Test filtering by ID pattern that doesn't match and message text that does
-		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "nonexistent", "COVID")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "nonexistent", "COVID", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with no ID matches failed: %v", err)
 		}
@@ -317,7 +317,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - no message matches", func(t *testing.T) {
 		// Test filtering by ID pattern that matches and message text that doesn't
-		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "nonexistent")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "nonexistent", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with no message matches failed: %v", err)
 		}
@@ -329,7 +329,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeIDAndMessageText - both patterns match different topics", func(t *testing.T) {
 		// Test filtering by ID pattern that matches topic1 and message text that matches topic2
-		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "Election")
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "001", "Election", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeIDAndMessageText with different topic matches failed: %v", err)
 		}
@@ -698,7 +698,7 @@ func TestRepository_ListHome(t *testing.T) {
 	}
 
 	t.Run("ListHome - no options (all topics)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0)
 		if err != nil {
 			t.Fatalf("ListHome with no options failed: %v", err)
 		}
@@ -709,7 +709,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, repo.WithTopicStatus(factcheck.StatusTopicPending))
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, repo.WithTopicStatus(factcheck.StatusTopicPending))
 		if err != nil {
 			t.Fatalf("ListHome with status filter failed: %v", err)
 		}
@@ -736,7 +736,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - message text filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicMessageText("COVID"))
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, repo.LikeTopicMessageText("COVID"))
 		if err != nil {
 			t.Fatalf("ListHome with message text filter failed: %v", err)
 		}
@@ -751,7 +751,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern filter only", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicID("550e8400"))
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, repo.LikeTopicID("550e8400"))
 		if err != nil {
 			t.Fatalf("ListHome with ID pattern filter failed: %v", err)
 		}
@@ -778,7 +778,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern and message text filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
@@ -795,7 +795,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and message text filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
@@ -812,7 +812,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and ID pattern filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"))
 		if err != nil {
@@ -829,7 +829,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - all three filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
@@ -847,7 +847,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - no matches for combined filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
@@ -861,7 +861,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - empty string filters", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.LikeTopicID(""),
 			repo.LikeTopicMessageText(""))
 		if err != nil {
@@ -874,7 +874,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - multiple options of same type (last one wins)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx,
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicID("660e8400"))
 		if err != nil {

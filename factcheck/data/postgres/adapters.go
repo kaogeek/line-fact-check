@@ -173,6 +173,106 @@ func ToTopicFromIDRow(data ListTopicsLikeIDRow) factcheck.Topic {
 	return topic
 }
 
+// ToTopicFromStatusLikeMessageTextRow converts a ListTopicsByStatusLikeMessageTextRow to factcheck.Topic
+func ToTopicFromStatusLikeMessageTextRow(data ListTopicsByStatusLikeMessageTextRow) factcheck.Topic {
+	topic := factcheck.Topic{
+		Name:        data.Name,
+		Description: data.Description,
+		Status:      factcheck.StatusTopic(data.Status),
+	}
+	if data.ID.Valid {
+		topic.ID = data.ID.String()
+	}
+	if data.Result.Valid {
+		topic.Result = data.Result.String
+	}
+	if data.ResultStatus.Valid {
+		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
+	}
+	if data.CreatedAt.Valid {
+		topic.CreatedAt = data.CreatedAt.Time
+	}
+	if data.UpdatedAt.Valid {
+		topic.UpdatedAt = &data.UpdatedAt.Time
+	}
+	return topic
+}
+
+// ToTopicFromStatusLikeIDRow converts a ListTopicsByStatusLikeIDRow to factcheck.Topic
+func ToTopicFromStatusLikeIDRow(data ListTopicsByStatusLikeIDRow) factcheck.Topic {
+	topic := factcheck.Topic{
+		Name:        data.Name,
+		Description: data.Description,
+		Status:      factcheck.StatusTopic(data.Status),
+	}
+	if data.ID.Valid {
+		topic.ID = data.ID.String()
+	}
+	if data.Result.Valid {
+		topic.Result = data.Result.String
+	}
+	if data.ResultStatus.Valid {
+		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
+	}
+	if data.CreatedAt.Valid {
+		topic.CreatedAt = data.CreatedAt.Time
+	}
+	if data.UpdatedAt.Valid {
+		topic.UpdatedAt = &data.UpdatedAt.Time
+	}
+	return topic
+}
+
+// ToTopicFromIDLikeMessageTextRow converts a ListTopicsLikeIDLikeMessageTextRow to factcheck.Topic
+func ToTopicFromIDLikeMessageTextRow(data ListTopicsLikeIDLikeMessageTextRow) factcheck.Topic {
+	topic := factcheck.Topic{
+		Name:        data.Name,
+		Description: data.Description,
+		Status:      factcheck.StatusTopic(data.Status),
+	}
+	if data.ID.Valid {
+		topic.ID = data.ID.String()
+	}
+	if data.Result.Valid {
+		topic.Result = data.Result.String
+	}
+	if data.ResultStatus.Valid {
+		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
+	}
+	if data.CreatedAt.Valid {
+		topic.CreatedAt = data.CreatedAt.Time
+	}
+	if data.UpdatedAt.Valid {
+		topic.UpdatedAt = &data.UpdatedAt.Time
+	}
+	return topic
+}
+
+// ToTopicFromStatusLikeIDLikeMessageTextRow converts a ListTopicsByStatusLikeIDLikeMessageTextRow to factcheck.Topic
+func ToTopicFromStatusLikeIDLikeMessageTextRow(data ListTopicsByStatusLikeIDLikeMessageTextRow) factcheck.Topic {
+	topic := factcheck.Topic{
+		Name:        data.Name,
+		Description: data.Description,
+		Status:      factcheck.StatusTopic(data.Status),
+	}
+	if data.ID.Valid {
+		topic.ID = data.ID.String()
+	}
+	if data.Result.Valid {
+		topic.Result = data.Result.String
+	}
+	if data.ResultStatus.Valid {
+		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
+	}
+	if data.CreatedAt.Valid {
+		topic.CreatedAt = data.CreatedAt.Time
+	}
+	if data.UpdatedAt.Valid {
+		topic.UpdatedAt = &data.UpdatedAt.Time
+	}
+	return topic
+}
+
 func MessageCreator(m factcheck.Message) (CreateMessageParams, error) {
 	id, err := UUID(m.ID)
 	if err != nil {

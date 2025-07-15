@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
@@ -18,22 +17,11 @@ func (h *handler) ListAllTopics(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *handler) ListTopicsPaginated(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get
-	queryLimit := query("limit")
-	queryOffset := query("offset")
-	limit, err := strconv.Atoi(queryLimit)
+// TODO: register route
+func (h *handler) ListTopics(w http.ResponseWriter, r *http.Request) {
+	limit, offset, err := limitOffSet(r)
 	if err != nil {
-		errBadRequest(w, fmt.Sprintf("bad query limit: '%s'", queryLimit))
-		return
-	}
-	offset, err := strconv.Atoi("offset")
-	if err != nil {
-		errBadRequest(w, fmt.Sprintf("bad query offset: '%s'", queryOffset))
-		return
-	}
-	if offset < 0 {
-		errBadRequest(w, fmt.Sprintf("negative offset: %d", offset))
+		errBadRequest(w, err.Error())
 		return
 	}
 	topics, err := h.topics.List(r.Context(), limit, offset)
@@ -53,6 +41,11 @@ func (h *handler) DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
+	limit, offset, err := limitOffSet(r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
 	opts := []repo.OptionListTopicHome{}
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
@@ -62,7 +55,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 	if text != "" {
 		opts = append(opts, repo.LikeTopicMessageText(text))
 	}
-	topics, err := h.topics.ListHome(r.Context(), opts...)
+	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

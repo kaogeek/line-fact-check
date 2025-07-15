@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
@@ -62,6 +63,27 @@ func handleNotFound(w http.ResponseWriter, err error, resourceType string, filte
 
 func paramID(r *http.Request) string {
 	return chi.URLParam(r, "id")
+}
+
+func limitOffSet(r *http.Request) (int, int, error) {
+	query := r.URL.Query().Get
+	queryLimit := query("limit")
+	queryOffset := query("offset")
+	limit, offset := 0, 0
+	var err error
+	if queryLimit != "" {
+		limit, err = strconv.Atoi(queryLimit)
+		if err != nil {
+			return 0, 0, fmt.Errorf("bad query limit: '%s'", queryLimit)
+		}
+	}
+	if queryOffset != "" {
+		offset, err = strconv.Atoi(queryOffset)
+		if err != nil {
+			return 0, 0, fmt.Errorf("bad query offset: '%s'", queryOffset)
+		}
+	}
+	return limit, offset, nil
 }
 
 func decode[T any](r *http.Request) (T, error) {

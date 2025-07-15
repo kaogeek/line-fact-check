@@ -66,6 +66,15 @@ type UserMessage struct {
 	UpdatedAt *time.Time      `json:"updated_at"`
 }
 
+// PaginatedResult represents a paginated result with metadata
+type PaginatedResult[T any] struct {
+	Data    []T   `json:"data"`
+	Total   int64 `json:"total"`
+	Limit   int   `json:"limit"`
+	Offset  int   `json:"offset"`
+	HasMore bool  `json:"has_more"`
+}
+
 func (s StatusTopic) IsValid() bool {
 	switch s {
 	case

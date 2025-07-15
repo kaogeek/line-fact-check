@@ -12,7 +12,24 @@ import (
 )
 
 func (h *handler) ListAllTopics(w http.ResponseWriter, r *http.Request) {
-	list(w, r, h.topics.List)
+	list(w, r, func(ctx context.Context) ([]factcheck.Topic, error) {
+		return h.topics.List(r.Context(), 0, 0)
+	})
+}
+
+// TODO: register route
+func (h *handler) ListTopics(w http.ResponseWriter, r *http.Request) {
+	limit, offset, err := limitOffSet(r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	topics, err := h.topics.List(r.Context(), limit, offset)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topics, http.StatusOK)
 }
 
 func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +41,11 @@ func (h *handler) DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
+	limit, offset, err := limitOffSet(r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
 	opts := []repo.OptionListTopicHome{}
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
@@ -33,7 +55,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 	if text != "" {
 		opts = append(opts, repo.LikeTopicMessageText(text))
 	}
-	topics, err := h.topics.ListHome(r.Context(), opts...)
+	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

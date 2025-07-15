@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
@@ -12,7 +13,35 @@ import (
 )
 
 func (h *handler) ListAllTopics(w http.ResponseWriter, r *http.Request) {
-	list(w, r, h.topics.List)
+	list(w, r, func(ctx context.Context) ([]factcheck.Topic, error) {
+		return h.topics.List(r.Context(), 0, 0)
+	})
+}
+
+func (h *handler) ListTopicsPaginated(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get
+	queryLimit := query("limit")
+	queryOffset := query("offset")
+	limit, err := strconv.Atoi(queryLimit)
+	if err != nil {
+		errBadRequest(w, fmt.Sprintf("bad query limit: '%s'", queryLimit))
+		return
+	}
+	offset, err := strconv.Atoi("offset")
+	if err != nil {
+		errBadRequest(w, fmt.Sprintf("bad query offset: '%s'", queryOffset))
+		return
+	}
+	if offset < 0 {
+		errBadRequest(w, fmt.Sprintf("negative offset: %d", offset))
+		return
+	}
+	topics, err := h.topics.List(r.Context(), limit, offset)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(w, topics, http.StatusOK)
 }
 
 func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {

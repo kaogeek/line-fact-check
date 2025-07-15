@@ -233,7 +233,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListByMessageText", func(t *testing.T) {
 		// Test filtering by message text containing "COVID"
-		topics, err := app.Repository.Topics.ListLikeMessageText(ctx, "COVID")
+		topics, err := app.Repository.Topics.ListLikeMessageText(ctx, "COVID", 0, 0)
 		if err != nil {
 			t.Fatalf("ListByMessageText failed: %v", err)
 		}
@@ -249,7 +249,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeID", func(t *testing.T) {
 		// Test filtering by ID pattern - look for topics with "001" in their ID
-		topics, err := app.Repository.Topics.ListLikeID(ctx, "001")
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "001", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeID failed: %v", err)
 		}
@@ -265,7 +265,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeID - multiple matches", func(t *testing.T) {
 		// Test filtering by ID pattern - look for topics with "550e8400" in their ID
-		topics, err := app.Repository.Topics.ListLikeID(ctx, "550e8400")
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "550e8400", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeID with multiple matches failed: %v", err)
 		}
@@ -277,7 +277,7 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	t.Run("ListLikeID - no matches", func(t *testing.T) {
 		// Test filtering by ID pattern that doesn't match any topics
-		topics, err := app.Repository.Topics.ListLikeID(ctx, "nonexistent")
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "nonexistent", 0, 0)
 		if err != nil {
 			t.Fatalf("ListLikeID with no matches failed: %v", err)
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
@@ -76,21 +77,34 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := h.repository.Begin(r.Context())
 	if err != nil {
+		slog.Error("error beginning transaction",
+			"err", err,
+			"message", body.Text,
+		)
 		errInternalError(w, err.Error())
 		return
 	}
 	// As per doc, they defer rollback
 	// https://docs.sqlc.dev/en/stable/howto/transactions.html
 	defer tx.Rollback(r.Context())
+	withTx := repo.WithTx(tx)
 
-	createdUserMessage, err := h.userMessages.Create(r.Context(), userMessage)
+	createdUserMessage, err := h.userMessages.Create(r.Context(), userMessage, withTx)
 	if err != nil {
-		errInternalError(w, fmt.Sprintf("error creating user_messages: %s", err.Error()))
+		slog.Error("error creating row in user_messages",
+			"err", err,
+			"message", body.Text,
+		)
+		errInternalError(w, fmt.Sprintf("error creating user_message: %s", err.Error()))
 		return
 	}
-	createdMessage, err := h.messages.Create(r.Context(), message)
+	createdMessage, err := h.messages.Create(r.Context(), message, withTx)
 	if err != nil {
-		errInternalError(w, fmt.Sprintf("error creating messages: %s", err.Error()))
+		slog.Error("error creating row in messages",
+			"err", err,
+			"message", body.Text,
+		)
+		errInternalError(w, fmt.Sprintf("error creating message: %s", err.Error()))
 		return
 	}
 

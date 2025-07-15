@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,11 +18,6 @@ type Repository struct {
 	TxnManager   postgres.TxnManager
 }
 
-type Tx interface {
-	Commit(context.Context) error
-	Rollback(context.Context) error
-}
-
 // ErrNotFound is returned when a requested resource is not found
 type ErrNotFound struct {
 	Err    error `json:"-"` // Prevent leaks?
@@ -38,10 +32,6 @@ func New(queries *postgres.Queries, conn *pgx.Conn) Repository {
 		UserMessages: NewUserMessages(queries),
 		TxnManager:   postgres.NewTxnManager(conn),
 	}
-}
-
-func (r *Repository) Begin(ctx context.Context) (Tx, error) {
-	return r.TxnManager.Begin(ctx)
 }
 
 // IsNotFound checks if the error is a not found error

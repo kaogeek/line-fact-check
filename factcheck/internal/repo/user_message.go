@@ -9,7 +9,7 @@ import (
 
 // UserMessages defines the interface for user message data operations
 type UserMessages interface {
-	Create(ctx context.Context, userMessage factcheck.UserMessage) (factcheck.UserMessage, error)
+	Create(ctx context.Context, userMessage factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error)
 	GetByID(ctx context.Context, id string) (factcheck.UserMessage, error)
 	Update(ctx context.Context, userMessage factcheck.UserMessage) (factcheck.UserMessage, error)
 	Delete(ctx context.Context, id string) error
@@ -30,12 +30,20 @@ func NewUserMessages(
 }
 
 // Create creates a new user message using the userMessage adapter
-func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage) (factcheck.UserMessage, error) {
+func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error) {
+	options := Options{}
+	for i := range opts {
+		options = opts[i](options)
+	}
 	params, err := userMessage(um)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
-	dbUserMessage, err := u.queries.CreateUserMessage(ctx, params)
+	query := u.queries.CreateUserMessage
+	if options.tx != nil {
+		query = u.queries.WithTx(options.tx).CreateUserMessage
+	}
+	dbUserMessage, err := query(ctx, params)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}

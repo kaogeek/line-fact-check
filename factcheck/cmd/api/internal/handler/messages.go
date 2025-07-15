@@ -24,7 +24,9 @@ func (h *handler) ListMessagesByTopicID(w http.ResponseWriter, r *http.Request) 
 
 func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 	create(
-		w, r, h.messages.Create,
+		w, r, func(ctx context.Context, m factcheck.Message) (factcheck.Message, error) {
+			return h.messages.Create(ctx, m)
+		},
 		createCheck(func(_ context.Context, m factcheck.Message) error {
 			if m.Text == "" {
 				return errors.New("empty text")

@@ -27,7 +27,7 @@ func InitializeServer() (server.Server, func(), error) {
 		return nil, nil, err
 	}
 	queries := postgres.New(conn)
-	repository := repo.New(queries)
+	repository := repo.New(queries, conn)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	return httpServer, func() {
@@ -47,7 +47,7 @@ func InitializeContainer() (Container, func(), error) {
 		return Container{}, nil, err
 	}
 	queries := postgres.New(conn)
-	repository := repo.New(queries)
+	repository := repo.New(queries, conn)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	container := New(configConfig, conn, queries, repository, handlerHandler, httpServer)
@@ -66,7 +66,7 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 		return ContainerTest{}, nil, err
 	}
 	queries := postgres.New(conn)
-	repository := repo.New(queries)
+	repository := repo.New(queries, conn)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	containerTest, cleanup2 := NewTest(configConfig, conn, queries, repository, handlerHandler, httpServer)

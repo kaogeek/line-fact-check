@@ -73,17 +73,18 @@ func topicsDomain(topics []postgres.Topic) []factcheck.Topic {
 }
 
 func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
-	var messageID pgtype.UUID
-	if err := messageID.Scan(m.ID); err != nil {
+	id, err := uuid(m.ID)
+	if err != nil {
 		return postgres.CreateMessageParams{}, err
 	}
-	var userMessageID pgtype.UUID
-	if err := userMessageID.Scan(m.UserMessageID); err != nil {
+	userMessageID, err := uuid(m.UserMessageID)
+	if err != nil {
 		return postgres.CreateMessageParams{}, err
 	}
 	var topicID pgtype.UUID
 	if m.TopicID != "" {
-		if err := topicID.Scan(m.TopicID); err != nil {
+		topicID, err = uuid(m.TopicID)
+		if err != nil {
 			return postgres.CreateMessageParams{}, err
 		}
 	}
@@ -96,7 +97,7 @@ func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
 		return postgres.CreateMessageParams{}, err
 	}
 	return postgres.CreateMessageParams{
-		ID:            messageID,
+		ID:            id,
 		UserMessageID: userMessageID,
 		Type:          string(m.Type),
 		Status:        string(m.Status),
@@ -108,8 +109,8 @@ func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
 }
 
 func messageUpdate(m factcheck.Message) (postgres.UpdateMessageParams, error) {
-	var messageID pgtype.UUID
-	if err := messageID.Scan(m.ID); err != nil {
+	id, err := uuid(m.ID)
+	if err != nil {
 		return postgres.UpdateMessageParams{}, err
 	}
 	updatedAt, err := timestamptzNullable(m.UpdatedAt)
@@ -117,7 +118,7 @@ func messageUpdate(m factcheck.Message) (postgres.UpdateMessageParams, error) {
 		return postgres.UpdateMessageParams{}, err
 	}
 	return postgres.UpdateMessageParams{
-		ID:        messageID,
+		ID:        id,
 		Text:      m.Text,
 		Type:      string(m.Type),
 		Status:    string(m.Status),

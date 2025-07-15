@@ -436,6 +436,10 @@ func UUID(id string) (pgtype.UUID, error) {
 	return uuid, err
 }
 
+func UUIDs(ids []string) ([]pgtype.UUID, error) {
+	return utils.MapSlice(ids, UUID)
+}
+
 func UUIDNullable(id string) pgtype.UUID {
 	//nolint
 	uuid, err := UUID(id)

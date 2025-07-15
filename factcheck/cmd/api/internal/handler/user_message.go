@@ -73,7 +73,7 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:     nil,
 	}
 
-	tx, err := h.repository.Begin(r.Context())
+	tx, err := h.repository.BeginTx(r.Context(), repo.Serializable)
 	if err != nil {
 		slog.Error("error beginning transaction",
 			"err", err,

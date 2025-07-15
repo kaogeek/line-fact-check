@@ -13,6 +13,13 @@ import (
 )
 
 type Tx pgx.Tx
+type IsoLevel pgx.TxIsoLevel
+
+const (
+	IsoLevelReadCommitted  IsoLevel = IsoLevel(pgx.ReadCommitted)
+	IsoLevelRepeatableRead IsoLevel = IsoLevel(pgx.RepeatableRead)
+	IsoLevelSerializable   IsoLevel = IsoLevel(pgx.Serializable)
+)
 
 type TxnManager struct {
 	c *pgx.Conn
@@ -20,6 +27,12 @@ type TxnManager struct {
 
 func (t TxnManager) Begin(ctx context.Context) (Tx, error) {
 	return t.c.Begin(ctx)
+}
+
+func (t TxnManager) BeginTx(ctx context.Context, level IsoLevel) (Tx, error) {
+	return t.c.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel: pgx.TxIsoLevel(level),
+	})
 }
 
 func NewTxnManager(conn *pgx.Conn) TxnManager {

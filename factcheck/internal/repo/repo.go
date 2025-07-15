@@ -70,3 +70,13 @@ func handleNotFound(err error, filter map[string]string) error {
 func substring(pattern string) string {
 	return "%" + pattern + "%"
 }
+
+func sanitize(limit, offset int) (int, int) {
+	if limit < 0 {
+		limit = 0
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return limit, offset
+}

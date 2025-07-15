@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
@@ -96,6 +94,7 @@ func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 
 // ListByStatus retrieves topics by status with pagination
 func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error) {
+	limit, offset = sanitize(limit, offset)
 	dbTopics, err := t.queries.ListTopicsByStatus(ctx, postgres.ListTopicsByStatusParams{
 		Status:  string(status),
 		Column2: limit,
@@ -113,6 +112,7 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 
 // ListLikeMessageText retrieves topics that have messages containing the given substring with pagination
 func (t *topics) ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error) {
+	limit, offset = sanitize(limit, offset)
 	likePattern := substring(pattern)
 	dbTopics, err := t.queries.ListTopicsLikeMessageText(ctx, postgres.ListTopicsLikeMessageTextParams{
 		Text:    likePattern,
@@ -131,6 +131,7 @@ func (t *topics) ListLikeMessageText(ctx context.Context, pattern string, limit,
 
 // ListLikeID retrieves topics by ID pattern matching using SQL LIKE with pagination
 func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int) ([]factcheck.Topic, error) {
+	limit, offset = sanitize(limit, offset)
 	// Add wildcards for LIKE query if not already present
 	likePattern := idPattern
 	if !strings.Contains(likePattern, "%") {
@@ -153,13 +154,7 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 }
 
 func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...OptionListTopicHome) ([]factcheck.Topic, error) {
-	// Sanitize limit and offset
-	if limit < 0 {
-		limit = 0
-	}
-	if offset < 0 {
-		offset = 0
-	}
+	limit, offset = sanitize(limit, offset)
 	f := FilterListTopicsHome{}
 	for i := range opts {
 		f = opts[i](f)
@@ -354,15 +349,11 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	uuidIDs := make([]pgtype.UUID, len(ids))
-	for i, id := range ids {
-		uuidID, err := postgres.UUID(id)
-		if err != nil {
-			return nil, err
-		}
-		uuidIDs[i] = uuidID
+	uuids, err := postgres.UUIDs(ids)
+	if err != nil {
+		return nil, err
 	}
-	dbTopics, err := t.queries.ListTopicsInIDs(ctx, uuidIDs)
+	dbTopics, err := t.queries.ListTopicsInIDs(ctx, uuids)
 	if err != nil {
 		return nil, err
 	}
@@ -375,6 +366,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 
 // ListLikeIDLikeMessageText retrieves topics by ID pattern and message text using SQL LIKE with pagination
 func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int) ([]factcheck.Topic, error) {
+	limit, offset = sanitize(limit, offset)
 	// Add wildcards for LIKE queries if not already present
 	idLikePattern := idPattern
 	if !strings.Contains(idLikePattern, "%") {

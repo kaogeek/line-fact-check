@@ -15,7 +15,7 @@ const assignMessageToTopic = `-- name: AssignMessageToTopic :one
 UPDATE messages SET 
     topic_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, text, type, created_at, updated_at
+WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
 `
 
 type AssignMessageToTopicParams struct {
@@ -28,9 +28,11 @@ func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToT
 	var i Message
 	err := row.Scan(
 		&i.ID,
+		&i.UserMessageID,
+		&i.Type,
+		&i.Status,
 		&i.TopicID,
 		&i.Text,
-		&i.Type,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -184,36 +186,42 @@ func (q *Queries) CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopics
 
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (
-    id, topic_id, text, type, created_at, updated_at
+    id, user_message_id, type, status, topic_id, text, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, topic_id, text, type, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
 `
 
 type CreateMessageParams struct {
-	ID        pgtype.UUID        `json:"id"`
-	TopicID   pgtype.UUID        `json:"topic_id"`
-	Text      string             `json:"text"`
-	Type      string             `json:"type"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	UserMessageID pgtype.UUID        `json:"user_message_id"`
+	Type          string             `json:"type"`
+	Status        string             `json:"status"`
+	TopicID       pgtype.UUID        `json:"topic_id"`
+	Text          string             `json:"text"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRow(ctx, createMessage,
 		arg.ID,
+		arg.UserMessageID,
+		arg.Type,
+		arg.Status,
 		arg.TopicID,
 		arg.Text,
-		arg.Type,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
 	var i Message
 	err := row.Scan(
 		&i.ID,
+		&i.UserMessageID,
+		&i.Type,
+		&i.Status,
 		&i.TopicID,
 		&i.Text,
-		&i.Type,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -266,16 +274,16 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 
 const createUserMessage = `-- name: CreateUserMessage :one
 INSERT INTO user_messages (
-    id, replied_at, message_id, metadata, created_at, updated_at
+    id, type, replied_at, metadata, created_at, updated_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6
-) RETURNING id, replied_at, message_id, metadata, created_at, updated_at
+) RETURNING id, type, replied_at, metadata, created_at, updated_at
 `
 
 type CreateUserMessageParams struct {
 	ID        pgtype.UUID        `json:"id"`
+	Type      string             `json:"type"`
 	RepliedAt pgtype.Timestamptz `json:"replied_at"`
-	MessageID pgtype.UUID        `json:"message_id"`
 	Metadata  []byte             `json:"metadata"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
@@ -284,8 +292,8 @@ type CreateUserMessageParams struct {
 func (q *Queries) CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error) {
 	row := q.db.QueryRow(ctx, createUserMessage,
 		arg.ID,
+		arg.Type,
 		arg.RepliedAt,
-		arg.MessageID,
 		arg.Metadata,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -293,8 +301,8 @@ func (q *Queries) CreateUserMessage(ctx context.Context, arg CreateUserMessagePa
 	var i UserMessage
 	err := row.Scan(
 		&i.ID,
+		&i.Type,
 		&i.RepliedAt,
-		&i.MessageID,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -330,7 +338,7 @@ func (q *Queries) DeleteUserMessage(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getMessage = `-- name: GetMessage :one
-SELECT id, topic_id, text, type, created_at, updated_at FROM messages WHERE id = $1
+SELECT id, user_message_id, type, status, topic_id, text, created_at, updated_at FROM messages WHERE id = $1
 `
 
 func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, error) {
@@ -338,9 +346,11 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 	var i Message
 	err := row.Scan(
 		&i.ID,
+		&i.UserMessageID,
+		&i.Type,
+		&i.Status,
 		&i.TopicID,
 		&i.Text,
-		&i.Type,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -368,7 +378,7 @@ func (q *Queries) GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error) {
 }
 
 const getUserMessage = `-- name: GetUserMessage :one
-SELECT id, replied_at, message_id, metadata, created_at, updated_at FROM user_messages WHERE id = $1
+SELECT id, type, replied_at, metadata, created_at, updated_at FROM user_messages WHERE id = $1
 `
 
 func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error) {
@@ -376,8 +386,8 @@ func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessa
 	var i UserMessage
 	err := row.Scan(
 		&i.ID,
+		&i.Type,
 		&i.RepliedAt,
-		&i.MessageID,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -386,7 +396,7 @@ func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessa
 }
 
 const listMessagesByTopic = `-- name: ListMessagesByTopic :many
-SELECT id, topic_id, text, type, created_at, updated_at FROM messages WHERE topic_id = $1 ORDER BY created_at ASC
+SELECT id, user_message_id, type, status, topic_id, text, created_at, updated_at FROM messages WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error) {
@@ -400,9 +410,11 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 		var i Message
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserMessageID,
+			&i.Type,
+			&i.Status,
 			&i.TopicID,
 			&i.Text,
-			&i.Type,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -793,49 +805,20 @@ func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, text string) ([
 	return items, nil
 }
 
-const listUserMessagesByMessage = `-- name: ListUserMessagesByMessage :many
-SELECT id, replied_at, message_id, metadata, created_at, updated_at FROM user_messages WHERE message_id = $1 ORDER BY created_at ASC
-`
-
-func (q *Queries) ListUserMessagesByMessage(ctx context.Context, messageID pgtype.UUID) ([]UserMessage, error) {
-	rows, err := q.db.Query(ctx, listUserMessagesByMessage, messageID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []UserMessage
-	for rows.Next() {
-		var i UserMessage
-		if err := rows.Scan(
-			&i.ID,
-			&i.RepliedAt,
-			&i.MessageID,
-			&i.Metadata,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateMessage = `-- name: UpdateMessage :one
 UPDATE messages SET 
     text = $2,
     type = $3,
-    updated_at = $4
-WHERE id = $1 RETURNING id, topic_id, text, type, created_at, updated_at
+    status = $4,
+    updated_at = $5
+WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
 `
 
 type UpdateMessageParams struct {
 	ID        pgtype.UUID        `json:"id"`
 	Text      string             `json:"text"`
 	Type      string             `json:"type"`
+	Status    string             `json:"status"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
@@ -844,14 +827,17 @@ func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (M
 		arg.ID,
 		arg.Text,
 		arg.Type,
+		arg.Status,
 		arg.UpdatedAt,
 	)
 	var i Message
 	err := row.Scan(
 		&i.ID,
+		&i.UserMessageID,
+		&i.Type,
+		&i.Status,
 		&i.TopicID,
 		&i.Text,
-		&i.Type,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -944,14 +930,16 @@ func (q *Queries) UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusPa
 
 const updateUserMessage = `-- name: UpdateUserMessage :one
 UPDATE user_messages SET 
-    replied_at = $2,
-    metadata = $3,
-    updated_at = $4
-WHERE id = $1 RETURNING id, replied_at, message_id, metadata, created_at, updated_at
+    type = $2,
+    replied_at = $3,
+    metadata = $4,
+    updated_at = $5
+WHERE id = $1 RETURNING id, type, replied_at, metadata, created_at, updated_at
 `
 
 type UpdateUserMessageParams struct {
 	ID        pgtype.UUID        `json:"id"`
+	Type      string             `json:"type"`
 	RepliedAt pgtype.Timestamptz `json:"replied_at"`
 	Metadata  []byte             `json:"metadata"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
@@ -960,6 +948,7 @@ type UpdateUserMessageParams struct {
 func (q *Queries) UpdateUserMessage(ctx context.Context, arg UpdateUserMessageParams) (UserMessage, error) {
 	row := q.db.QueryRow(ctx, updateUserMessage,
 		arg.ID,
+		arg.Type,
 		arg.RepliedAt,
 		arg.Metadata,
 		arg.UpdatedAt,
@@ -967,8 +956,8 @@ func (q *Queries) UpdateUserMessage(ctx context.Context, arg UpdateUserMessagePa
 	var i UserMessage
 	err := row.Scan(
 		&i.ID,
+		&i.Type,
 		&i.RepliedAt,
-		&i.MessageID,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,

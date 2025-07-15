@@ -9,12 +9,14 @@ import (
 )
 
 type Message struct {
-	ID        pgtype.UUID        `json:"id"`
-	TopicID   pgtype.UUID        `json:"topic_id"`
-	Text      string             `json:"text"`
-	Type      string             `json:"type"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	UserMessageID pgtype.UUID        `json:"user_message_id"`
+	Type          string             `json:"type"`
+	Status        string             `json:"status"`
+	TopicID       pgtype.UUID        `json:"topic_id"`
+	Text          string             `json:"text"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Topic struct {
@@ -30,8 +32,8 @@ type Topic struct {
 
 type UserMessage struct {
 	ID        pgtype.UUID        `json:"id"`
+	Type      string             `json:"type"`
 	RepliedAt pgtype.Timestamptz `json:"replied_at"`
-	MessageID pgtype.UUID        `json:"message_id"`
 	Metadata  []byte             `json:"metadata"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`

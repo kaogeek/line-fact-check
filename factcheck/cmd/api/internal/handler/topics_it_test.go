@@ -384,32 +384,82 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		t.Fatalf("Failed to create topic3: %v", err)
 	}
 
-	// Create messages
-	message1 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440001",
-		TopicID:   createdTopic1.ID,
-		Text:      "COVID-19 vaccine is effective against new variants",
-		Type:      factcheck.TypeMessageText,
+	// Create user messages first
+	userMessage1 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440001",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-1"}`),
 		CreatedAt: now,
 		UpdatedAt: nil,
+	}
+
+	userMessage2 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440002",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-2"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage3 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440003",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-3"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create user messages in database
+	createdUserMessage1, err := app.Repository.UserMessages.Create(t.Context(), userMessage1)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage1: %v", err)
+	}
+
+	createdUserMessage2, err := app.Repository.UserMessages.Create(t.Context(), userMessage2)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage2: %v", err)
+	}
+
+	createdUserMessage3, err := app.Repository.UserMessages.Create(t.Context(), userMessage3)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage3: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440001",
+		UserMessageID: createdUserMessage1.ID,
+		TopicID:       createdTopic1.ID,
+		Text:          "COVID-19 vaccine is effective against new variants",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	message2 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440002",
-		TopicID:   createdTopic2.ID,
-		Text:      "Election results show clear victory",
-		Type:      factcheck.TypeMessageText,
-		CreatedAt: now,
-		UpdatedAt: nil,
+		ID:            "660e8400-e29b-41d4-a716-446655440002",
+		UserMessageID: createdUserMessage2.ID,
+		TopicID:       createdTopic2.ID,
+		Text:          "Election results show clear victory",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	message3 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440003",
-		TopicID:   createdTopic3.ID,
-		Text:      "New AI technology breakthrough",
-		Type:      factcheck.TypeMessageText,
-		CreatedAt: now,
-		UpdatedAt: nil,
+		ID:            "660e8400-e29b-41d4-a716-446655440003",
+		UserMessageID: createdUserMessage3.ID,
+		TopicID:       createdTopic3.ID,
+		Text:          "New AI technology breakthrough",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	// Create messages in database
@@ -685,41 +735,107 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		t.Fatalf("Failed to create topic4: %v", err)
 	}
 
-	// Create messages
-	message1 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440001",
-		TopicID:   createdTopic1.ID,
-		Text:      "COVID-19 vaccine is effective against new variants",
-		Type:      factcheck.TypeMessageText,
+	// Create user messages first
+	userMessage1 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440001",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-1"}`),
 		CreatedAt: now,
 		UpdatedAt: nil,
+	}
+
+	userMessage2 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440002",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-2"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage3 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440003",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-3"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage4 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440004",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-4"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create user messages in database
+	createdUserMessage1, err := app.Repository.UserMessages.Create(t.Context(), userMessage1)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage1: %v", err)
+	}
+
+	createdUserMessage2, err := app.Repository.UserMessages.Create(t.Context(), userMessage2)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage2: %v", err)
+	}
+
+	createdUserMessage3, err := app.Repository.UserMessages.Create(t.Context(), userMessage3)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage3: %v", err)
+	}
+
+	createdUserMessage4, err := app.Repository.UserMessages.Create(t.Context(), userMessage4)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage4: %v", err)
+	}
+
+	// Create messages
+	message1 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440001",
+		UserMessageID: createdUserMessage1.ID,
+		TopicID:       createdTopic1.ID,
+		Text:          "COVID-19 vaccine is effective against new variants",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	message2 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440002",
-		TopicID:   createdTopic2.ID,
-		Text:      "Election results show clear victory",
-		Type:      factcheck.TypeMessageText,
-		CreatedAt: now,
-		UpdatedAt: nil,
+		ID:            "660e8400-e29b-41d4-a716-446655440002",
+		UserMessageID: createdUserMessage2.ID,
+		TopicID:       createdTopic2.ID,
+		Text:          "Election results show clear victory",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	message3 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440003",
-		TopicID:   createdTopic3.ID,
-		Text:      "New AI technology breakthrough",
-		Type:      factcheck.TypeMessageText,
-		CreatedAt: now,
-		UpdatedAt: nil,
+		ID:            "660e8400-e29b-41d4-a716-446655440003",
+		UserMessageID: createdUserMessage3.ID,
+		TopicID:       createdTopic3.ID,
+		Text:          "New AI technology breakthrough",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	message4 := factcheck.Message{
-		ID:        "660e8400-e29b-41d4-a716-446655440004",
-		TopicID:   createdTopic4.ID,
-		Text:      "World Cup final results announced",
-		Type:      factcheck.TypeMessageText,
-		CreatedAt: now,
-		UpdatedAt: nil,
+		ID:            "660e8400-e29b-41d4-a716-446655440004",
+		UserMessageID: createdUserMessage4.ID,
+		TopicID:       createdTopic4.ID,
+		Text:          "World Cup final results announced",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
 	}
 
 	// Create messages in database

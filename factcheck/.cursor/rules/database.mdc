@@ -21,7 +21,7 @@ To decouple data from storage, we define data types twice:
     They are easy to work with compared to the database-coupled variant,
     have normal Go types, and so on. Our code will mostly work with these types.
 
-Adapters to convert between the two are provided in /repo/adapters.go.
+Adapters to convert between the two are provided in /data/postgres/adapters.go.
 
 To abstract over database interactions, we divide the database access code into 3 layers,
 lowest first:

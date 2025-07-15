@@ -26,17 +26,23 @@ type Handler interface {
 	CreateMessage(http.ResponseWriter, *http.Request)
 	ListMessagesByTopicID(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
+
+	NewUserMessage(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {
-	topics   repo.Topics
-	messages repo.Messages
+	repository   repo.Repository
+	topics       repo.Topics
+	messages     repo.Messages
+	userMessages repo.UserMessages
 }
 
 func New(repo repo.Repository) Handler {
 	return &handler{
-		topics:   repo.Topics,
-		messages: repo.Messages,
+		repository:   repo,
+		topics:       repo.Topics,
+		messages:     repo.Messages,
+		userMessages: repo.UserMessages,
 	}
 }
 

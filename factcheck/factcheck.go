@@ -2,13 +2,18 @@
 // It is very business-centric and agnostic to tech stack
 package factcheck
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type (
 	TopicResult       string
 	StatusTopic       string
 	StatusTopicResult string
+	StatusMessage     string
 	TypeMessage       string
+	TypeUserMessage   string
 )
 
 const (
@@ -19,7 +24,15 @@ const (
 	StatusTopicResultAnswered    StatusTopicResult = "TOPIC_RESULT_ANSWERED"   // answered at least once
 	StatusTopicResultChanllenged StatusTopicResult = "TOPIC_RESULT_CHALLENGED" // the last answer was challenged by the public
 
+	StatusMessageSubmitted      StatusMessage = "MSG_SUBMITTED"
+	StatusMessageTopicSubmitted StatusMessage = "MSG_TOPIC_SUBMITTED"
+	StatusMessageTopicAssigned  StatusMessage = "MSG_TOPIC_ASSIGNED"
+
 	TypeMessageText TypeMessage = "TYPE_TEXT"
+
+	TypeUserMessageLINEChat      TypeUserMessage = "CHAT"
+	TypeUserMessageLINEGroupChat TypeUserMessage = "GROUPCHAT"
+	TypeUserMessageAdmin         TypeUserMessage = "ADMIN"
 )
 
 type Topic struct {
@@ -34,21 +47,23 @@ type Topic struct {
 }
 
 type Message struct {
-	ID        string      `json:"id"`
-	TopicID   string      `json:"topic_id"`
-	Text      string      `json:"text"`
-	Type      TypeMessage `json:"type"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt *time.Time  `json:"updated_at"`
+	ID            string        `json:"id"`
+	UserMessageID string        `json:"user_message_id"`
+	Type          TypeMessage   `json:"type"`
+	Status        StatusMessage `json:"status"`
+	TopicID       string        `json:"topic_id"`
+	Text          string        `json:"text"`
+	CreatedAt     time.Time     `json:"created_at"`
+	UpdatedAt     *time.Time    `json:"updated_at"`
 }
 
-type UserMessage[T any] struct {
-	ID        string     `json:"id"`
-	RepliedAt *time.Time `json:"replied_at"`
-	MessageID string     `json:"message_id"`
-	Metadata  T          `json:"metadata"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+type UserMessage struct {
+	ID        string          `json:"id"`
+	Type      TypeUserMessage `json:"type"`
+	RepliedAt *time.Time      `json:"replied_at"`
+	Metadata  json.RawMessage `json:"metadata"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt *time.Time      `json:"updated_at"`
 }
 
 func (s StatusTopic) IsValid() bool {

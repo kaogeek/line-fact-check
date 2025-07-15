@@ -110,9 +110,9 @@ DELETE FROM topics WHERE id = $1;
 
 -- name: CreateMessage :one
 INSERT INTO messages (
-    id, topic_id, text, type, created_at, updated_at
+    id, user_message_id, type, status, topic_id, text, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 -- name: GetMessage :one
@@ -125,7 +125,8 @@ SELECT * FROM messages WHERE topic_id = $1 ORDER BY created_at ASC;
 UPDATE messages SET 
     text = $2,
     type = $3,
-    updated_at = $4
+    status = $4,
+    updated_at = $5
 WHERE id = $1 RETURNING *;
 
 -- name: AssignMessageToTopic :one
@@ -139,7 +140,7 @@ DELETE FROM messages WHERE id = $1;
 
 -- name: CreateUserMessage :one
 INSERT INTO user_messages (
-    id, replied_at, message_id, metadata, created_at, updated_at
+    id, type, replied_at, metadata, created_at, updated_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6
 ) RETURNING *;
@@ -149,9 +150,10 @@ SELECT * FROM user_messages WHERE id = $1;
 
 -- name: UpdateUserMessage :one
 UPDATE user_messages SET 
-    replied_at = $2,
-    metadata = $3,
-    updated_at = $4
+    type = $2,
+    replied_at = $3,
+    metadata = $4,
+    updated_at = $5
 WHERE id = $1 RETURNING *;
 
 -- name: DeleteUserMessage :exec

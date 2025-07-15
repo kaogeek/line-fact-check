@@ -5,6 +5,7 @@ package repo_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
@@ -1284,6 +1285,529 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 		}
 		if counts[factcheck.StatusTopicResolved] != expectedResolved {
 			t.Errorf("Expected %d resolved topics with lowercase COVID messages, got %d", expectedResolved, counts[factcheck.StatusTopicResolved])
+		}
+	})
+}
+
+func TestRepository_TopicPagination(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create 10 topics for pagination testing
+	var createdTopics []factcheck.Topic
+	for i := 1; i <= 10; i++ {
+		topic := factcheck.Topic{
+			ID:           fmt.Sprintf("550e8400-e29b-41d4-a716-446655440%03d", i),
+			Name:         fmt.Sprintf("Topic %d - Test Pagination", i),
+			Description:  fmt.Sprintf("Description for topic %d", i),
+			Status:       factcheck.StatusTopicPending,
+			Result:       "",
+			ResultStatus: factcheck.StatusTopicResultNone,
+			CreatedAt:    now,
+			UpdatedAt:    nil,
+		}
+
+		createdTopic, err := app.Repository.Topics.Create(ctx, topic)
+		if err != nil {
+			t.Fatalf("Failed to create topic %d: %v", i, err)
+		}
+		createdTopics = append(createdTopics, createdTopic)
+	}
+
+	// Create user messages and messages for filtering tests
+	userMessage1 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440001",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-1"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage2 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440002",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-2"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	createdUserMessage1, err := app.Repository.UserMessages.Create(ctx, userMessage1)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage1: %v", err)
+	}
+
+	createdUserMessage2, err := app.Repository.UserMessages.Create(ctx, userMessage2)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage2: %v", err)
+	}
+
+	// Create messages with specific text for filtering
+	message1 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440001",
+		UserMessageID: createdUserMessage1.ID,
+		TopicID:       createdTopics[0].ID,
+		Text:          "COVID-19 vaccine is effective",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440002",
+		UserMessageID: createdUserMessage2.ID,
+		TopicID:       createdTopics[1].ID,
+		Text:          "Election results show victory",
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	t.Run("List - no pagination (limit=0)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.List(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return all 10 topics when limit=0
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("List - normal pagination (limit=3, offset=0)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.List(ctx, 3, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("List - pagination with offset (limit=3, offset=3)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.List(ctx, 3, 3)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("List - pagination with large offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.List(ctx, 5, 8)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return remaining 2 topics (10 total - 8 offset)
+		if len(topics) != 2 {
+			t.Errorf("Expected 2 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - no pagination (limit=0)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return all 10 topics when limit=0
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - normal pagination (limit=3, offset=0)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - pagination with filter and limit", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, repo.LikeTopicID("550e8400"))
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return 5 topics (all match the ID pattern)
+		if len(topics) != 5 {
+			t.Errorf("Expected 5 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - pagination with message text filter", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return 1 topic (only topic1 has COVID message)
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopics[0].ID {
+			t.Errorf("Expected topic ID %s, got %s", createdTopics[0].ID, topics[0].ID)
+		}
+	})
+
+	t.Run("ListHome - pagination with both filters", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0,
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return 1 topic (matches both filters)
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopics[0].ID {
+			t.Errorf("Expected topic ID %s, got %s", createdTopics[0].ID, topics[0].ID)
+		}
+	})
+
+	t.Run("ListHome - negative limit (should return all)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, -1, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return all 10 topics when limit is negative
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - negative offset (should start from beginning)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, -2)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return first 3 topics (negative offset treated as 0)
+		if len(topics) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - large limit (should cap at available records)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 100, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return all 10 topics (limit capped at available records)
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - pagination order consistency", func(t *testing.T) {
+		// Get first page
+		topics1, err := app.Repository.Topics.ListHome(ctx, 3, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		if len(topics1) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics1))
+		}
+
+		// Get second page
+		topics2, err := app.Repository.Topics.ListHome(ctx, 3, 3)
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		if len(topics2) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics2))
+		}
+
+		// Verify no overlap between pages
+		topicIDs1 := make(map[string]bool)
+		for _, topic := range topics1 {
+			topicIDs1[topic.ID] = true
+		}
+
+		for _, topic := range topics2 {
+			if topicIDs1[topic.ID] {
+				t.Errorf("Topic %s appears in both pages", topic.ID)
+			}
+		}
+	})
+
+	t.Run("ListHome - pagination with empty result set", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, repo.LikeTopicMessageText("nonexistent"))
+		if err != nil {
+			t.Fatalf("Failed to list topics: %v", err)
+		}
+		// Should return empty array
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListByStatus - pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListByStatus(ctx, factcheck.StatusTopicPending, 3, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics by status: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Errorf("Expected 3 topics, got %d", len(topics))
+		}
+		// Verify all topics have the correct status
+		for _, topic := range topics {
+			if topic.Status != factcheck.StatusTopicPending {
+				t.Errorf("Expected status %s, got %s", factcheck.StatusTopicPending, topic.Status)
+			}
+		}
+	})
+
+	t.Run("ListLikeMessageText - pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListLikeMessageText(ctx, "COVID", 5, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics by message text: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopics[0].ID {
+			t.Errorf("Expected topic ID %s, got %s", createdTopics[0].ID, topics[0].ID)
+		}
+	})
+
+	t.Run("ListLikeID - pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListLikeID(ctx, "550e8400", 5, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics by ID pattern: %v", err)
+		}
+		if len(topics) != 5 {
+			t.Errorf("Expected 5 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListLikeIDLikeMessageText - pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListLikeIDLikeMessageText(ctx, "550e8400", "COVID", 5, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics by ID and message text: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopics[0].ID {
+			t.Errorf("Expected topic ID %s, got %s", createdTopics[0].ID, topics[0].ID)
+		}
+	})
+
+	// Edge Case 3: Very large values
+	t.Run("ListHome - very large limit", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 999999, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics with large limit: %v", err)
+		}
+		// Should return all 10 topics (capped at available records)
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - very large offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 999999)
+		if err != nil {
+			t.Fatalf("Failed to list topics with large offset: %v", err)
+		}
+		// Should return empty array (offset beyond available records)
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 4: Single record scenarios
+	t.Run("ListHome - single record limit", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics with limit=1: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - single record with offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 1)
+		if err != nil {
+			t.Fatalf("Failed to list topics with limit=1, offset=1: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 5: Empty result sets with pagination
+	t.Run("ListHome - empty result with pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, repo.LikeTopicMessageText("nonexistent"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with empty result: %v", err)
+		}
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - empty result with offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 10, repo.LikeTopicMessageText("nonexistent"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with empty result and offset: %v", err)
+		}
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 6: Single page scenarios
+	t.Run("ListHome - single page (limit equals total)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0)
+		if err != nil {
+			t.Fatalf("Failed to list topics with limit=total: %v", err)
+		}
+		if len(topics) != 10 {
+			t.Errorf("Expected 10 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - single page with filter", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with single page filter: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 7: Last page scenarios
+	t.Run("ListHome - last page (offset + limit > total)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 8)
+		if err != nil {
+			t.Fatalf("Failed to list topics on last page: %v", err)
+		}
+		// Should return remaining 2 topics (10 total - 8 offset)
+		if len(topics) != 2 {
+			t.Errorf("Expected 2 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - last page with filter", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5, repo.LikeTopicID("550e8400"))
+		if err != nil {
+			t.Fatalf("Failed to list topics on last page with filter: %v", err)
+		}
+		// Should return remaining topics after offset
+		if len(topics) != 5 {
+			t.Errorf("Expected 5 topics, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 8: Exact boundary scenarios
+	t.Run("ListHome - exact boundary (offset + limit = total)", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5)
+		if err != nil {
+			t.Fatalf("Failed to list topics at exact boundary: %v", err)
+		}
+		// Should return exactly 5 topics (10 total - 5 offset)
+		if len(topics) != 5 {
+			t.Errorf("Expected 5 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - exact boundary with filter", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics at exact boundary with filter: %v", err)
+		}
+		// Should return exactly 1 topic
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 9: Multiple filters with pagination
+	t.Run("ListHome - multiple filters with pagination", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0,
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with multiple filters: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - multiple filters with offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 1,
+			repo.LikeTopicID("550e8400"),
+			repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with multiple filters and offset: %v", err)
+		}
+		// Should return 0 topics (only 1 matches, offset=1)
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 10: Filter that returns exactly limit records
+	t.Run("ListHome - filter returns exactly limit records", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, repo.LikeTopicID("550e8400"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with exact limit: %v", err)
+		}
+		// Should return exactly 5 topics
+		if len(topics) != 5 {
+			t.Errorf("Expected 5 topics, got %d", len(topics))
+		}
+	})
+
+	// Edge Case 11: Filter that returns fewer than limit records
+	t.Run("ListHome - filter returns fewer than limit", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with fewer than limit: %v", err)
+		}
+		// Should return 1 topic (fewer than limit of 5)
+		if len(topics) != 1 {
+			t.Errorf("Expected 1 topic, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListHome - filter returns fewer than limit with offset", func(t *testing.T) {
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 1, repo.LikeTopicMessageText("COVID"))
+		if err != nil {
+			t.Fatalf("Failed to list topics with fewer than limit and offset: %v", err)
+		}
+		// Should return 0 topics (only 1 matches, offset=1)
+		if len(topics) != 0 {
+			t.Errorf("Expected 0 topics, got %d", len(topics))
 		}
 	})
 }

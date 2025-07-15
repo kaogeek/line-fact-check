@@ -153,6 +153,13 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 }
 
 func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...OptionListTopicHome) ([]factcheck.Topic, error) {
+	// Sanitize limit and offset
+	if limit < 0 {
+		limit = 0
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	f := FilterListTopicsHome{}
 	for i := range opts {
 		f = opts[i](f)
@@ -160,16 +167,16 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 
 	switch {
 	case empty(f.likeID) && empty(f.likeMessageText) && empty(f.status):
-		return t.List(ctx, 0, 0)
+		return t.List(ctx, limit, offset)
 
 	case empty(f.likeID) && empty(f.likeMessageText):
-		return t.ListByStatus(ctx, f.status, 0, 0)
+		return t.ListByStatus(ctx, f.status, limit, offset)
 
 	case empty(f.likeID) && empty(f.status):
-		return t.ListLikeMessageText(ctx, f.likeMessageText, 0, 0)
+		return t.ListLikeMessageText(ctx, f.likeMessageText, limit, offset)
 
 	case empty(f.likeMessageText) && empty(f.status):
-		return t.ListLikeID(ctx, f.likeID, 0, 0)
+		return t.ListLikeID(ctx, f.likeID, limit, offset)
 
 	case empty(f.likeID):
 		// Status + message text filter
@@ -177,8 +184,8 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		topics, err := t.queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
 			Status:  string(f.status),
 			Text:    likePattern,
-			Column3: 0, // No pagination for ListHome
-			Column4: 0,
+			Column3: limit,
+			Column4: offset,
 		})
 		if err != nil {
 			return nil, err
@@ -198,8 +205,8 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		topics, err := t.queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
 			Status:  string(f.status),
 			Column2: idPattern,
-			Column3: 0, // No pagination for ListHome
-			Column4: 0,
+			Column3: limit,
+			Column4: offset,
 		})
 		if err != nil {
 			return nil, err
@@ -212,7 +219,7 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 
 	case empty(f.status):
 		// ID pattern + message text filter
-		return t.ListLikeIDLikeMessageTextAll(ctx, f.likeID, f.likeMessageText)
+		return t.ListLikeIDLikeMessageText(ctx, f.likeID, f.likeMessageText, limit, offset)
 	}
 
 	// All three filters
@@ -225,8 +232,8 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		Status:  string(f.status),
 		Column2: idPattern,
 		Text:    messageLikePattern,
-		Column4: 0, // No pagination for ListHome
-		Column5: 0,
+		Column4: limit,
+		Column5: offset,
 	})
 	if err != nil {
 		return nil, err

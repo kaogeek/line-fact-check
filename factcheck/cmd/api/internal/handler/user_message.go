@@ -113,7 +113,14 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx.Commit(r.Context())
+	err = tx.Commit(r.Context())
+	if err != nil {
+		slog.Error("error committing transaction for creating new user_message",
+			"err", err,
+		)
+		errInternalError(w, fmt.Sprintf("error committing transaction: %s", err.Error()))
+		return
+	}
 
 	sendJSON(w, map[string]any{
 		"user_message": createdUserMessage,

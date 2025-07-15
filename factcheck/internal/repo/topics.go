@@ -80,7 +80,7 @@ func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -114,7 +114,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		if err != nil {
 			return nil, err
 		}
-		return ToTopics(topics), nil
+		return postgres.ToTopics(topics), nil
 
 	case empty(f.likeMessageText):
 		// Status + ID pattern filter
@@ -129,7 +129,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		if err != nil {
 			return nil, err
 		}
-		return ToTopics(topics), nil
+		return postgres.ToTopics(topics), nil
 
 	case empty(f.status):
 		// ID pattern + message text filter
@@ -150,7 +150,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 	if err != nil {
 		return nil, err
 	}
-	return ToTopics(topics), nil
+	return postgres.ToTopics(topics), nil
 }
 
 type OptionCountTopicByStatus func(f FilterCountTopicByStatus) FilterCountTopicByStatus
@@ -232,7 +232,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopic
 
 // Create creates a new topic using the topic adapter
 func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Topic, error) {
-	params, err := TopicCreator(top)
+	params, err := postgres.TopicCreator(top)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -241,12 +241,12 @@ func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Top
 		return factcheck.Topic{}, err
 	}
 
-	return ToTopic(dbTopic), nil
+	return postgres.ToTopic(dbTopic), nil
 }
 
 // GetByID retrieves a topic by ID using the topicDomain adapter
 func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
-	topicID, err := uuid(id)
+	topicID, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -254,7 +254,7 @@ func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return ToTopic(dbTopic), nil
+	return postgres.ToTopic(dbTopic), nil
 }
 
 // ListByStatus retrieves topics by status using the topicDomain adapter
@@ -265,7 +265,7 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic)
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -277,7 +277,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	}
 	uuidIDs := make([]pgtype.UUID, len(ids))
 	for i, id := range ids {
-		uuidID, err := uuid(id)
+		uuidID, err := postgres.UUID(id)
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +289,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -303,7 +303,7 @@ func (t *topics) ListLikeMessageText(ctx context.Context, pattern string) ([]fac
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -322,7 +322,7 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string) ([]factcheck.
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -346,7 +346,7 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = ToTopic(dbTopic)
+		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -374,7 +374,7 @@ func (t *topics) CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]i
 
 // Delete deletes a topic by ID using the stringToUUID adapter
 func (t *topics) Delete(ctx context.Context, id string) error {
-	topicID, err := uuid(id)
+	topicID, err := postgres.UUID(id)
 	if err != nil {
 		return err
 	}
@@ -386,7 +386,7 @@ func (t *topics) Delete(ctx context.Context, id string) error {
 }
 
 func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
-	topicID, err := uuid(id)
+	topicID, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -397,11 +397,11 @@ func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.S
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return ToTopic(dbTopic), nil
+	return postgres.ToTopic(dbTopic), nil
 }
 
 func (t *topics) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
-	topicID, err := uuid(id)
+	topicID, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -412,11 +412,11 @@ func (t *topics) UpdateDescription(ctx context.Context, id string, description s
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return ToTopic(dbTopic), nil
+	return postgres.ToTopic(dbTopic), nil
 }
 
 func (t *topics) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
-	topicID, err := uuid(id)
+	topicID, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -427,7 +427,7 @@ func (t *topics) UpdateName(ctx context.Context, id string, name string) (factch
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return ToTopic(dbTopic), nil
+	return postgres.ToTopic(dbTopic), nil
 }
 
 func empty[S ~string](s S) bool {

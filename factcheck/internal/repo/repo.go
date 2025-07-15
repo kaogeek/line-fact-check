@@ -1,3 +1,6 @@
+// Package repo defines our common repository.
+// It abstracts over sqlc generated code by providing interface and code
+// to work with types defined in package factcheck
 package repo
 
 import (

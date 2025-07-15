@@ -35,7 +35,7 @@ func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opt
 	for i := range opts {
 		options = opts[i](options)
 	}
-	params, err := UserMessageCreator(um)
+	params, err := postgres.UserMessageCreator(um)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
@@ -47,12 +47,12 @@ func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opt
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
-	return ToUserMessage(dbUserMessage)
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // GetByID retrieves a user message by ID using the userMessageDomain adapter
 func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMessage, error) {
-	uuid, err := uuid(id)
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
@@ -60,12 +60,12 @@ func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMe
 	if err != nil {
 		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return ToUserMessage(dbUserMessage)
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // Update updates a user message using the userMessageUpdate adapter
 func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage) (factcheck.UserMessage, error) {
-	params, err := UserMessageUpdater(um)
+	params, err := postgres.UserMessageUpdater(um)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
@@ -73,12 +73,12 @@ func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage) (fa
 	if err != nil {
 		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": um.ID})
 	}
-	return ToUserMessage(dbUserMessage)
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // Delete deletes a user message by ID using the stringToUUID adapter
 func (u *userMessages) Delete(ctx context.Context, id string) error {
-	uuid, err := uuid(id)
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return err
 	}

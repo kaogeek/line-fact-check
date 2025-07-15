@@ -35,7 +35,7 @@ func (m *messages) Create(ctx context.Context, msg factcheck.Message, opts ...Op
 	for i := range opts {
 		options = opts[i](options)
 	}
-	params, err := message(msg)
+	params, err := MessageCreator(msg)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -47,7 +47,7 @@ func (m *messages) Create(ctx context.Context, msg factcheck.Message, opts ...Op
 	if err != nil {
 		return factcheck.Message{}, err
 	}
-	return messageDomain(dbMessage), nil
+	return ToMessage(dbMessage), nil
 }
 
 // GetByID retrieves a message by ID using the messageDomain adapter
@@ -60,7 +60,7 @@ func (m *messages) GetByID(ctx context.Context, id string) (factcheck.Message, e
 	if err != nil {
 		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return messageDomain(dbMessage), nil
+	return ToMessage(dbMessage), nil
 }
 
 // ListByTopic retrieves messages by topic ID using the messageDomain adapter
@@ -75,14 +75,14 @@ func (m *messages) ListByTopic(ctx context.Context, topicID string) ([]factcheck
 	}
 	messages := make([]factcheck.Message, len(dbMessages))
 	for i, dbMessage := range dbMessages {
-		messages[i] = messageDomain(dbMessage)
+		messages[i] = ToMessage(dbMessage)
 	}
 	return messages, nil
 }
 
 // Update updates a message using the messageUpdate adapter
 func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck.Message, error) {
-	params, err := messageUpdate(msg)
+	params, err := MessageUpdater(msg)
 	if err != nil {
 		return factcheck.Message{}, err
 	}
@@ -90,7 +90,7 @@ func (m *messages) Update(ctx context.Context, msg factcheck.Message) (factcheck
 	if err != nil {
 		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": msg.ID})
 	}
-	return messageDomain(dbMessage), nil
+	return ToMessage(dbMessage), nil
 }
 
 // AssignTopic assigns a message to a different topic
@@ -114,7 +114,7 @@ func (m *messages) AssignTopic(ctx context.Context, messageID string, topicID st
 		return factcheck.Message{}, handleNotFound(err, map[string]string{"message_id": messageID, "topic_id": topicID})
 	}
 
-	return messageDomain(dbMessage), nil
+	return ToMessage(dbMessage), nil
 }
 
 // Delete deletes a message by ID using the stringToUUID adapter

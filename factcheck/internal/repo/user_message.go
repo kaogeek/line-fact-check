@@ -35,7 +35,7 @@ func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opt
 	for i := range opts {
 		options = opts[i](options)
 	}
-	params, err := userMessage(um)
+	params, err := UserMessageCreator(um)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
@@ -47,7 +47,7 @@ func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opt
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
-	return userMessageDomain(dbUserMessage)
+	return ToUserMessage(dbUserMessage)
 }
 
 // GetByID retrieves a user message by ID using the userMessageDomain adapter
@@ -60,12 +60,12 @@ func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMe
 	if err != nil {
 		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return userMessageDomain(dbUserMessage)
+	return ToUserMessage(dbUserMessage)
 }
 
 // Update updates a user message using the userMessageUpdate adapter
 func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage) (factcheck.UserMessage, error) {
-	params, err := userMessageUpdate(um)
+	params, err := UserMessageUpdater(um)
 	if err != nil {
 		return factcheck.UserMessage{}, err
 	}
@@ -73,7 +73,7 @@ func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage) (fa
 	if err != nil {
 		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": um.ID})
 	}
-	return userMessageDomain(dbUserMessage)
+	return ToUserMessage(dbUserMessage)
 }
 
 // Delete deletes a user message by ID using the stringToUUID adapter

@@ -2,7 +2,9 @@ package repo
 
 import (
 	"encoding/json"
-	"time"
+	"fmt"
+	"log/slog"
+	gotime "time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -11,9 +13,9 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
-func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
-	var topicID pgtype.UUID
-	if err := topicID.Scan(topic.ID); err != nil {
+func TopicCreator(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
+	id, err := uuid(topic.ID)
+	if err != nil {
 		return postgres.CreateTopicParams{}, err
 	}
 	createdAt, err := timestamptz(topic.CreatedAt)
@@ -33,7 +35,7 @@ func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
 		return postgres.CreateTopicParams{}, err
 	}
 	return postgres.CreateTopicParams{
-		ID:           topicID,
+		ID:           id,
 		Name:         topic.Name,
 		Description:  topic.Description,
 		Status:       string(topic.Status),
@@ -44,35 +46,35 @@ func topic(topic factcheck.Topic) (postgres.CreateTopicParams, error) {
 	}, nil
 }
 
-func topicDomain(dbTopic postgres.Topic) factcheck.Topic {
+func ToTopic(data postgres.Topic) factcheck.Topic {
 	topic := factcheck.Topic{
-		Name:        dbTopic.Name,
-		Description: dbTopic.Description,
-		Status:      factcheck.StatusTopic(dbTopic.Status),
+		Name:        data.Name,
+		Description: data.Description,
+		Status:      factcheck.StatusTopic(data.Status),
 	}
-	if dbTopic.ID.Valid {
-		topic.ID = dbTopic.ID.String()
+	if data.ID.Valid {
+		topic.ID = data.ID.String()
 	}
-	if dbTopic.Result.Valid {
-		topic.Result = dbTopic.Result.String
+	if data.Result.Valid {
+		topic.Result = data.Result.String
 	}
-	if dbTopic.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(dbTopic.ResultStatus.String)
+	if data.ResultStatus.Valid {
+		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
 	}
-	if dbTopic.CreatedAt.Valid {
-		topic.CreatedAt = dbTopic.CreatedAt.Time
+	if data.CreatedAt.Valid {
+		topic.CreatedAt = data.CreatedAt.Time
 	}
-	if dbTopic.UpdatedAt.Valid {
-		topic.UpdatedAt = &dbTopic.UpdatedAt.Time
+	if data.UpdatedAt.Valid {
+		topic.UpdatedAt = &data.UpdatedAt.Time
 	}
 	return topic
 }
 
-func topicsDomain(topics []postgres.Topic) []factcheck.Topic {
-	return utils.MapSlice(topics, topicDomain)
+func ToTopics(topics []postgres.Topic) []factcheck.Topic {
+	return utils.MapSliceNoError(topics, ToTopic)
 }
 
-func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
+func MessageCreator(m factcheck.Message) (postgres.CreateMessageParams, error) {
 	id, err := uuid(m.ID)
 	if err != nil {
 		return postgres.CreateMessageParams{}, err
@@ -81,13 +83,8 @@ func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
 	if err != nil {
 		return postgres.CreateMessageParams{}, err
 	}
-	var topicID pgtype.UUID
-	if m.TopicID != "" {
-		topicID, err = uuid(m.TopicID)
-		if err != nil {
-			return postgres.CreateMessageParams{}, err
-		}
-	}
+	// Could be nil
+	topicID, _ := uuid(m.TopicID)
 	createdAt, err := timestamptz(m.CreatedAt)
 	if err != nil {
 		return postgres.CreateMessageParams{}, err
@@ -108,7 +105,7 @@ func message(m factcheck.Message) (postgres.CreateMessageParams, error) {
 	}, nil
 }
 
-func messageUpdate(m factcheck.Message) (postgres.UpdateMessageParams, error) {
+func MessageUpdater(m factcheck.Message) (postgres.UpdateMessageParams, error) {
 	id, err := uuid(m.ID)
 	if err != nil {
 		return postgres.UpdateMessageParams{}, err
@@ -126,31 +123,31 @@ func messageUpdate(m factcheck.Message) (postgres.UpdateMessageParams, error) {
 	}, nil
 }
 
-func messageDomain(dbMessage postgres.Message) factcheck.Message {
+func ToMessage(data postgres.Message) factcheck.Message {
 	message := factcheck.Message{
-		Text:   dbMessage.Text,
-		Type:   factcheck.TypeMessage(dbMessage.Type),
-		Status: factcheck.StatusMessage(dbMessage.Status),
+		Text:   data.Text,
+		Type:   factcheck.TypeMessage(data.Type),
+		Status: factcheck.StatusMessage(data.Status),
 	}
-	if dbMessage.ID.Valid {
-		message.ID = dbMessage.ID.String()
+	if data.ID.Valid {
+		message.ID = data.ID.String()
 	}
-	if dbMessage.UserMessageID.Valid {
-		message.UserMessageID = dbMessage.UserMessageID.String()
+	if data.UserMessageID.Valid {
+		message.UserMessageID = data.UserMessageID.String()
 	}
-	if dbMessage.TopicID.Valid {
-		message.TopicID = dbMessage.TopicID.String()
+	if data.TopicID.Valid {
+		message.TopicID = data.TopicID.String()
 	}
-	if dbMessage.CreatedAt.Valid {
-		message.CreatedAt = dbMessage.CreatedAt.Time
+	if data.CreatedAt.Valid {
+		message.CreatedAt = data.CreatedAt.Time
 	}
-	if dbMessage.UpdatedAt.Valid {
-		message.UpdatedAt = &dbMessage.UpdatedAt.Time
+	if data.UpdatedAt.Valid {
+		message.UpdatedAt = &data.UpdatedAt.Time
 	}
 	return message
 }
 
-func userMessage(u factcheck.UserMessage) (postgres.CreateUserMessageParams, error) {
+func UserMessageCreator(u factcheck.UserMessage) (postgres.CreateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
 	if err := userMessageID.Scan(u.ID); err != nil {
 		return postgres.CreateUserMessageParams{}, err
@@ -181,52 +178,57 @@ func userMessage(u factcheck.UserMessage) (postgres.CreateUserMessageParams, err
 	}, nil
 }
 
-func userMessageUpdate(userMessage factcheck.UserMessage) (postgres.UpdateUserMessageParams, error) {
+func UserMessageUpdater(um factcheck.UserMessage) (postgres.UpdateUserMessageParams, error) {
 	var userMessageID pgtype.UUID
-	if err := userMessageID.Scan(userMessage.ID); err != nil {
+	if err := userMessageID.Scan(um.ID); err != nil {
 		return postgres.UpdateUserMessageParams{}, err
 	}
-	updatedAt, err := timestamptzNullable(userMessage.UpdatedAt)
+	updatedAt, err := timestamptzNullable(um.UpdatedAt)
 	if err != nil {
 		return postgres.UpdateUserMessageParams{}, err
 	}
-	repliedAt, err := timestamptzNullable(userMessage.RepliedAt)
+	repliedAt, err := timestamptzNullable(um.RepliedAt)
 	if err != nil {
 		return postgres.UpdateUserMessageParams{}, err
 	}
-	metadata, err := json.Marshal(userMessage.Metadata)
+	metadata, err := json.Marshal(um.Metadata)
 	if err != nil {
 		return postgres.UpdateUserMessageParams{}, err
 	}
 	return postgres.UpdateUserMessageParams{
 		ID:        userMessageID,
-		Type:      string(userMessage.Type),
+		Type:      string(um.Type),
 		RepliedAt: repliedAt,
 		Metadata:  metadata,
 		UpdatedAt: updatedAt,
 	}, nil
 }
 
-func userMessageDomain(dbUserMessage postgres.UserMessage) (factcheck.UserMessage, error) {
-	userMessage := factcheck.UserMessage{
-		Type: factcheck.TypeUserMessage(dbUserMessage.Type),
+func ToUserMessage(data postgres.UserMessage) (factcheck.UserMessage, error) {
+	id, err := uuidString(data.ID)
+	if err != nil {
+		return factcheck.UserMessage{}, err
 	}
-	if dbUserMessage.ID.Valid {
-		userMessage.ID = dbUserMessage.ID.String()
+	createdAt, err := time(data.CreatedAt)
+	if err != nil {
+		return factcheck.UserMessage{}, err
 	}
-	if dbUserMessage.CreatedAt.Valid {
-		userMessage.CreatedAt = dbUserMessage.CreatedAt.Time
+	var metadata json.RawMessage
+	if len(data.Metadata) > 0 {
+		metadata = json.RawMessage(data.Metadata)
 	}
-	if dbUserMessage.UpdatedAt.Valid {
-		userMessage.UpdatedAt = &dbUserMessage.UpdatedAt.Time
-	}
-	if dbUserMessage.RepliedAt.Valid {
-		userMessage.RepliedAt = &dbUserMessage.RepliedAt.Time
-	}
-	if len(dbUserMessage.Metadata) > 0 {
-		userMessage.Metadata = json.RawMessage(dbUserMessage.Metadata)
-	}
-	return userMessage, nil
+	return factcheck.UserMessage{
+		ID:        id,
+		Type:      factcheck.TypeUserMessage(data.Type),
+		RepliedAt: timeNullable(data.RepliedAt),
+		Metadata:  metadata,
+		CreatedAt: createdAt,
+		UpdatedAt: timeNullable(data.UpdatedAt),
+	}, nil
+}
+
+func ToUserMessages(data []postgres.UserMessage) ([]factcheck.UserMessage, error) {
+	return utils.MapSlice(data, ToUserMessage)
 }
 
 func uuid(id string) (pgtype.UUID, error) {
@@ -235,23 +237,60 @@ func uuid(id string) (pgtype.UUID, error) {
 	return uuid, err
 }
 
+func uuidStringNullable(id string) pgtype.UUID {
+	//nolint
+	uuid, err := uuid(id)
+	if err != nil && id != "" {
+		slog.Error("unexpected bad uuid '%s' in our system: %w", id, err.Error())
+	}
+	return uuid
+}
+
+func uuidString(id pgtype.UUID) (string, error) {
+	if !id.Valid {
+		return "", fmt.Errorf("invalid uuid string: %+v", id)
+	}
+	return id.String(), nil
+}
+
 func text(s string) (pgtype.Text, error) {
 	var text pgtype.Text
 	err := text.Scan(s)
 	return text, err
 }
 
-func timestamptz(t time.Time) (pgtype.Timestamptz, error) {
+func textString(s pgtype.Text) (string, error) {
+	if s.Valid {
+		return s.String, nil
+	}
+	return "", fmt.Errorf("invalid database text: %+v", s)
+}
+
+func timestamptz(t gotime.Time) (pgtype.Timestamptz, error) {
 	var timestamptz pgtype.Timestamptz
 	err := timestamptz.Scan(t)
 	return timestamptz, err
 }
 
-func timestamptzNullable(t *time.Time) (pgtype.Timestamptz, error) {
+func time(t pgtype.Timestamptz) (gotime.Time, error) {
+	if !t.Valid {
+		return gotime.Time{}, fmt.Errorf("invalid time %+v", t)
+	}
+	return t.Time, nil
+}
+
+func timestamptzNullable(t *gotime.Time) (pgtype.Timestamptz, error) {
 	var timestamptz pgtype.Timestamptz
 	if t != nil {
 		err := timestamptz.Scan(*t)
 		return timestamptz, err
 	}
 	return timestamptz, nil
+}
+
+func timeNullable(t pgtype.Timestamptz) *gotime.Time {
+	if !t.Valid {
+		return nil
+	}
+	return &t.Time
 }

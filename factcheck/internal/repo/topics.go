@@ -80,7 +80,7 @@ func (t *topics) List(ctx context.Context) ([]factcheck.Topic, error) {
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -114,7 +114,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		if err != nil {
 			return nil, err
 		}
-		return topicsDomain(topics), nil
+		return ToTopics(topics), nil
 
 	case empty(f.likeMessageText):
 		// Status + ID pattern filter
@@ -129,7 +129,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 		if err != nil {
 			return nil, err
 		}
-		return topicsDomain(topics), nil
+		return ToTopics(topics), nil
 
 	case empty(f.status):
 		// ID pattern + message text filter
@@ -150,7 +150,7 @@ func (t *topics) ListHome(ctx context.Context, opts ...OptionListTopicHome) ([]f
 	if err != nil {
 		return nil, err
 	}
-	return topicsDomain(topics), nil
+	return ToTopics(topics), nil
 }
 
 type OptionCountTopicByStatus func(f FilterCountTopicByStatus) FilterCountTopicByStatus
@@ -232,7 +232,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopic
 
 // Create creates a new topic using the topic adapter
 func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Topic, error) {
-	params, err := topic(top)
+	params, err := TopicCreator(top)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -241,7 +241,7 @@ func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Top
 		return factcheck.Topic{}, err
 	}
 
-	return topicDomain(dbTopic), nil
+	return ToTopic(dbTopic), nil
 }
 
 // GetByID retrieves a topic by ID using the topicDomain adapter
@@ -254,7 +254,7 @@ func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return topicDomain(dbTopic), nil
+	return ToTopic(dbTopic), nil
 }
 
 // ListByStatus retrieves topics by status using the topicDomain adapter
@@ -265,7 +265,7 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic)
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -289,7 +289,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -303,7 +303,7 @@ func (t *topics) ListLikeMessageText(ctx context.Context, pattern string) ([]fac
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -322,7 +322,7 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string) ([]factcheck.
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -346,7 +346,7 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 	}
 	topics := make([]factcheck.Topic, len(dbTopics))
 	for i, dbTopic := range dbTopics {
-		topics[i] = topicDomain(dbTopic)
+		topics[i] = ToTopic(dbTopic)
 	}
 	return topics, nil
 }
@@ -397,7 +397,7 @@ func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.S
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return topicDomain(dbTopic), nil
+	return ToTopic(dbTopic), nil
 }
 
 func (t *topics) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
@@ -412,7 +412,7 @@ func (t *topics) UpdateDescription(ctx context.Context, id string, description s
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return topicDomain(dbTopic), nil
+	return ToTopic(dbTopic), nil
 }
 
 func (t *topics) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
@@ -427,7 +427,7 @@ func (t *topics) UpdateName(ctx context.Context, id string, name string) (factch
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return topicDomain(dbTopic), nil
+	return ToTopic(dbTopic), nil
 }
 
 func empty[S ~string](s S) bool {

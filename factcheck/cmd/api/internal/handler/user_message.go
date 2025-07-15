@@ -6,8 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
@@ -57,7 +55,7 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	now := utils.TimeNow()
 	userMessage := factcheck.UserMessage{
-		ID:        uuid.NewString(),
+		ID:        utils.NewID().String(),
 		Type:      meta.UserType,
 		RepliedAt: nil,
 		Metadata:  metaJSON,
@@ -65,7 +63,7 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: nil,
 	}
 	message := factcheck.Message{
-		ID:            uuid.NewString(),
+		ID:            utils.NewID().String(),
 		UserMessageID: userMessage.ID,
 		Type:          factcheck.TypeMessageText,
 		Status:        statusMessage,

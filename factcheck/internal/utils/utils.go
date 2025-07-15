@@ -1,7 +1,11 @@
 // Package utils provides commonly shared code
 package utils
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 // DefaultIfZero returns v if v is non-zero,
 // and falls back to default d otherwise
@@ -21,10 +25,22 @@ func NewID() interface{ String() string } {
 	return uuid.New()
 }
 
-func MapSlice[T any, U any](slice []T, fn func(T) U) []U {
+func MapSlice[T any, U any](slice []T, fn func(T) (U, error)) ([]U, error) {
 	result := make([]U, len(slice))
-	for i, v := range slice {
-		result[i] = fn(v)
+	for i := range slice {
+		var err error
+		result[i], err = fn(slice[i])
+		if err != nil {
+			return nil, fmt.Errorf("MapSlice[%d]: %w", i, err)
+		}
+	}
+	return result, nil
+}
+
+func MapSliceNoError[T any, U any](slice []T, fn func(T) U) []U {
+	result := make([]U, len(slice))
+	for i := range slice {
+		result[i] = fn(slice[i])
 	}
 	return result
 }

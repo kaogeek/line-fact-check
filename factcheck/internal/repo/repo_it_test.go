@@ -539,7 +539,7 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 	})
 }
 
-func TestRepository_ListHomePage(t *testing.T) {
+func TestRepository_ListHome(t *testing.T) {
 	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
@@ -697,10 +697,10 @@ func TestRepository_ListHomePage(t *testing.T) {
 		t.Fatalf("Failed to create message3: %v", err)
 	}
 
-	t.Run("ListHomePage - no options (all topics)", func(t *testing.T) {
+	t.Run("ListHome - no options (all topics)", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx)
 		if err != nil {
-			t.Fatalf("ListHomePage with no options failed: %v", err)
+			t.Fatalf("ListHome with no options failed: %v", err)
 		}
 
 		if len(topics) != 3 {
@@ -708,10 +708,10 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - status filter only", func(t *testing.T) {
+	t.Run("ListHome - status filter only", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx, repo.WithTopicStatus(factcheck.StatusTopicPending))
 		if err != nil {
-			t.Fatalf("ListHomePage with status filter failed: %v", err)
+			t.Fatalf("ListHome with status filter failed: %v", err)
 		}
 
 		if len(topics) != 2 {
@@ -735,10 +735,10 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - message text filter only", func(t *testing.T) {
+	t.Run("ListHome - message text filter only", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicMessageText("COVID"))
 		if err != nil {
-			t.Fatalf("ListHomePage with message text filter failed: %v", err)
+			t.Fatalf("ListHome with message text filter failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -750,10 +750,10 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - ID pattern filter only", func(t *testing.T) {
+	t.Run("ListHome - ID pattern filter only", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx, repo.LikeTopicID("550e8400"))
 		if err != nil {
-			t.Fatalf("ListHomePage with ID pattern filter failed: %v", err)
+			t.Fatalf("ListHome with ID pattern filter failed: %v", err)
 		}
 
 		if len(topics) != 2 {
@@ -777,12 +777,12 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - ID pattern and message text filters", func(t *testing.T) {
+	t.Run("ListHome - ID pattern and message text filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
-			t.Fatalf("ListHomePage with ID pattern and message text filters failed: %v", err)
+			t.Fatalf("ListHome with ID pattern and message text filters failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -794,12 +794,12 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - status and message text filters", func(t *testing.T) {
+	t.Run("ListHome - status and message text filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
-			t.Fatalf("ListHomePage with status and message text filters failed: %v", err)
+			t.Fatalf("ListHome with status and message text filters failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -811,12 +811,12 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - status and ID pattern filters", func(t *testing.T) {
+	t.Run("ListHome - status and ID pattern filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"))
 		if err != nil {
-			t.Fatalf("ListHomePage with status and ID pattern filters failed: %v", err)
+			t.Fatalf("ListHome with status and ID pattern filters failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -828,13 +828,13 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - all three filters", func(t *testing.T) {
+	t.Run("ListHome - all three filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
-			t.Fatalf("ListHomePage with all three filters failed: %v", err)
+			t.Fatalf("ListHome with all three filters failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -846,13 +846,13 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - no matches for combined filters", func(t *testing.T) {
+	t.Run("ListHome - no matches for combined filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicMessageText("COVID"))
 		if err != nil {
-			t.Fatalf("ListHomePage with no matches failed: %v", err)
+			t.Fatalf("ListHome with no matches failed: %v", err)
 		}
 
 		if len(topics) != 0 {
@@ -860,12 +860,12 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - empty string filters", func(t *testing.T) {
+	t.Run("ListHome - empty string filters", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID(""),
 			repo.LikeTopicMessageText(""))
 		if err != nil {
-			t.Fatalf("ListHomePage with empty string filters failed: %v", err)
+			t.Fatalf("ListHome with empty string filters failed: %v", err)
 		}
 
 		if len(topics) != 3 {
@@ -873,12 +873,12 @@ func TestRepository_ListHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("ListHomePage - multiple options of same type (last one wins)", func(t *testing.T) {
+	t.Run("ListHome - multiple options of same type (last one wins)", func(t *testing.T) {
 		topics, err := app.Repository.Topics.ListHome(ctx,
 			repo.LikeTopicID("550e8400"),
 			repo.LikeTopicID("660e8400"))
 		if err != nil {
-			t.Fatalf("ListHomePage with multiple ID filters failed: %v", err)
+			t.Fatalf("ListHome with multiple ID filters failed: %v", err)
 		}
 
 		if len(topics) != 1 {
@@ -891,7 +891,7 @@ func TestRepository_ListHomePage(t *testing.T) {
 	})
 }
 
-func TestRepository_CountByStatusesHomePage(t *testing.T) {
+func TestRepository_CountByStatusesHome(t *testing.T) {
 	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
@@ -1095,10 +1095,10 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		t.Fatalf("Failed to create message4: %v", err)
 	}
 
-	t.Run("CountByStatusesHomePage - no filters (all topics)", func(t *testing.T) {
+	t.Run("CountByStatusesHome - no filters (all topics)", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with no filters failed: %v", err)
+			t.Fatalf("CountByStatusesHome with no filters failed: %v", err)
 		}
 
 		expectedPending := int64(2)  // topic1, topic3
@@ -1112,12 +1112,12 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - ID pattern filter only", func(t *testing.T) {
+	t.Run("CountByStatusesHome - ID pattern filter only", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID("550e8400"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with ID pattern filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with ID pattern filter failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic1
@@ -1131,12 +1131,12 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - message text filter only", func(t *testing.T) {
+	t.Run("CountByStatusesHome - message text filter only", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeMessageText("COVID"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with message text filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with message text filter failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic1
@@ -1150,13 +1150,13 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - ID pattern and message text filters", func(t *testing.T) {
+	t.Run("CountByStatusesHome - ID pattern and message text filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID("550e8400"),
 			repo.CountTopicByStatusLikeMessageText("COVID"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with ID pattern and message text filters failed: %v", err)
+			t.Fatalf("CountByStatusesHome with ID pattern and message text filters failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic1
@@ -1170,12 +1170,12 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - message text filter for resolved topics", func(t *testing.T) {
+	t.Run("CountByStatusesHome - message text filter for resolved topics", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeMessageText("Election"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with Election message filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with Election message filter failed: %v", err)
 		}
 
 		expectedPending := int64(0)  // none
@@ -1189,12 +1189,12 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - ID pattern filter for different prefix", func(t *testing.T) {
+	t.Run("CountByStatusesHome - ID pattern filter for different prefix", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID("660e8400"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with '660e8400' ID filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with '660e8400' ID filter failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic3
@@ -1208,13 +1208,13 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - combined filters for technology topics", func(t *testing.T) {
+	t.Run("CountByStatusesHome - combined filters for technology topics", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID("660e8400"),
 			repo.CountTopicByStatusLikeMessageText("technology"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with technology filters failed: %v", err)
+			t.Fatalf("CountByStatusesHome with technology filters failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic3
@@ -1228,13 +1228,13 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - no matches for combined filters", func(t *testing.T) {
+	t.Run("CountByStatusesHome - no matches for combined filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID("550e8400"),
 			repo.CountTopicByStatusLikeMessageText("techonology"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with no matches filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with no matches filter failed: %v", err)
 		}
 
 		expectedPending := int64(0)  // none
@@ -1248,13 +1248,13 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - empty string filters", func(t *testing.T) {
+	t.Run("CountByStatusesHome - empty string filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeID(""),
 			repo.CountTopicByStatusLikeMessageText(""),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with empty string filters failed: %v", err)
+			t.Fatalf("CountByStatusesHome with empty string filters failed: %v", err)
 		}
 
 		expectedPending := int64(2)  // topic1, topic3
@@ -1268,12 +1268,12 @@ func TestRepository_CountByStatusesHomePage(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusesHomePage - case insensitive message text filter", func(t *testing.T) {
+	t.Run("CountByStatusesHome - case insensitive message text filter", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
 			repo.CountTopicByStatusLikeMessageText("covid"),
 		)
 		if err != nil {
-			t.Fatalf("CountByStatusesHomePage with lowercase COVID filter failed: %v", err)
+			t.Fatalf("CountByStatusesHome with lowercase COVID filter failed: %v", err)
 		}
 
 		expectedPending := int64(1)  // topic1

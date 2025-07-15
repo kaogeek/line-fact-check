@@ -84,9 +84,16 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	// As per doc, they defer rollback
 	// https://docs.sqlc.dev/en/stable/howto/transactions.html
-	defer tx.Rollback(r.Context())
-	withTx := repo.WithTx(tx)
+	defer func() {
+		err := tx.Rollback(r.Context())
+		if err != nil {
+			slog.Error("error rolling back transaction for creating new user_message",
+				"err", err,
+			)
+		}
+	}()
 
+	withTx := repo.WithTx(tx)
 	createdUserMessage, err := h.userMessages.Create(r.Context(), userMessage, withTx)
 	if err != nil {
 		slog.Error("error creating row in user_messages",

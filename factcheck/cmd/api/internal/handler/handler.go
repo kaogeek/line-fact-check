@@ -69,13 +69,19 @@ func limitOffSet(r *http.Request) (int, int, error) {
 	query := r.URL.Query().Get
 	queryLimit := query("limit")
 	queryOffset := query("offset")
-	limit, err := strconv.Atoi(queryLimit)
-	if err != nil {
-		return 0, 0, fmt.Errorf("bad query limit: '%s'", queryLimit)
+	limit, offset := 0, 0
+	var err error
+	if queryLimit != "" {
+		limit, err = strconv.Atoi(queryLimit)
+		if err != nil {
+			return 0, 0, fmt.Errorf("bad query limit: '%s'", queryLimit)
+		}
 	}
-	offset, err := strconv.Atoi(queryOffset)
-	if err != nil {
-		return 0, 0, fmt.Errorf("bad query offset: '%s'", queryOffset)
+	if queryOffset != "" {
+		offset, err = strconv.Atoi(queryOffset)
+		if err != nil {
+			return 0, 0, fmt.Errorf("bad query offset: '%s'", queryOffset)
+		}
 	}
 	return limit, offset, nil
 }

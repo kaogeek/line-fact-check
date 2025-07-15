@@ -29,3 +29,45 @@ We try to use Nix everywhere when we could, for example, in [.github/workflows/r
 
 # Jargons (in code and chat)
 - A Go integration test is called "it-test", and Go integration tests end with `_it_test.go` and tag `integration_test`.
+
+# Business logic
+## Business users
+As a fact-checker platform, we have 2 types of "users"
+
+- Users
+Users can access our app via chat apps like LINE or other entrypoints, and the web portal.
+They can submit their messages any time on any entrypoints, and this will be reflected in
+the user_message metadata that records the whole submission.
+
+- Admins
+Admins access our app via web portal and are the "human verifiers" of our system.
+Admin creates "topics", reviews and approves "topic-message assignment", as well as resolve topics with result.
+
+## Business flow
+As a fact-checker platform, our business logic can be classified into 3 steps:
+
+1. "Users" post/submit some news or statement into our system
+    This action has side effects on 2 of our entites:
+    - user_messages:
+        An "event log" recording the user interaction (submission)
+
+    - messages
+        News or statements that user wishes to fact-check.
+
+    The users can choose if they want to include some existing topic ID
+    right when they submit, or leave it up to the admin for topic assignment.
+
+2. "Admins" review user submissions
+    This is when admins come in and validate user message submissions.
+    If the submissions are spams, admins can delete/ignore these new messages.
+
+    Until the admin "approves" the submission, no other users will see the message.
+
+3. "Admins" assign topic to new message submissions
+    After approval, admins will assign the message submission to a topic,
+    or create a new topic just for this message.
+
+4. "Admins" resolve topic
+    Admins can check and verify fake news, and save their findings as "topic result".
+    This result consists of a result status (resolve, pending, revoked, or something else)
+    and result findings - human language statements that support their verification.

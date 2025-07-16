@@ -87,6 +87,9 @@ When schema changes occur, we'll probably need to do a lot, but probably in this
 7. Update adapters to address the changes
 8. Leave the rest to me
 
+## Go database driver
+We use pgx "github.com/jackc/pgx/v5" as PostgreSQL driver. Unlike the traditional driver, transactions are not rolled back by default on context timeouts.
+
 ## Go database repository
 Most repository methods will just mirror the raw SQL queries, with some addition of option (type Options).
 

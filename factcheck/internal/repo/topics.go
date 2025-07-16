@@ -11,23 +11,21 @@ import (
 
 // Topics defines the interface for topic data operations
 type Topics interface {
-	Create(ctx context.Context, topic factcheck.Topic, opts ...OptionTx) (factcheck.Topic, error)
-	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
-	List(ctx context.Context, limit, offset int) ([]factcheck.Topic, error)
+	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
+	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
+	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
-	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error)
-	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
-	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error)
-	ListLikeID(ctx context.Context, idPattern string, limit, offset int) ([]factcheck.Topic, error)
-	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int) ([]factcheck.Topic, error)
-	ListLikeIDLikeMessageTextAll(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error) // Backward compatibility
-	CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
-	CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
+	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
+	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
 	CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
-	Delete(ctx context.Context, id string) error
-	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
-	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
-	UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error)
+	Delete(ctx context.Context, id string, opts ...Option) error
+	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
+	UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error)
+	UpdateName(ctx context.Context, id string, name string, opts ...Option) (factcheck.Topic, error)
 }
 
 // topics implements RepositoryTopic
@@ -43,16 +41,17 @@ func NewTopics(queries *postgres.Queries) Topics {
 }
 
 // List retrieves topics with pagination using the topicDomain adapter
-func (t *topics) List(ctx context.Context, limit, offset int) ([]factcheck.Topic, error) {
-	dbTopics, err := t.queries.ListTopics(ctx, postgres.ListTopicsParams{
+func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	list, err := queries.ListTopics(ctx, postgres.ListTopicsParams{
 		Column1: limit,
 		Column2: offset,
 	})
 	if err != nil {
 		return nil, err
 	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
+	topics := make([]factcheck.Topic, len(list))
+	for i, dbTopic := range list {
 		topics[i] = postgres.ToTopicFromRow(dbTopic)
 	}
 	return topics, nil
@@ -64,9 +63,10 @@ func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 }
 
 // ListByStatus retrieves topics by status with pagination
-func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error) {
+func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
-	dbTopics, err := t.queries.ListTopicsByStatus(ctx, postgres.ListTopicsByStatusParams{
+	queries := queries(t.queries, options(opts...))
+	dbTopics, err := queries.ListTopicsByStatus(ctx, postgres.ListTopicsByStatusParams{
 		Status:  string(status),
 		Column2: limit,
 		Column3: offset,
@@ -82,10 +82,11 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 }
 
 // ListLikeMessageText retrieves topics that have messages containing the given substring with pagination
-func (t *topics) ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error) {
+func (t *topics) ListLikeMessageText(ctx context.Context, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
+	queries := queries(t.queries, options(opts...))
 	likePattern := substring(pattern)
-	dbTopics, err := t.queries.ListTopicsLikeMessageText(ctx, postgres.ListTopicsLikeMessageTextParams{
+	list, err := queries.ListTopicsLikeMessageText(ctx, postgres.ListTopicsLikeMessageTextParams{
 		Text:    likePattern,
 		Column2: limit,
 		Column3: offset,
@@ -93,23 +94,24 @@ func (t *topics) ListLikeMessageText(ctx context.Context, pattern string, limit,
 	if err != nil {
 		return nil, err
 	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
+	topics := make([]factcheck.Topic, len(list))
+	for i, dbTopic := range list {
 		topics[i] = postgres.ToTopicFromMessageTextRow(dbTopic)
 	}
 	return topics, nil
 }
 
 // ListLikeID retrieves topics by ID pattern matching using SQL LIKE with pagination
-func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int) ([]factcheck.Topic, error) {
+func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
+	queries := queries(t.queries, options(opts...))
 	// Add wildcards for LIKE query if not already present
 	likePattern := idPattern
 	if !strings.Contains(likePattern, "%") {
 		likePattern = substring(idPattern)
 	}
 
-	dbTopics, err := t.queries.ListTopicsLikeID(ctx, postgres.ListTopicsLikeIDParams{
+	list, err := queries.ListTopicsLikeID(ctx, postgres.ListTopicsLikeIDParams{
 		Column1: likePattern,
 		Column2: limit,
 		Column3: offset,
@@ -117,39 +119,46 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 	if err != nil {
 		return nil, err
 	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
+	topics := make([]factcheck.Topic, len(list))
+	for i, dbTopic := range list {
 		topics[i] = postgres.ToTopicFromIDRow(dbTopic)
 	}
 	return topics, nil
 }
 
-// TODO: handle subquery transactions
-func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
+func (t *topics) ListHome(
+	ctx context.Context,
+	limit, offset int,
+	opts ...OptionTopic,
+) (
+	[]factcheck.Topic,
+	error,
+) {
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
 	limit, offset = sanitize(limit, offset)
-
-	options := &OptionsTopic{}
-	for _, opt := range opts {
-		opt(options)
-	}
 
 	switch {
 	case empty(options.LikeID) && empty(options.LikeMessageText) && empty(options.Status):
-		return t.List(ctx, limit, offset)
+		return t.List(ctx, limit, offset, options.Clone()...)
 
 	case empty(options.LikeID) && empty(options.LikeMessageText):
-		return t.ListByStatus(ctx, options.Status, limit, offset)
+		return t.ListByStatus(ctx, options.Status, limit, offset, options.Clone()...)
 
 	case empty(options.LikeID) && empty(options.Status):
-		return t.ListLikeMessageText(ctx, options.LikeMessageText, limit, offset)
+		return t.ListLikeMessageText(ctx, options.LikeMessageText, limit, offset, options.Clone()...)
 
 	case empty(options.LikeMessageText) && empty(options.Status):
-		return t.ListLikeID(ctx, options.LikeID, limit, offset)
+		return t.ListLikeID(ctx, options.LikeID, limit, offset, options.Clone()...)
+
+	case empty(options.Status):
+		// ID pattern + message text filter
+		return t.ListLikeIDLikeMessageText(ctx, options.LikeID, options.LikeMessageText, limit, offset, options.Clone()...)
 
 	case empty(options.LikeID):
 		// Status + message text filter
 		likePattern := substring(options.LikeMessageText)
-		topics, err := t.queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
+		topics, err := queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
 			Status:  string(options.Status),
 			Text:    likePattern,
 			Column3: limit,
@@ -170,7 +179,7 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
-		topics, err := t.queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
+		topics, err := queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
 			Status:  string(options.Status),
 			Column2: idPattern,
 			Column3: limit,
@@ -184,10 +193,6 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 			result[i] = postgres.ToTopicFromStatusLikeIDRow(dbTopic)
 		}
 		return result, nil
-
-	case empty(options.Status):
-		// ID pattern + message text filter
-		return t.ListLikeIDLikeMessageText(ctx, options.LikeID, options.LikeMessageText, limit, offset)
 	}
 
 	// All three filters
@@ -196,7 +201,7 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		idPattern = substring(idPattern)
 	}
 	messageLikePattern := substring(options.LikeMessageText)
-	topics, err := t.queries.ListTopicsByStatusLikeIDLikeMessageText(ctx, postgres.ListTopicsByStatusLikeIDLikeMessageTextParams{
+	topics, err := queries.ListTopicsByStatusLikeIDLikeMessageText(ctx, postgres.ListTopicsByStatusLikeIDLikeMessageTextParams{
 		Status:  string(options.Status),
 		Column2: idPattern,
 		Text:    messageLikePattern,
@@ -214,10 +219,8 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 }
 
 func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {
-	options := &OptionsTopic{}
-	for _, opt := range opts {
-		opt(options)
-	}
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
 
 	switch {
 	case empty(options.LikeID) && empty(options.LikeMessageText):
@@ -225,7 +228,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (ma
 
 	case empty(options.LikeID):
 		likePattern := substring(options.LikeMessageText)
-		result, err := t.queries.CountTopicsGroupByStatusLikeMessageText(ctx, likePattern)
+		result, err := queries.CountTopicsGroupByStatusLikeMessageText(ctx, likePattern)
 		if err != nil {
 			return nil, err
 		}
@@ -240,7 +243,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (ma
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
-		result, err := t.queries.CountTopicsGroupByStatusLikeID(ctx, idPattern)
+		result, err := queries.CountTopicsGroupByStatusLikeID(ctx, idPattern)
 		if err != nil {
 			return nil, err
 		}
@@ -255,7 +258,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (ma
 		idPattern = substring(idPattern)
 	}
 	messageLikePattern := substring(options.LikeMessageText)
-	result, err := t.queries.CountTopicsGroupByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsGroupByStatusLikeIDLikeMessageTextParams{
+	result, err := queries.CountTopicsGroupByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsGroupByStatusLikeIDLikeMessageTextParams{
 		Column1: idPattern,
 		Text:    messageLikePattern,
 	})
@@ -270,45 +273,36 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (ma
 }
 
 // Create creates a new topic using the topic adapter
-func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...OptionTx) (factcheck.Topic, error) {
-	txOptions := &TxOptions{}
-	for _, opt := range opts {
-		opt(txOptions)
-	}
-
+func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
 	params, err := postgres.TopicCreator(top)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-
-	query := t.queries.CreateTopic
-	if txOptions.Tx != nil {
-		query = t.queries.WithTx(txOptions.Tx).CreateTopic
-	}
-
-	dbTopic, err := query(ctx, params)
+	created, err := queries.CreateTopic(ctx, params)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-
-	return postgres.ToTopic(dbTopic), nil
+	return postgres.ToTopic(created), nil
 }
 
 // GetByID retrieves a topic by ID using the topicDomain adapter
-func (t *topics) GetByID(ctx context.Context, id string) (factcheck.Topic, error) {
-	topicID, err := postgres.UUID(id)
+func (t *topics) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := t.queries.GetTopic(ctx, topicID)
+	result, err := queries.GetTopic(ctx, uuid)
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return postgres.ToTopic(dbTopic), nil
+	return postgres.ToTopic(result), nil
 }
 
 // ListInIDs retrieves topics by IDs using the topicDomain adapter
-func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error) {
+func (t *topics) ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -316,20 +310,21 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic
 	if err != nil {
 		return nil, err
 	}
-	dbTopics, err := t.queries.ListTopicsInIDs(ctx, uuids)
+	list, err := queries.ListTopicsInIDs(ctx, uuids)
 	if err != nil {
 		return nil, err
 	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
+	topics := make([]factcheck.Topic, len(list))
+	for i, dbTopic := range list {
 		topics[i] = postgres.ToTopic(dbTopic)
 	}
 	return topics, nil
 }
 
 // ListLikeIDLikeMessageText retrieves topics by ID pattern and message text using SQL LIKE with pagination
-func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int) ([]factcheck.Topic, error) {
+func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
+	queries := queries(t.queries, options(opts...))
 	// Add wildcards for LIKE queries if not already present
 	idLikePattern := idPattern
 	if !strings.Contains(idLikePattern, "%") {
@@ -337,8 +332,7 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 	}
 
 	messageLikePattern := substring(pattern)
-
-	dbTopics, err := t.queries.ListTopicsLikeIDLikeMessageText(ctx, postgres.ListTopicsLikeIDLikeMessageTextParams{
+	list, err := queries.ListTopicsLikeIDLikeMessageText(ctx, postgres.ListTopicsLikeIDLikeMessageTextParams{
 		Column1: idLikePattern,
 		Text:    messageLikePattern,
 		Column3: limit,
@@ -347,8 +341,8 @@ func (t *topics) ListLikeIDLikeMessageText(ctx context.Context, idPattern string
 	if err != nil {
 		return nil, err
 	}
-	topics := make([]factcheck.Topic, len(dbTopics))
-	for i, dbTopic := range dbTopics {
+	topics := make([]factcheck.Topic, len(list))
+	for i, dbTopic := range list {
 		topics[i] = postgres.ToTopicFromIDLikeMessageTextRow(dbTopic)
 	}
 	return topics, nil
@@ -359,12 +353,9 @@ func (t *topics) ListLikeIDLikeMessageTextAll(ctx context.Context, idPattern str
 	return t.ListLikeIDLikeMessageText(ctx, idPattern, pattern, 0, 0)
 }
 
-func (t *topics) CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error) {
-	return t.queries.CountTopicsByStatus(ctx, string(status))
-}
-
-func (t *topics) CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error) {
-	rows, err := t.queries.CountTopicsGroupedByStatus(ctx)
+func (t *topics) CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error) {
+	queries := queries(t.queries, options(opts...))
+	rows, err := queries.CountTopicsGroupedByStatus(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -381,25 +372,28 @@ func (t *topics) CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]i
 }
 
 // Delete deletes a topic by ID using the stringToUUID adapter
-func (t *topics) Delete(ctx context.Context, id string) error {
-	topicID, err := postgres.UUID(id)
+func (t *topics) Delete(ctx context.Context, id string, opts ...Option) error {
+	options := options(opts...)
+	queries := queries(t.queries, options)
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return err
 	}
-	err = t.queries.DeleteTopic(ctx, topicID)
+	err = queries.DeleteTopic(ctx, uuid)
 	if err != nil {
 		return handleNotFound(err, map[string]string{"id": id})
 	}
 	return nil
 }
 
-func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error) {
-	topicID, err := postgres.UUID(id)
+func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := t.queries.UpdateTopicStatus(ctx, postgres.UpdateTopicStatusParams{
-		ID:     topicID,
+	dbTopic, err := queries.UpdateTopicStatus(ctx, postgres.UpdateTopicStatusParams{
+		ID:     uuid,
 		Status: string(status),
 	})
 	if err != nil {
@@ -408,34 +402,36 @@ func (t *topics) UpdateStatus(ctx context.Context, id string, status factcheck.S
 	return postgres.ToTopic(dbTopic), nil
 }
 
-func (t *topics) UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error) {
-	topicID, err := postgres.UUID(id)
+func (t *topics) UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := t.queries.UpdateTopicDescription(ctx, postgres.UpdateTopicDescriptionParams{
-		ID:          topicID,
+	updated, err := queries.UpdateTopicDescription(ctx, postgres.UpdateTopicDescriptionParams{
+		ID:          uuid,
 		Description: description,
 	})
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return postgres.ToTopic(dbTopic), nil
+	return postgres.ToTopic(updated), nil
 }
 
-func (t *topics) UpdateName(ctx context.Context, id string, name string) (factcheck.Topic, error) {
-	topicID, err := postgres.UUID(id)
+func (t *topics) UpdateName(ctx context.Context, id string, name string, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := t.queries.UpdateTopicName(ctx, postgres.UpdateTopicNameParams{
-		ID:   topicID,
+	updated, err := queries.UpdateTopicName(ctx, postgres.UpdateTopicNameParams{
+		ID:   uuid,
 		Name: name,
 	})
 	if err != nil {
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return postgres.ToTopic(dbTopic), nil
+	return postgres.ToTopic(updated), nil
 }
 
 func empty[S ~string](s S) bool {

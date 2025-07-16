@@ -33,11 +33,15 @@ func (h *handler) ListTopics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), h.topics.GetByID)
+	getBy(w, r, paramID(r), func(ctx context.Context, id string) (factcheck.Topic, error) {
+		return h.topics.GetByID(ctx, id)
+	})
 }
 
 func (h *handler) DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
-	deleteByID[factcheck.Topic](w, r, h.topics.Delete)
+	deleteByID[factcheck.Topic](w, r, func(ctx context.Context, s string) error {
+		return h.topics.Delete(ctx, s)
+	})
 }
 
 func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {

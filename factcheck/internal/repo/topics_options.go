@@ -9,7 +9,7 @@ type OptionTopic func(*OptionsTopic)
 
 // OptionsTopic contains topic operation configuration
 type OptionsTopic struct {
-	TxOptions
+	Options
 	// Topic-specific filters
 	LikeID          string
 	LikeMessageText string
@@ -33,5 +33,5 @@ func WithTopicStatus(status factcheck.StatusTopic) OptionTopic {
 
 // WithTopicTx sets the transaction for topic operations
 func WithTopicTx(tx Tx) OptionTopic {
-	return func(opts *OptionsTopic) { opts.Tx = tx }
+	return func(opts *OptionsTopic) { opts.tx = tx }
 }

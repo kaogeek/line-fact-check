@@ -699,17 +699,7 @@ func TestRepository_ListHome(t *testing.T) {
 	}
 
 	t.Run("ListHome - no options (all topics)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, new(repo.OptionsListTopicsHome))
-		if err != nil {
-			t.Fatalf("ListHome with no options failed: %v", err)
-		}
-		if len(topics) != 3 {
-			t.Fatalf("Expected 3 topics, got %d", len(topics))
-		}
-	})
-
-	t.Run("ListHome - nil options", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0)
 		if err != nil {
 			t.Fatalf("ListHome with no options failed: %v", err)
 		}
@@ -719,10 +709,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status filter only", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			WithTopicStatus(factcheck.StatusTopicPending)
+		opts := []repo.TopicOption{
+			repo.WithTopicStatus(factcheck.StatusTopicPending),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with status filter failed: %v", err)
 		}
@@ -746,10 +737,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - message text filter only", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with message text filter failed: %v", err)
 		}
@@ -762,10 +754,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern filter only", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with ID pattern filter failed: %v", err)
 		}
@@ -789,10 +782,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern and message text filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with ID pattern and message text filters failed: %v", err)
 		}
@@ -807,10 +801,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and message text filters", func(t *testing.T) {
-		options := new(repo.OptionsListTopicsHome).
-			WithTopicStatus(factcheck.StatusTopicPending).
-			LikeTopicMessageText("COVID")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, options)
+		opts := []repo.TopicOption{
+			repo.WithTopicStatus(factcheck.StatusTopicPending),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with status and message text filters failed: %v", err)
 		}
@@ -825,10 +820,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and ID pattern filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			WithTopicStatus(factcheck.StatusTopicResolved).
-			LikeTopicID("550e8400")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicStatus(factcheck.StatusTopicResolved),
+			repo.WithTopicLikeID("550e8400"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with status and ID pattern filters failed: %v", err)
 		}
@@ -843,11 +839,12 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - all three filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			WithTopicStatus(factcheck.StatusTopicPending).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicStatus(factcheck.StatusTopicPending),
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with all three filters failed: %v", err)
 		}
@@ -860,11 +857,12 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - no matches for combined filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			WithTopicStatus(factcheck.StatusTopicResolved).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicStatus(factcheck.StatusTopicResolved),
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with no matches failed: %v", err)
 		}
@@ -874,10 +872,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - empty string filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("").
-			LikeTopicMessageText("")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID(""),
+			repo.WithTopicLikeMessageText(""),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with empty string filters failed: %v", err)
 		}
@@ -888,10 +887,11 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - multiple options of same type (last one wins)", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400").
-			LikeTopicID("660e8400")
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeID("660e8400"),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListHome with multiple ID filters failed: %v", err)
 		}
@@ -1127,7 +1127,7 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - ID pattern filter only", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID("550e8400"),
+			repo.WithTopicLikeID("550e8400"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with ID pattern filter failed: %v", err)
@@ -1146,7 +1146,7 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - message text filter only", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeMessageText("COVID"),
+			repo.WithTopicLikeMessageText("COVID"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with message text filter failed: %v", err)
@@ -1165,8 +1165,8 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - ID pattern and message text filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID("550e8400"),
-			repo.CountTopicByStatusLikeMessageText("COVID"),
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with ID pattern and message text filters failed: %v", err)
@@ -1185,7 +1185,7 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - message text filter for resolved topics", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeMessageText("Election"),
+			repo.WithTopicLikeMessageText("Election"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with Election message filter failed: %v", err)
@@ -1204,7 +1204,7 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - ID pattern filter for different prefix", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID("660e8400"),
+			repo.WithTopicLikeID("660e8400"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with '660e8400' ID filter failed: %v", err)
@@ -1223,8 +1223,8 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - combined filters for technology topics", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID("660e8400"),
-			repo.CountTopicByStatusLikeMessageText("technology"),
+			repo.WithTopicLikeID("660e8400"),
+			repo.WithTopicLikeMessageText("technology"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with technology filters failed: %v", err)
@@ -1243,8 +1243,8 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - no matches for combined filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID("550e8400"),
-			repo.CountTopicByStatusLikeMessageText("techonology"),
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("techonology"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with no matches filter failed: %v", err)
@@ -1263,8 +1263,8 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - empty string filters", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeID(""),
-			repo.CountTopicByStatusLikeMessageText(""),
+			repo.WithTopicLikeID(""),
+			repo.WithTopicLikeMessageText(""),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with empty string filters failed: %v", err)
@@ -1283,7 +1283,7 @@ func TestRepository_CountByStatusesHome(t *testing.T) {
 
 	t.Run("CountByStatusesHome - case insensitive message text filter", func(t *testing.T) {
 		counts, err := app.Repository.Topics.CountByStatusHome(ctx,
-			repo.CountTopicByStatusLikeMessageText("covid"),
+			repo.WithTopicLikeMessageText("covid"),
 		)
 		if err != nil {
 			t.Fatalf("CountByStatusesHome with lowercase COVID filter failed: %v", err)
@@ -1441,7 +1441,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - no pagination (limit=0)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1456,8 +1456,10 @@ func TestRepository_TopicPagination(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to begin transaction: %v", err)
 		}
-		opts := new(repo.OptionsListTopicsHome).WithTx(tx)
-		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts)
+		opts := []repo.TopicOption{
+			repo.WithTopicTx(tx),
+		}
+		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1468,7 +1470,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - normal pagination (limit=3, offset=0)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1478,10 +1480,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with filter and limit", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1492,10 +1495,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with message text filter", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1509,11 +1513,12 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with both filters", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1527,7 +1532,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - negative limit (should return all)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, -1, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, -1, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1538,7 +1543,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - negative offset (should start from beginning)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 3, -2, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, -2)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1549,7 +1554,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - large limit (should cap at available records)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 100, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 100, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1561,7 +1566,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	t.Run("ListHome - pagination order consistency", func(t *testing.T) {
 		// Get first page
-		topics1, err := app.Repository.Topics.ListHome(ctx, 3, 0, nil)
+		topics1, err := app.Repository.Topics.ListHome(ctx, 3, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1569,7 +1574,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 			t.Errorf("Expected 3 topics, got %d", len(topics1))
 		}
 		// Get second page
-		topics2, err := app.Repository.Topics.ListHome(ctx, 3, 3, nil)
+		topics2, err := app.Repository.Topics.ListHome(ctx, 3, 3)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1589,10 +1594,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with empty result set", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("nonexistent")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("nonexistent"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics: %v", err)
 		}
@@ -1656,7 +1662,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 3: Very large values
 	t.Run("ListHome - very large limit", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 999999, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 999999, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics with large limit: %v", err)
 		}
@@ -1667,7 +1673,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - very large offset", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 999999, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 999999)
 		if err != nil {
 			t.Fatalf("Failed to list topics with large offset: %v", err)
 		}
@@ -1679,7 +1685,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 4: Single record scenarios
 	t.Run("ListHome - single record limit", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics with limit=1: %v", err)
 		}
@@ -1689,7 +1695,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - single record with offset", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 1, 1, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 1)
 		if err != nil {
 			t.Fatalf("Failed to list topics with limit=1, offset=1: %v", err)
 		}
@@ -1700,10 +1706,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 5: Empty result sets with pagination
 	t.Run("ListHome - empty result with pagination", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("nonexistent")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("nonexistent"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with empty result: %v", err)
 		}
@@ -1713,10 +1720,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - empty result with offset", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("nonexistent")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("nonexistent"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 10, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 10, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with empty result and offset: %v", err)
 		}
@@ -1727,7 +1735,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 6: Single page scenarios
 	t.Run("ListHome - single page (limit equals total)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 10, 0)
 		if err != nil {
 			t.Fatalf("Failed to list topics with limit=total: %v", err)
 		}
@@ -1737,10 +1745,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - single page with filter", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with single page filter: %v", err)
 		}
@@ -1751,7 +1760,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 7: Last page scenarios
 	t.Run("ListHome - last page (offset + limit > total)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 8, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 8)
 		if err != nil {
 			t.Fatalf("Failed to list topics on last page: %v", err)
 		}
@@ -1762,10 +1771,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - last page with filter", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics on last page with filter: %v", err)
 		}
@@ -1777,7 +1787,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 8: Exact boundary scenarios
 	t.Run("ListHome - exact boundary (offset + limit = total)", func(t *testing.T) {
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5, nil)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 5)
 		if err != nil {
 			t.Fatalf("Failed to list topics at exact boundary: %v", err)
 		}
@@ -1788,10 +1798,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - exact boundary with filter", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 1, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics at exact boundary with filter: %v", err)
 		}
@@ -1803,11 +1814,12 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 9: Multiple filters with pagination
 	t.Run("ListHome - multiple filters with pagination", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with multiple filters: %v", err)
 		}
@@ -1817,11 +1829,12 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - multiple filters with offset", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400").
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 3, 1, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 3, 1, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with multiple filters and offset: %v", err)
 		}
@@ -1833,10 +1846,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 10: Filter that returns exactly limit records
 	t.Run("ListHome - filter returns exactly limit records", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicID("550e8400")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeID("550e8400"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with exact limit: %v", err)
 		}
@@ -1848,10 +1862,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 11: Filter that returns fewer than limit records
 	t.Run("ListHome - filter returns fewer than limit", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 0, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with fewer than limit: %v", err)
 		}
@@ -1862,10 +1877,11 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - filter returns fewer than limit with offset", func(t *testing.T) {
-		opts := new(repo.OptionsListTopicsHome).
-			LikeTopicMessageText("COVID")
+		opts := []repo.TopicOption{
+			repo.WithTopicLikeMessageText("COVID"),
+		}
 
-		topics, err := app.Repository.Topics.ListHome(ctx, 5, 1, opts)
+		topics, err := app.Repository.Topics.ListHome(ctx, 5, 1, opts...)
 		if err != nil {
 			t.Fatalf("Failed to list topics with fewer than limit and offset: %v", err)
 		}

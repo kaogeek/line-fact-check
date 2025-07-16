@@ -7,11 +7,15 @@ import (
 )
 
 type (
-	Options struct {
-		tx    Tx
+	// TxOption represents transaction-related options
+	TxOption func(*TxOptions)
+
+	// TxOptions contains transaction configuration
+	TxOptions struct {
+		Tx    Tx
 		level IsoLevel
 	}
-	Option   func(Options) Options
+
 	IsoLevel string
 	Tx       postgres.Tx
 )
@@ -22,27 +26,23 @@ const (
 	Serializable   IsoLevel = IsoLevel(postgres.IsoLevelSerializable)
 )
 
-func WithTx(tx Tx) Option {
-	return func(o Options) Options {
-		return o.WithTx(tx)
+// WithTx sets the transaction for the operation
+func WithTx(tx Tx) TxOption {
+	return func(o *TxOptions) {
+		if o.Tx != nil {
+			panic("tx already set")
+		}
+		o.Tx = tx
 	}
 }
 
-func (o Options) WithTx(tx Tx) Options {
-	if o.tx != nil {
-		panic("tx already set")
-	}
-	o.tx = tx
-	return o
-}
-
-func WithIsolationLevel(level IsoLevel) Option {
-	return func(o Options) Options {
+// WithIsolationLevel sets the isolation level for the operation
+func WithIsolationLevel(level IsoLevel) TxOption {
+	return func(o *TxOptions) {
 		if o.level != "" {
 			panic("isolation level already set")
 		}
 		o.level = level
-		return o
 	}
 }
 
@@ -51,5 +51,5 @@ func (r *Repository) Begin(ctx context.Context) (Tx, error) {
 }
 
 func (r *Repository) BeginTx(ctx context.Context, level IsoLevel) (Tx, error) {
-	return r.TxnManager.BeginTx(ctx, postgres.IsoLevel(level)) // TODO:
+	return r.TxnManager.BeginTx(ctx, postgres.IsoLevel(level))
 }

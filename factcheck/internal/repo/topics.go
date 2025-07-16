@@ -11,10 +11,10 @@ import (
 
 // Topics defines the interface for topic data operations
 type Topics interface {
-	Create(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error)
+	Create(ctx context.Context, topic factcheck.Topic, opts ...TxOption) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context, limit, offset int) ([]factcheck.Topic, error)
-	ListHome(ctx context.Context, limit, offset int, opts *OptionsListTopicsHome) ([]factcheck.Topic, error)
+	ListHome(ctx context.Context, limit, offset int, opts ...TopicOption) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
 	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error)
@@ -23,7 +23,7 @@ type Topics interface {
 	ListLikeIDLikeMessageTextAll(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error) // Backward compatibility
 	CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusHome(ctx context.Context, opts ...OptionCountTopicByStatus) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusHome(ctx context.Context, opts ...TopicOption) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -40,33 +40,6 @@ func NewTopics(queries *postgres.Queries) Topics {
 	return &topics{
 		queries: queries,
 	}
-}
-
-type OptionsListTopicsHome struct {
-	Options
-	likeID          string
-	likeMessageText string
-	status          factcheck.StatusTopic
-}
-
-func (o *OptionsListTopicsHome) LikeTopicID(id string) *OptionsListTopicsHome {
-	o.likeID = id
-	return o
-}
-
-func (o *OptionsListTopicsHome) LikeTopicMessageText(s string) *OptionsListTopicsHome {
-	o.likeMessageText = s
-	return o
-}
-
-func (o *OptionsListTopicsHome) WithTopicStatus(s factcheck.StatusTopic) *OptionsListTopicsHome {
-	o.status = s
-	return o
-}
-
-func (o *OptionsListTopicsHome) WithTx(tx Tx) *OptionsListTopicsHome {
-	o.Options.WithTx(tx)
-	return o
 }
 
 // List retrieves topics with pagination using the topicDomain adapter
@@ -151,29 +124,33 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 	return topics, nil
 }
 
-func (t *topics) ListHome(ctx context.Context, limit, offset int, opts *OptionsListTopicsHome) ([]factcheck.Topic, error) {
+// TODO: handle subquery transactions
+func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...TopicOption) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
-	if opts == nil {
-		opts = new(OptionsListTopicsHome)
+
+	options := &TopicOptions{}
+	for _, opt := range opts {
+		opt(options)
 	}
+
 	switch {
-	case empty(opts.likeID) && empty(opts.likeMessageText) && empty(opts.status):
+	case empty(options.LikeID) && empty(options.LikeMessageText) && empty(options.Status):
 		return t.List(ctx, limit, offset)
 
-	case empty(opts.likeID) && empty(opts.likeMessageText):
-		return t.ListByStatus(ctx, opts.status, limit, offset)
+	case empty(options.LikeID) && empty(options.LikeMessageText):
+		return t.ListByStatus(ctx, options.Status, limit, offset)
 
-	case empty(opts.likeID) && empty(opts.status):
-		return t.ListLikeMessageText(ctx, opts.likeMessageText, limit, offset)
+	case empty(options.LikeID) && empty(options.Status):
+		return t.ListLikeMessageText(ctx, options.LikeMessageText, limit, offset)
 
-	case empty(opts.likeMessageText) && empty(opts.status):
-		return t.ListLikeID(ctx, opts.likeID, limit, offset)
+	case empty(options.LikeMessageText) && empty(options.Status):
+		return t.ListLikeID(ctx, options.LikeID, limit, offset)
 
-	case empty(opts.likeID):
+	case empty(options.LikeID):
 		// Status + message text filter
-		likePattern := substring(opts.likeMessageText)
+		likePattern := substring(options.LikeMessageText)
 		topics, err := t.queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
-			Status:  string(opts.status),
+			Status:  string(options.Status),
 			Text:    likePattern,
 			Column3: limit,
 			Column4: offset,
@@ -187,14 +164,14 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts *OptionsL
 		}
 		return result, nil
 
-	case empty(opts.likeMessageText):
+	case empty(options.LikeMessageText):
 		// Status + ID pattern filter
-		idPattern := opts.likeID
+		idPattern := options.LikeID
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
 		topics, err := t.queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
-			Status:  string(opts.status),
+			Status:  string(options.Status),
 			Column2: idPattern,
 			Column3: limit,
 			Column4: offset,
@@ -208,19 +185,19 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts *OptionsL
 		}
 		return result, nil
 
-	case empty(opts.status):
+	case empty(options.Status):
 		// ID pattern + message text filter
-		return t.ListLikeIDLikeMessageText(ctx, opts.likeID, opts.likeMessageText, limit, offset)
+		return t.ListLikeIDLikeMessageText(ctx, options.LikeID, options.LikeMessageText, limit, offset)
 	}
 
 	// All three filters
-	idPattern := opts.likeID
+	idPattern := options.LikeID
 	if !strings.Contains(idPattern, "%") {
 		idPattern = substring(idPattern)
 	}
-	messageLikePattern := substring(opts.likeMessageText)
+	messageLikePattern := substring(options.LikeMessageText)
 	topics, err := t.queries.ListTopicsByStatusLikeIDLikeMessageText(ctx, postgres.ListTopicsByStatusLikeIDLikeMessageTextParams{
-		Status:  string(opts.status),
+		Status:  string(options.Status),
 		Column2: idPattern,
 		Text:    messageLikePattern,
 		Column4: limit,
@@ -236,40 +213,18 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts *OptionsL
 	return result, nil
 }
 
-type OptionCountTopicByStatus func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus
-
-type OptionsCountTopicByStatus struct {
-	Options
-	likeID          string
-	likeMessageText string
-}
-
-func CountTopicByStatusLikeID(id string) OptionCountTopicByStatus {
-	return func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus {
-		f.likeID = id
-		return f
-	}
-}
-
-func CountTopicByStatusLikeMessageText(text string) OptionCountTopicByStatus {
-	return func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus {
-		f.likeMessageText = text
-		return f
-	}
-}
-
-func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
-	f := OptionsCountTopicByStatus{}
-	for i := range opts {
-		f = opts[i](f)
+func (t *topics) CountByStatusHome(ctx context.Context, opts ...TopicOption) (map[factcheck.StatusTopic]int64, error) {
+	options := &TopicOptions{}
+	for _, opt := range opts {
+		opt(options)
 	}
 
 	switch {
-	case empty(f.likeID) && empty(f.likeMessageText):
+	case empty(options.LikeID) && empty(options.LikeMessageText):
 		return t.CountByStatus(ctx)
 
-	case empty(f.likeID):
-		likePattern := substring(f.likeMessageText)
+	case empty(options.LikeID):
+		likePattern := substring(options.LikeMessageText)
 		result, err := t.queries.CountTopicsGroupByStatusLikeMessageText(ctx, likePattern)
 		if err != nil {
 			return nil, err
@@ -280,8 +235,8 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopic
 		}
 		return m, nil
 
-	case empty(f.likeMessageText):
-		idPattern := f.likeID
+	case empty(options.LikeMessageText):
+		idPattern := options.LikeID
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
@@ -295,11 +250,11 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopic
 		}
 		return m, nil
 	}
-	idPattern := f.likeID
+	idPattern := options.LikeID
 	if !strings.Contains(idPattern, "%") {
 		idPattern = substring(idPattern)
 	}
-	messageLikePattern := substring(f.likeMessageText)
+	messageLikePattern := substring(options.LikeMessageText)
 	result, err := t.queries.CountTopicsGroupByStatusLikeIDLikeMessageText(ctx, postgres.CountTopicsGroupByStatusLikeIDLikeMessageTextParams{
 		Column1: idPattern,
 		Text:    messageLikePattern,
@@ -315,12 +270,23 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopic
 }
 
 // Create creates a new topic using the topic adapter
-func (t *topics) Create(ctx context.Context, top factcheck.Topic) (factcheck.Topic, error) {
+func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...TxOption) (factcheck.Topic, error) {
+	txOptions := &TxOptions{}
+	for _, opt := range opts {
+		opt(txOptions)
+	}
+
 	params, err := postgres.TopicCreator(top)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
-	dbTopic, err := t.queries.CreateTopic(ctx, params)
+
+	query := t.queries.CreateTopic
+	if txOptions.Tx != nil {
+		query = t.queries.WithTx(txOptions.Tx).CreateTopic
+	}
+
+	dbTopic, err := query(ctx, params)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}

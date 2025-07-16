@@ -48,14 +48,16 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 	}
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
-	opts := new(repo.OptionsListTopicsHome)
+
+	var opts []repo.TopicOption
 	if id != "" {
-		opts.LikeTopicID(id)
+		opts = append(opts, repo.WithTopicLikeID(id))
 	}
 	if text != "" {
-		opts.LikeTopicMessageText(text)
+		opts = append(opts, repo.WithTopicLikeMessageText(text))
 	}
-	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts)
+
+	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
@@ -64,14 +66,14 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
-	opts := []repo.OptionCountTopicByStatus{}
+	var opts []repo.TopicOption
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
 	if id != "" {
-		opts = append(opts, repo.CountTopicByStatusLikeID(id))
+		opts = append(opts, repo.WithTopicLikeID(id))
 	}
 	if text != "" {
-		opts = append(opts, repo.CountTopicByStatusLikeMessageText(text))
+		opts = append(opts, repo.WithTopicLikeMessageText(text))
 	}
 	counts, err := h.topics.CountByStatusHome(r.Context(), opts...)
 	if err != nil {
@@ -88,7 +90,10 @@ func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	create(
-		w, r, h.topics.Create,
+		w, r,
+		func(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error) {
+			return h.topics.Create(ctx, topic)
+		},
 		createCheck(func(_ context.Context, topic factcheck.Topic) error {
 			if topic.ID != "" {
 				return fmt.Errorf("unexpected topic id (expecting empty topic id): '%s'", topic.Status)

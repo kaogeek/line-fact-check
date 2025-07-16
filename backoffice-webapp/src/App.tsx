@@ -1,3 +1,4 @@
+import './i18n';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import RootLayout from './layouts/RootLayout';
 import { topicRouter } from './pages/topic/topicRouter';

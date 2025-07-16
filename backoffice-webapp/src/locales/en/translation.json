@@ -1,0 +1,16 @@
+{
+  "welcome": "Welcome",
+  "greeting": "Hello, {{name}}!",
+  "dashboard": {
+    "title": "Dashboard",
+    "totalTicket": "Total ticket",
+    "pending": "Pending",
+    "answer": "Answer",
+    "rejected": "Rejected",
+    "statusTimeline": "Status Timeline",
+    "approveStat": "Approval Statistics",
+    "totalNews": "Total news",
+    "realNews": "Real news",
+    "fakeNews": "Fake news"
+  }
+}

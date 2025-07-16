@@ -1,0 +1,16 @@
+{
+  "welcome": "ยินดีต้อนรับ",
+  "greeting": "สวัสดี, {{name}}!",
+  "dashboard": {
+    "title": "แดชบอร์ด",
+    "totalTicket": "ตั๋วทั้งหมด",
+    "pending": "รอดำเนินการ",
+    "answer": "ตอบแล้ว",
+    "rejected": "ปฏิเสธ",
+    "statusTimeline": "ไทม์ไลน์สถานะ",
+    "approveStat": "สถิติการอนุมัติ",
+    "totalNews": "ข่าวทั้งหมด",
+    "realNews": "ข่าวจริง",
+    "fakeNews": "ข่าวปลอม"
+  }
+}

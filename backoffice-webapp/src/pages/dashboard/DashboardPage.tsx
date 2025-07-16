@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import StatCard from '../../components/StatCard';
 import { TYH3 } from '../../components/Typography';
@@ -33,23 +34,25 @@ const approveData = [
 const COLORS = ['#0088FE', '#FF8042'];
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="p-4 h-full space-y-4">
       <div>
-        <TYH3 className="mb-4">Dashboard</TYH3>
+        <TYH3 className="mb-4">{t('dashboard.title')}</TYH3>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total ticket" value="9" />
-        <StatCard label="Pending" value="3" />
-        <StatCard label="Answer" value="2" />
-        <StatCard label="Rejected" value="2" />
+        <StatCard label={t('dashboard.totalTicket')} value="9" />
+        <StatCard label={t('dashboard.pending')} value="3" />
+        <StatCard label={t('dashboard.answer')} value="2" />
+        <StatCard label={t('dashboard.rejected')} value="2" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Status Timeline</CardTitle>
+            <CardTitle>{t('dashboard.statusTimeline')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -69,13 +72,13 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Approve stat</CardTitle>
+            <CardTitle>{t('dashboard.approveStat')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <StatCard label="Total news" value="9" />
-              <StatCard label="Real news" value="9" />
-              <StatCard label="Fake news" value="3" />
+              <StatCard label={t('dashboard.totalNews')} value="9" />
+              <StatCard label={t('dashboard.realNews')} value="9" />
+              <StatCard label={t('dashboard.fakeNews')} value="3" />
             </div>
             <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">

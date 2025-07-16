@@ -9,7 +9,7 @@ import (
 
 // Messages defines the interface for message data operations
 type Messages interface {
-	Create(ctx context.Context, message factcheck.Message, opts ...TxOption) (factcheck.Message, error)
+	Create(ctx context.Context, message factcheck.Message, opts ...OptionTx) (factcheck.Message, error)
 	GetByID(ctx context.Context, id string) (factcheck.Message, error)
 	ListByTopic(ctx context.Context, topicID string) ([]factcheck.Message, error)
 	Update(ctx context.Context, message factcheck.Message) (factcheck.Message, error)
@@ -30,7 +30,7 @@ func NewMessages(queries *postgres.Queries) Messages {
 }
 
 // Create creates a new message using the message adapter
-func (m *messages) Create(ctx context.Context, msg factcheck.Message, opts ...TxOption) (factcheck.Message, error) {
+func (m *messages) Create(ctx context.Context, msg factcheck.Message, opts ...OptionTx) (factcheck.Message, error) {
 	txOptions := &TxOptions{}
 	for _, opt := range opts {
 		opt(txOptions)

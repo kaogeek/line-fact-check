@@ -4,11 +4,11 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck"
 )
 
-// TopicOption represents topic-specific options
-type TopicOption func(*TopicOptions)
+// OptionTopic represents topic-specific options
+type OptionTopic func(*OptionsTopic)
 
-// TopicOptions contains topic operation configuration
-type TopicOptions struct {
+// OptionsTopic contains topic operation configuration
+type OptionsTopic struct {
 	TxOptions
 	// Topic-specific filters
 	LikeID          string
@@ -17,21 +17,21 @@ type TopicOptions struct {
 }
 
 // WithTopicLikeID sets the topic ID pattern filter
-func WithTopicLikeID(id string) TopicOption {
-	return func(opts *TopicOptions) { opts.LikeID = id }
+func WithTopicLikeID(id string) OptionTopic {
+	return func(opts *OptionsTopic) { opts.LikeID = id }
 }
 
 // WithTopicLikeMessageText sets the message text pattern filter
-func WithTopicLikeMessageText(text string) TopicOption {
-	return func(opts *TopicOptions) { opts.LikeMessageText = text }
+func WithTopicLikeMessageText(text string) OptionTopic {
+	return func(opts *OptionsTopic) { opts.LikeMessageText = text }
 }
 
 // WithTopicStatus sets the topic status filter
-func WithTopicStatus(status factcheck.StatusTopic) TopicOption {
-	return func(opts *TopicOptions) { opts.Status = status }
+func WithTopicStatus(status factcheck.StatusTopic) OptionTopic {
+	return func(opts *OptionsTopic) { opts.Status = status }
 }
 
 // WithTopicTx sets the transaction for topic operations
-func WithTopicTx(tx Tx) TopicOption {
-	return func(opts *TopicOptions) { opts.Tx = tx }
+func WithTopicTx(tx Tx) OptionTopic {
+	return func(opts *OptionsTopic) { opts.Tx = tx }
 }

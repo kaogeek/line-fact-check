@@ -11,10 +11,10 @@ import (
 
 // Topics defines the interface for topic data operations
 type Topics interface {
-	Create(ctx context.Context, topic factcheck.Topic, opts ...TxOption) (factcheck.Topic, error)
+	Create(ctx context.Context, topic factcheck.Topic, opts ...OptionTx) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context, limit, offset int) ([]factcheck.Topic, error)
-	ListHome(ctx context.Context, limit, offset int, opts ...TopicOption) ([]factcheck.Topic, error)
+	ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
 	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error)
@@ -23,7 +23,7 @@ type Topics interface {
 	ListLikeIDLikeMessageTextAll(ctx context.Context, idPattern string, pattern string) ([]factcheck.Topic, error) // Backward compatibility
 	CountStatus(ctx context.Context, status factcheck.StatusTopic) (int64, error)
 	CountByStatus(ctx context.Context) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusHome(ctx context.Context, opts ...TopicOption) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string) (factcheck.Topic, error)
@@ -125,10 +125,10 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 }
 
 // TODO: handle subquery transactions
-func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...TopicOption) ([]factcheck.Topic, error) {
+func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
 
-	options := &TopicOptions{}
+	options := &OptionsTopic{}
 	for _, opt := range opts {
 		opt(options)
 	}
@@ -213,8 +213,8 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...TopicO
 	return result, nil
 }
 
-func (t *topics) CountByStatusHome(ctx context.Context, opts ...TopicOption) (map[factcheck.StatusTopic]int64, error) {
-	options := &TopicOptions{}
+func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {
+	options := &OptionsTopic{}
 	for _, opt := range opts {
 		opt(options)
 	}
@@ -270,7 +270,7 @@ func (t *topics) CountByStatusHome(ctx context.Context, opts ...TopicOption) (ma
 }
 
 // Create creates a new topic using the topic adapter
-func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...TxOption) (factcheck.Topic, error) {
+func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...OptionTx) (factcheck.Topic, error) {
 	txOptions := &TxOptions{}
 	for _, opt := range opts {
 		opt(txOptions)

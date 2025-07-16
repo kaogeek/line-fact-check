@@ -709,7 +709,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status filter only", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 		}
 
@@ -737,7 +737,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - message text filter only", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 
@@ -754,7 +754,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern filter only", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 		}
 
@@ -782,7 +782,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - ID pattern and message text filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
 		}
@@ -801,7 +801,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and message text filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.WithTopicLikeMessageText("COVID"),
 		}
@@ -820,7 +820,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - status and ID pattern filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.WithTopicLikeID("550e8400"),
 		}
@@ -839,7 +839,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - all three filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicStatus(factcheck.StatusTopicPending),
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
@@ -857,7 +857,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - no matches for combined filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicStatus(factcheck.StatusTopicResolved),
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
@@ -872,7 +872,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - empty string filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID(""),
 			repo.WithTopicLikeMessageText(""),
 		}
@@ -887,7 +887,7 @@ func TestRepository_ListHome(t *testing.T) {
 	})
 
 	t.Run("ListHome - multiple options of same type (last one wins)", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeID("660e8400"),
 		}
@@ -1456,7 +1456,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to begin transaction: %v", err)
 		}
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicTx(tx),
 		}
 		topics, err := app.Repository.Topics.ListHome(ctx, 0, 0, opts...)
@@ -1480,7 +1480,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with filter and limit", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 		}
 
@@ -1495,7 +1495,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with message text filter", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 
@@ -1513,7 +1513,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with both filters", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
 		}
@@ -1594,7 +1594,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - pagination with empty result set", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("nonexistent"),
 		}
 
@@ -1706,7 +1706,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 5: Empty result sets with pagination
 	t.Run("ListHome - empty result with pagination", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("nonexistent"),
 		}
 
@@ -1720,7 +1720,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - empty result with offset", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("nonexistent"),
 		}
 
@@ -1745,7 +1745,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - single page with filter", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 
@@ -1771,7 +1771,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - last page with filter", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 		}
 
@@ -1798,7 +1798,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - exact boundary with filter", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 
@@ -1814,7 +1814,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 9: Multiple filters with pagination
 	t.Run("ListHome - multiple filters with pagination", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
 		}
@@ -1829,7 +1829,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - multiple filters with offset", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 			repo.WithTopicLikeMessageText("COVID"),
 		}
@@ -1846,7 +1846,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 10: Filter that returns exactly limit records
 	t.Run("ListHome - filter returns exactly limit records", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeID("550e8400"),
 		}
 
@@ -1862,7 +1862,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 
 	// Edge Case 11: Filter that returns fewer than limit records
 	t.Run("ListHome - filter returns fewer than limit", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 
@@ -1877,7 +1877,7 @@ func TestRepository_TopicPagination(t *testing.T) {
 	})
 
 	t.Run("ListHome - filter returns fewer than limit with offset", func(t *testing.T) {
-		opts := []repo.TopicOption{
+		opts := []repo.OptionTopic{
 			repo.WithTopicLikeMessageText("COVID"),
 		}
 

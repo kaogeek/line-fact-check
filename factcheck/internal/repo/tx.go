@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	// TxOption represents transaction-related options
-	TxOption func(*TxOptions)
+	// OptionTx represents transaction-related options
+	OptionTx func(*TxOptions)
 
 	// TxOptions contains transaction configuration
 	TxOptions struct {
@@ -27,7 +27,7 @@ const (
 )
 
 // WithTx sets the transaction for the operation
-func WithTx(tx Tx) TxOption {
+func WithTx(tx Tx) OptionTx {
 	return func(o *TxOptions) {
 		if o.Tx != nil {
 			panic("tx already set")
@@ -37,7 +37,7 @@ func WithTx(tx Tx) TxOption {
 }
 
 // WithIsolationLevel sets the isolation level for the operation
-func WithIsolationLevel(level IsoLevel) TxOption {
+func WithIsolationLevel(level IsoLevel) OptionTx {
 	return func(o *TxOptions) {
 		if o.level != "" {
 			panic("isolation level already set")

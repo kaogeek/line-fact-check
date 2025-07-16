@@ -49,7 +49,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
 
-	var opts []repo.TopicOption
+	var opts []repo.OptionTopic
 	if id != "" {
 		opts = append(opts, repo.WithTopicLikeID(id))
 	}
@@ -66,7 +66,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
-	var opts []repo.TopicOption
+	var opts []repo.OptionTopic
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
 	if id != "" {

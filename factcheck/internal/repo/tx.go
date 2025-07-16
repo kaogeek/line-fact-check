@@ -24,12 +24,16 @@ const (
 
 func WithTx(tx Tx) Option {
 	return func(o Options) Options {
-		if o.tx != nil {
-			panic("tx already set")
-		}
-		o.tx = tx
-		return o
+		return o.WithTx(tx)
 	}
+}
+
+func (o Options) WithTx(tx Tx) Options {
+	if o.tx != nil {
+		panic("tx already set")
+	}
+	o.tx = tx
+	return o
 }
 
 func WithIsolationLevel(level IsoLevel) Option {

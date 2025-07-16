@@ -46,16 +46,16 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
-	opts := []repo.OptionListTopicHome{}
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
+	opts := new(repo.OptionsListTopicsHome)
 	if id != "" {
-		opts = append(opts, repo.LikeTopicID(id))
+		opts.LikeTopicID(id)
 	}
 	if text != "" {
-		opts = append(opts, repo.LikeTopicMessageText(text))
+		opts.LikeTopicMessageText(text)
 	}
-	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts...)
+	topics, err := h.topics.ListHome(r.Context(), limit, offset, opts)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

@@ -14,7 +14,7 @@ type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string) (factcheck.Topic, error)
 	List(ctx context.Context, limit, offset int) ([]factcheck.Topic, error)
-	ListHome(ctx context.Context, limit, offset int, opts ...OptionListTopicHome) ([]factcheck.Topic, error)
+	ListHome(ctx context.Context, limit, offset int, opts *OptionsListTopicsHome) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string) ([]factcheck.Topic, error)
 	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int) ([]factcheck.Topic, error)
@@ -42,33 +42,31 @@ func NewTopics(queries *postgres.Queries) Topics {
 	}
 }
 
-type OptionListTopicHome func(f FilterListTopicsHome) FilterListTopicsHome
-
-type FilterListTopicsHome struct {
+type OptionsListTopicsHome struct {
+	Options
 	likeID          string
 	likeMessageText string
 	status          factcheck.StatusTopic
 }
 
-func LikeTopicID(id string) OptionListTopicHome {
-	return func(f FilterListTopicsHome) FilterListTopicsHome {
-		f.likeID = id
-		return f
-	}
+func (o *OptionsListTopicsHome) LikeTopicID(id string) *OptionsListTopicsHome {
+	o.likeID = id
+	return o
 }
 
-func LikeTopicMessageText(s string) OptionListTopicHome {
-	return func(f FilterListTopicsHome) FilterListTopicsHome {
-		f.likeMessageText = s
-		return f
-	}
+func (o *OptionsListTopicsHome) LikeTopicMessageText(s string) *OptionsListTopicsHome {
+	o.likeMessageText = s
+	return o
 }
 
-func WithTopicStatus(s factcheck.StatusTopic) OptionListTopicHome {
-	return func(f FilterListTopicsHome) FilterListTopicsHome {
-		f.status = s
-		return f
-	}
+func (o *OptionsListTopicsHome) WithTopicStatus(s factcheck.StatusTopic) *OptionsListTopicsHome {
+	o.status = s
+	return o
+}
+
+func (o *OptionsListTopicsHome) WithTx(tx Tx) *OptionsListTopicsHome {
+	o.Options.WithTx(tx)
+	return o
 }
 
 // List retrieves topics with pagination using the topicDomain adapter
@@ -153,31 +151,29 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 	return topics, nil
 }
 
-func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...OptionListTopicHome) ([]factcheck.Topic, error) {
+func (t *topics) ListHome(ctx context.Context, limit, offset int, opts *OptionsListTopicsHome) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
-	f := FilterListTopicsHome{}
-	for i := range opts {
-		f = opts[i](f)
+	if opts == nil {
+		opts = new(OptionsListTopicsHome)
 	}
-
 	switch {
-	case empty(f.likeID) && empty(f.likeMessageText) && empty(f.status):
+	case empty(opts.likeID) && empty(opts.likeMessageText) && empty(opts.status):
 		return t.List(ctx, limit, offset)
 
-	case empty(f.likeID) && empty(f.likeMessageText):
-		return t.ListByStatus(ctx, f.status, limit, offset)
+	case empty(opts.likeID) && empty(opts.likeMessageText):
+		return t.ListByStatus(ctx, opts.status, limit, offset)
 
-	case empty(f.likeID) && empty(f.status):
-		return t.ListLikeMessageText(ctx, f.likeMessageText, limit, offset)
+	case empty(opts.likeID) && empty(opts.status):
+		return t.ListLikeMessageText(ctx, opts.likeMessageText, limit, offset)
 
-	case empty(f.likeMessageText) && empty(f.status):
-		return t.ListLikeID(ctx, f.likeID, limit, offset)
+	case empty(opts.likeMessageText) && empty(opts.status):
+		return t.ListLikeID(ctx, opts.likeID, limit, offset)
 
-	case empty(f.likeID):
+	case empty(opts.likeID):
 		// Status + message text filter
-		likePattern := substring(f.likeMessageText)
+		likePattern := substring(opts.likeMessageText)
 		topics, err := t.queries.ListTopicsByStatusLikeMessageText(ctx, postgres.ListTopicsByStatusLikeMessageTextParams{
-			Status:  string(f.status),
+			Status:  string(opts.status),
 			Text:    likePattern,
 			Column3: limit,
 			Column4: offset,
@@ -191,14 +187,14 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		}
 		return result, nil
 
-	case empty(f.likeMessageText):
+	case empty(opts.likeMessageText):
 		// Status + ID pattern filter
-		idPattern := f.likeID
+		idPattern := opts.likeID
 		if !strings.Contains(idPattern, "%") {
 			idPattern = substring(idPattern)
 		}
 		topics, err := t.queries.ListTopicsByStatusLikeID(ctx, postgres.ListTopicsByStatusLikeIDParams{
-			Status:  string(f.status),
+			Status:  string(opts.status),
 			Column2: idPattern,
 			Column3: limit,
 			Column4: offset,
@@ -212,19 +208,19 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 		}
 		return result, nil
 
-	case empty(f.status):
+	case empty(opts.status):
 		// ID pattern + message text filter
-		return t.ListLikeIDLikeMessageText(ctx, f.likeID, f.likeMessageText, limit, offset)
+		return t.ListLikeIDLikeMessageText(ctx, opts.likeID, opts.likeMessageText, limit, offset)
 	}
 
 	// All three filters
-	idPattern := f.likeID
+	idPattern := opts.likeID
 	if !strings.Contains(idPattern, "%") {
 		idPattern = substring(idPattern)
 	}
-	messageLikePattern := substring(f.likeMessageText)
+	messageLikePattern := substring(opts.likeMessageText)
 	topics, err := t.queries.ListTopicsByStatusLikeIDLikeMessageText(ctx, postgres.ListTopicsByStatusLikeIDLikeMessageTextParams{
-		Status:  string(f.status),
+		Status:  string(opts.status),
 		Column2: idPattern,
 		Text:    messageLikePattern,
 		Column4: limit,
@@ -240,29 +236,30 @@ func (t *topics) ListHome(ctx context.Context, limit, offset int, opts ...Option
 	return result, nil
 }
 
-type OptionCountTopicByStatus func(f FilterCountTopicByStatus) FilterCountTopicByStatus
+type OptionCountTopicByStatus func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus
 
-type FilterCountTopicByStatus struct {
+type OptionsCountTopicByStatus struct {
+	Options
 	likeID          string
 	likeMessageText string
 }
 
 func CountTopicByStatusLikeID(id string) OptionCountTopicByStatus {
-	return func(f FilterCountTopicByStatus) FilterCountTopicByStatus {
+	return func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus {
 		f.likeID = id
 		return f
 	}
 }
 
 func CountTopicByStatusLikeMessageText(text string) OptionCountTopicByStatus {
-	return func(f FilterCountTopicByStatus) FilterCountTopicByStatus {
+	return func(f OptionsCountTopicByStatus) OptionsCountTopicByStatus {
 		f.likeMessageText = text
 		return f
 	}
 }
 
 func (t *topics) CountByStatusHome(ctx context.Context, opts ...OptionCountTopicByStatus) (map[factcheck.StatusTopic]int64, error) {
-	f := FilterCountTopicByStatus{}
+	f := OptionsCountTopicByStatus{}
 	for i := range opts {
 		f = opts[i](f)
 	}

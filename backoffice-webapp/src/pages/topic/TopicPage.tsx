@@ -1,7 +1,7 @@
 import TopicSearchBar from './components/TopicSearchBar';
 
 import TopicData from './components/TopicData';
-import { useCountTopics, useGetTopics } from '@/hooks/api/useTopic';
+import { useCountTopics, useGetTopics } from '@/hooks/api/topic';
 import { useEffect, useState } from 'react';
 import TabIndex from '../../components/TabIndex';
 import { TopicStatus, type GetTopicCriteria, type Topic } from '@/lib/api/type/topic';
@@ -11,7 +11,7 @@ import PaginationControl from '@/components/PaginationControl';
 import { rejectTopic } from '@/lib/api/service/topic';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useLoader } from '@/hooks/useLoader';
+import { useLoader } from '@/hooks/loader';
 import { ConfirmAlertDialog } from '@/components/ConfirmAlertDialog';
 
 export default function TopicPage() {

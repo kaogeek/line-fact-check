@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { MoveRight, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/formatter/date-formatter';
-import { useGetMessageByTopicId } from '@/hooks/api/userMessage';
+import { useGetMessageByTopicId } from '@/hooks/api/message';
 import TableStateRow from '@/components/table/TableStateRow';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';

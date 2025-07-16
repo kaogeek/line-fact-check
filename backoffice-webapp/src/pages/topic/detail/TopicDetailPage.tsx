@@ -1,7 +1,7 @@
 import { TYH3, TYMuted } from '@/components/Typography';
 import { Navigate, useParams } from 'react-router';
 import TopicStatusBadge from '../components/TopicStatusBadge';
-import { useGetTopicById } from '@/hooks/api/useTopic';
+import { useGetTopicById } from '@/hooks/api/topic';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
 import AddMessageDialog from './dialog/AddMessageDialog';
-import { useLoader } from '@/hooks/useLoader';
+import { useLoader } from '@/hooks/loader';
 import { createMessage } from '@/lib/api/service/message';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';

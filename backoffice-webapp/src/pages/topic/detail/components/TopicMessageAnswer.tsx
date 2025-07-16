@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useEffect } from 'react';
-import { useGetTopicAnswerByTopicId } from '@/hooks/api/useTopicAnswer';
+import { useGetTopicAnswerByTopicId } from '@/hooks/api/topicAnswer';
 import { TopicAnswerType } from '@/lib/api/type/topic-answer';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';

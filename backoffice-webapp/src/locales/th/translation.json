@@ -1,6 +1,11 @@
 {
   "welcome": "ยินดีต้อนรับ",
   "greeting": "สวัสดี, {{name}}!",
+  "localeSwitcher": {
+    "switchTo": "เปลี่ยนเป็น",
+    "thai": "ไทย",
+    "english": "อังกฤษ"
+  },
   "dashboard": {
     "title": "แดชบอร์ด",
     "totalTicket": "ตั๋วทั้งหมด",

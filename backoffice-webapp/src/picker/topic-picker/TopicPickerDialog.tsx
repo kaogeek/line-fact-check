@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useGetTopics } from '@/hooks/api/useTopic';
+import { useGetTopics } from '@/hooks/api/topic';
 import TopicPickerData from './components/TopicPickerData';
 import { useState } from 'react';
 import type { GetTopicCriteria } from '@/lib/api/type/topic';

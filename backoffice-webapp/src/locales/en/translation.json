@@ -1,6 +1,11 @@
 {
   "welcome": "Welcome",
   "greeting": "Hello, {{name}}!",
+  "localeSwitcher": {
+    "switchTo": "Switch to",
+    "thai": "Thai",
+    "english": "English"
+  },
   "dashboard": {
     "title": "Dashboard",
     "totalTicket": "Total ticket",

@@ -5,7 +5,7 @@ import { topicRouter } from './pages/topic/topicRouter';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NotFoundPage from './pages/404';
-import { LoaderProvider } from './hooks/useLoader';
+import { LoaderProvider } from './hooks/loader';
 import { Toaster } from 'sonner';
 
 const router = createBrowserRouter([

@@ -1,5 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useLanguageStorage } from '@/hooks/languageStorage';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface NavigatorBarProps {
   brand: string;
@@ -8,14 +16,24 @@ interface NavigatorBarProps {
 }
 
 export default function NavigatorBar({ brand, setIsOpen, className }: NavigatorBarProps) {
+  const { t, i18n } = useTranslation();
+  const { getSavedLanguage, saveLanguage } = useLanguageStorage();
+
+  const savedLanguage = getSavedLanguage() || i18n.language;
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    saveLanguage(lng);
+  };
+
   return (
     <header>
       <nav
-        className={`flex items-center gap-2 p-4 bg-primary text-primary-foreground ${className ?? ''}`}
+        className={`flex items-center gap-2 p-4 bg-secondary text-secondary-foreground ${className ?? ''} min-h-[60px]`}
         aria-label="Main navigation"
       >
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
           className="md:hidden"
           onClick={() => setIsOpen(true)}
@@ -23,7 +41,19 @@ export default function NavigatorBar({ brand, setIsOpen, className }: NavigatorB
         >
           <Menu />
         </Button>
-        <strong className="text-lg font-bold">{brand}</strong>
+        <strong className="text-lg font-bold md:hidden">{brand}</strong>
+        <div className="flex-1"></div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              {savedLanguage === 'th' ? 'ไทย' : 'English'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => changeLanguage('en')}>{t('localeSwitcher.english')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('th')}>{t('localeSwitcher.thai')}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
     </header>
   );

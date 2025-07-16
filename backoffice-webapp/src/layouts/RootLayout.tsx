@@ -31,7 +31,7 @@ export default function RootLayout() {
       />
 
       <main className="flex-1">
-        <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} className="md:hidden" />
+        <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} />
         <Outlet />
       </main>
     </div>

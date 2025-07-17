@@ -10,7 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 // Repository combines all repository interfaces
@@ -79,4 +81,32 @@ func sanitize(limit, offset int) (int, int) {
 		offset = 0
 	}
 	return limit, offset
+}
+
+func paginationNone[T any](offset, limit int) factcheck.Pagination[T] {
+	return factcheck.Pagination[T]{
+		Data:   nil,
+		Offset: offset,
+		Limit:  limit,
+		Total:  0,
+	}
+}
+
+func paginate[D any, T any](
+	offset int,
+	limit int,
+	rows []D,
+	mapFn func(D) T, // Maps []row to data
+	totalFromList0 func(D) int64, // Extracts total_count from row
+) factcheck.Pagination[T] {
+	if len(rows) == 0 {
+		return paginationNone[T](offset, limit)
+	}
+	data := utils.MapSliceNoError(rows, mapFn)
+	return factcheck.Pagination[T]{
+		Data:   data,
+		Offset: offset,
+		Limit:  limit,
+		Total:  totalFromList0(rows[0]),
+	}
 }

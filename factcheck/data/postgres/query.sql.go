@@ -435,7 +435,7 @@ WITH numbered_topics AS (
            COUNT(*) OVER () as total_count
     FROM topics
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $1 = 0 THEN true  -- No pagination
@@ -459,6 +459,7 @@ type ListTopicsRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListTopicsRow, error) {
@@ -479,6 +480,7 @@ func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListT
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -498,7 +500,7 @@ WITH numbered_topics AS (
     FROM topics
     WHERE status = $1
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -523,6 +525,7 @@ type ListTopicsByStatusRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]ListTopicsByStatusRow, error) {
@@ -543,6 +546,7 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatus
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -562,7 +566,7 @@ WITH numbered_topics AS (
     FROM topics t 
     WHERE t.status = $1 AND t.id::text LIKE $2::text
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -588,6 +592,7 @@ type ListTopicsByStatusLikeIDRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsByStatusLikeIDParams) ([]ListTopicsByStatusLikeIDRow, error) {
@@ -613,6 +618,7 @@ func (q *Queries) ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsBy
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -639,7 +645,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $4 = 0 THEN true  -- No pagination
@@ -666,6 +672,7 @@ type ListTopicsByStatusLikeIDLikeMessageTextRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeIDLikeMessageTextParams) ([]ListTopicsByStatusLikeIDLikeMessageTextRow, error) {
@@ -692,6 +699,7 @@ func (q *Queries) ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, a
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -718,7 +726,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -744,6 +752,7 @@ type ListTopicsByStatusLikeMessageTextRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeMessageTextParams) ([]ListTopicsByStatusLikeMessageTextRow, error) {
@@ -769,6 +778,7 @@ func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg Lis
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -823,7 +833,7 @@ WITH numbered_topics AS (
     FROM topics t 
     WHERE t.id::text LIKE $1::text
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -848,6 +858,7 @@ type ListTopicsLikeIDRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error) {
@@ -868,6 +879,7 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDPara
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -894,7 +906,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -920,6 +932,7 @@ type ListTopicsLikeIDLikeMessageTextRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]ListTopicsLikeIDLikeMessageTextRow, error) {
@@ -945,6 +958,7 @@ func (q *Queries) ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListT
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -971,7 +985,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -996,6 +1010,7 @@ type ListTopicsLikeMessageTextRow struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TotalCount   int64              `json:"total_count"`
 }
 
 func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, arg ListTopicsLikeMessageTextParams) ([]ListTopicsLikeMessageTextRow, error) {
@@ -1016,6 +1031,7 @@ func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, arg ListTopicsL
 			&i.ResultStatus,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}

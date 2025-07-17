@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/wire"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
@@ -28,11 +28,11 @@ var ProviderSetTest = wire.NewSet(
 	handler.New,
 	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,
-	New,
+	NewTest,
 )
 
 var ProviderSetBase = wire.NewSet(
-	wire.Bind(new(postgres.DBTX), new(*pgx.Conn)),
+	wire.Bind(new(postgres.DBTX), new(*pgxpool.Pool)),
 	wire.Bind(new(postgres.Querier), new(*postgres.Queries)),
 	config.New,
 	postgres.New,
@@ -40,7 +40,7 @@ var ProviderSetBase = wire.NewSet(
 )
 
 var ProviderSetBaseTest = wire.NewSet(
-	wire.Bind(new(postgres.DBTX), new(*pgx.Conn)),
+	wire.Bind(new(postgres.DBTX), new(*pgxpool.Pool)),
 	wire.Bind(new(postgres.Querier), new(*postgres.Queries)),
 	config.NewTest,
 	postgres.New,

@@ -21,8 +21,10 @@ type Server interface {
 }
 
 func New(conf config.Config, h handler.Handler) *http.Server {
-	topics, messages := chi.NewMux(), chi.NewMux()
-	topics.Get("/", h.ListTopics)
+	topics, messages, userMessages := chi.NewMux(), chi.NewMux(), chi.NewMux()
+	topics.Get("/all", h.ListAllTopics)
+	topics.Get("/", h.ListTopicsHome)
+	topics.Get("/count", h.CountTopicsHome)
 	topics.Get("/{id}", h.GetTopicByID)
 	topics.Post("/", h.CreateTopic)
 	topics.Delete("/{id}", h.DeleteTopicByID)
@@ -32,6 +34,7 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	messages.Get("/by-topic/{id}", h.ListMessagesByTopicID)
 	messages.Post("/", h.CreateMessage)
 	messages.Delete("/", h.DeleteMessageByID)
+	userMessages.Post("/", h.NewUserMessage)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -42,6 +45,7 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	r.Handle("/health", pillars.HandlerOk(conf.AppName))
 	r.Mount("/topics", topics)
 	r.Mount("/messages", messages)
+	r.Mount("/user-messages", userMessages)
 
 	return &http.Server{
 		Addr:         utils.DefaultIfZero(conf.HTTP.ListenAddr, ":8080"),

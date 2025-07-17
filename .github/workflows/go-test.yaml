@@ -71,7 +71,7 @@ jobs:
             cd factcheck
             echo 'PWD: $PWD'
             echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
-            go test -race -count=1 -json ./... > $ARTIFACT_FACTCHECK
+            go test -race -count=1 -json ./... | tee $ARTIFACT_FACTCHECK
           "
 
       - name: Test foo
@@ -80,7 +80,7 @@ jobs:
             cd foo
             echo 'PWD: $PWD'
             echo 'Testing foo and writing JSON report to $ARTIFACT_FOO'
-            go test -race -count=1 -json ./... > $ARTIFACT_FOO
+            go test -race -count=1 -json ./... | tee $ARTIFACT_FOO
           "
 
       - name: Test build with Docker
@@ -141,7 +141,7 @@ jobs:
             cd factcheck
             echo 'PWD: $PWD'
             echo 'Running integration tests for factcheck...'
-            go test -tags=integration_test -race -count=1 -json ./... > factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json
+            go test -tags=integration_test -p=1 -count=1 -race -json ./... | tee factcheck-it-test_result-go${{ matrix.go-version }}_${{ matrix.os }}.json
             
             echo 'Integration tests completed'
             docker stop postgres-it-test && docker rm postgres-it-test

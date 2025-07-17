@@ -1,3 +1,6 @@
+// Package repo defines our common repository.
+// It abstracts over sqlc generated code by providing interface and code
+// to work with types defined in package factcheck
 package repo
 
 import (
@@ -5,14 +8,17 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
 
 // Repository combines all repository interfaces
 type Repository struct {
-	Topic       Topics
-	Message     Messages
-	UserMessage UserMessages
+	Topics       Topics
+	Messages     Messages
+	UserMessages UserMessages
+	TxnManager   postgres.TxnManager
 }
 
 // ErrNotFound is returned when a requested resource is not found
@@ -22,11 +28,12 @@ type ErrNotFound struct {
 }
 
 // New creates a new repository with all implementations
-func New(queries *postgres.Queries) Repository {
+func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 	return Repository{
-		Topic:       NewTopics(queries),
-		Message:     NewMessages(queries),
-		UserMessage: NewUserMessages(queries),
+		Topics:       NewTopics(queries),
+		Messages:     NewMessages(queries),
+		UserMessages: NewUserMessages(queries),
+		TxnManager:   postgres.NewTxnManager(pool),
 	}
 }
 
@@ -57,4 +64,19 @@ func handleNotFound(err error, filter map[string]string) error {
 		}
 	}
 	return err
+}
+
+// substring surrounds the pattern with % for LIKE queries
+func substring(pattern string) string {
+	return "%" + pattern + "%"
+}
+
+func sanitize(limit, offset int) (int, int) {
+	if limit < 0 {
+		limit = 0
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return limit, offset
 }

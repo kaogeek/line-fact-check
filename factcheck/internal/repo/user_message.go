@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -10,11 +9,10 @@ import (
 
 // UserMessages defines the interface for user message data operations
 type UserMessages interface {
-	Create(ctx context.Context, userMessage factcheck.UserMessage[json.RawMessage]) (factcheck.UserMessage[json.RawMessage], error)
-	GetByID(ctx context.Context, id string) (factcheck.UserMessage[json.RawMessage], error)
-	ListByMessage(ctx context.Context, messageID string) ([]factcheck.UserMessage[json.RawMessage], error)
-	Update(ctx context.Context, userMessage factcheck.UserMessage[json.RawMessage]) (factcheck.UserMessage[json.RawMessage], error)
-	Delete(ctx context.Context, id string) error
+	Create(ctx context.Context, userMessage factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error)
+	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.UserMessage, error)
+	Update(ctx context.Context, userMessage factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error)
+	Delete(ctx context.Context, id string, opts ...Option) error
 }
 
 // userMessages implements RepositoryUserMessage
@@ -30,71 +28,55 @@ func NewUserMessages(queries *postgres.Queries) UserMessages {
 }
 
 // Create creates a new user message using the userMessage adapter
-func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage[json.RawMessage]) (factcheck.UserMessage[json.RawMessage], error) {
-	params, err := userMessage(um)
+func (u *userMessages) Create(ctx context.Context, um factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error) {
+	queries := queries(u.queries, options(opts...))
+	params, err := postgres.UserMessageCreator(um)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage{}, err
 	}
-	dbUserMessage, err := u.queries.CreateUserMessage(ctx, params)
+	dbUserMessage, err := queries.CreateUserMessage(ctx, params)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage{}, err
 	}
-	return userMessageDomain(dbUserMessage)
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // GetByID retrieves a user message by ID using the userMessageDomain adapter
-func (u *userMessages) GetByID(ctx context.Context, id string) (factcheck.UserMessage[json.RawMessage], error) {
-	uuid, err := uuid(id)
+func (u *userMessages) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.UserMessage, error) {
+	queries := queries(u.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage{}, err
 	}
-	dbUserMessage, err := u.queries.GetUserMessage(ctx, uuid)
+	dbUserMessage, err := queries.GetUserMessage(ctx, uuid)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, handleNotFound(err, map[string]string{"id": id})
+		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": id})
 	}
-	return userMessageDomain(dbUserMessage)
-}
-
-func (u *userMessages) ListByMessage(ctx context.Context, messageID string) ([]factcheck.UserMessage[json.RawMessage], error) {
-	uuid, err := uuid(messageID)
-	if err != nil {
-		return nil, err
-	}
-	dbUserMessages, err := u.queries.ListUserMessagesByMessage(ctx, uuid)
-	if err != nil {
-		return nil, err
-	}
-	userMessages := make([]factcheck.UserMessage[json.RawMessage], len(dbUserMessages))
-	for i, dbUserMessage := range dbUserMessages {
-		userMessage, err := userMessageDomain(dbUserMessage)
-		if err != nil {
-			return nil, err
-		}
-		userMessages[i] = userMessage
-	}
-	return userMessages, nil
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // Update updates a user message using the userMessageUpdate adapter
-func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage[json.RawMessage]) (factcheck.UserMessage[json.RawMessage], error) {
-	params, err := userMessageUpdate(um)
+func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error) {
+	queries := queries(u.queries, options(opts...))
+	params, err := postgres.UserMessageUpdater(um)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, err
+		return factcheck.UserMessage{}, err
 	}
-	dbUserMessage, err := u.queries.UpdateUserMessage(ctx, params)
+	dbUserMessage, err := queries.UpdateUserMessage(ctx, params)
 	if err != nil {
-		return factcheck.UserMessage[json.RawMessage]{}, handleNotFound(err, map[string]string{"id": um.ID})
+		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": um.ID})
 	}
-	return userMessageDomain(dbUserMessage)
+	return postgres.ToUserMessage(dbUserMessage)
 }
 
 // Delete deletes a user message by ID using the stringToUUID adapter
-func (u *userMessages) Delete(ctx context.Context, id string) error {
-	uuid, err := uuid(id)
+func (u *userMessages) Delete(ctx context.Context, id string, opts ...Option) error {
+	queries := queries(u.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return err
 	}
-	err = u.queries.DeleteUserMessage(ctx, uuid)
+	err = queries.DeleteUserMessage(ctx, uuid)
 	if err != nil {
 		return handleNotFound(err, map[string]string{"id": id})
 	}

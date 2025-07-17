@@ -6,27 +6,33 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 func (h *handler) GetMessageByID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), h.messages.GetByID)
+	getBy(w, r, paramID(r), func(ctx context.Context, id string) (factcheck.Message, error) {
+		return h.messages.GetByID(ctx, id)
+	})
 }
 
 func (h *handler) DeleteMessageByID(w http.ResponseWriter, r *http.Request) {
-	deleteByID[factcheck.Message](w, r, h.messages.Delete)
+	deleteByID[factcheck.Message](w, r, func(ctx context.Context, s string) error {
+		return h.messages.Delete(ctx, s)
+	})
 }
 
 func (h *handler) ListMessagesByTopicID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), h.messages.ListByTopic)
+	getBy(w, r, paramID(r), func(ctx context.Context, id string) ([]factcheck.Message, error) {
+		return h.messages.ListByTopic(ctx, id)
+	})
 }
 
 func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 	create(
-		w, r, h.messages.Create,
+		w, r, func(ctx context.Context, m factcheck.Message) (factcheck.Message, error) {
+			return h.messages.Create(ctx, m)
+		},
 		createCheck(func(_ context.Context, m factcheck.Message) error {
 			if m.Text == "" {
 				return errors.New("empty text")
@@ -38,7 +44,7 @@ func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 		}),
 		createModify(func(_ context.Context, m factcheck.Message) factcheck.Message {
 			return factcheck.Message{
-				ID:        uuid.New().String(),
+				ID:        utils.NewID().String(),
 				TopicID:   m.TopicID,
 				Text:      m.Text,
 				Type:      m.Type,

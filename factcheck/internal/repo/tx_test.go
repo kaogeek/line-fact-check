@@ -506,9 +506,13 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
-	var tx1, tx2 repo.Tx
-	var err1, err2 error
 	var success1, success2 bool
+
+	tx1Started := make(chan struct{})
+	tx1Read := make(chan struct{})
+	tx2Started := make(chan struct{})
+	tx2Read := make(chan struct{})
+	bothRead := make(chan struct{})
 
 	// Reset the topic description first
 	_, err := r.Topics.UpdateDescription(ctx, topicID, "Original description")
@@ -520,8 +524,8 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		tx1, err1 = r.BeginTx(ctx, repo.Serializable)
-		if err1 != nil {
+		tx1, err := r.BeginTx(ctx, repo.Serializable)
+		if err != nil {
 			return
 		}
 		defer func() {
@@ -530,24 +534,33 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 			}
 		}()
 
+		// Signal that TX1 has started
+		close(tx1Started)
+
+		// Wait for TX2 to start
+		<-tx2Started
+
 		// Read the topic
-		_, err1 = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx1))
-		if err1 != nil {
+		_, err = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx1))
+		if err != nil {
 			return
 		}
 
-		// Sleep to create race condition
-		time.Sleep(50 * time.Millisecond)
+		// Signal that TX1 has read
+		close(tx1Read)
+
+		// Wait for both transactions to have read
+		<-bothRead
 
 		// Update the topic
-		_, err1 = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX1", repo.WithTx(tx1))
-		if err1 != nil {
+		_, err = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX1", repo.WithTx(tx1))
+		if err != nil {
 			return
 		}
 
 		// Try to commit
-		err1 = tx1.Commit(ctx)
-		if err1 == nil {
+		err = tx1.Commit(ctx)
+		if err == nil {
 			success1 = true
 		}
 	}()
@@ -556,11 +569,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Small delay to ensure both transactions start around the same time
-		time.Sleep(25 * time.Millisecond)
 
-		tx2, err2 = r.BeginTx(ctx, repo.Serializable)
-		if err2 != nil {
+		// Wait for TX1 to start first
+		<-tx1Started
+
+		tx2, err := r.BeginTx(ctx, repo.Serializable)
+		if err != nil {
 			return
 		}
 		defer func() {
@@ -569,26 +583,42 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 			}
 		}()
 
+		// Signal that TX2 has started
+		close(tx2Started)
+
+		// Wait for TX1 to read
+		<-tx1Read
+
 		// Read the topic
-		_, err2 = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
-		if err2 != nil {
+		_, err = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
+		if err != nil {
 			return
 		}
 
-		// Sleep to create race condition
-		time.Sleep(50 * time.Millisecond)
+		// Signal that TX2 has read
+		close(tx2Read)
+
+		// Wait for both transactions to have read
+		<-bothRead
 
 		// Update the topic
-		_, err2 = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX2", repo.WithTx(tx2))
-		if err2 != nil {
+		_, err = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX2", repo.WithTx(tx2))
+		if err != nil {
 			return
 		}
 
 		// Try to commit
-		err2 = tx2.Commit(ctx)
-		if err2 == nil {
+		err = tx2.Commit(ctx)
+		if err == nil {
 			success2 = true
 		}
+	}()
+
+	// Wait for both transactions to read, then signal them to proceed
+	go func() {
+		<-tx1Read
+		<-tx2Read
+		close(bothRead)
 	}()
 
 	wg.Wait()

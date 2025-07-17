@@ -18,37 +18,69 @@ import (
 
 // TestTransactionIsolationLevels tests different isolation levels with race conditions
 func TestTransactionIsolationLevels(t *testing.T) {
-	t.Run("ReadCommitted_ShouldAllowDirtyReads", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
-		if err != nil {
-			t.Fatalf("Failed to initialize test container: %v", err)
-		}
-		defer cleanup()
+	t.Run("ReadCommitted", func(t *testing.T) {
+		t.Run("CommitAfterTx2", func(t *testing.T) {
+			app, cleanup, err := di.InitializeContainerTest()
+			if err != nil {
+				t.Fatalf("Failed to initialize test container: %v", err)
+			}
+			defer cleanup()
 
-		ctx := context.Background()
+			ctx := context.Background()
 
-		// Create test data with unique ID
-		now := utils.TimeNow().Round(0)
-		utils.TimeFreeze(now)
-		defer utils.TimeUnfreeze()
+			// Create test data with unique ID
+			now := utils.TimeNow().Round(0)
+			utils.TimeFreeze(now)
+			defer utils.TimeUnfreeze()
 
-		sharedTopic := factcheck.Topic{
-			ID:           "550e8400-e29b-41d4-a716-446655440001",
-			Name:         "Shared Topic - ReadCommitted",
-			Description:  "This topic will be updated by competing transactions",
-			Status:       factcheck.StatusTopicPending,
-			Result:       "",
-			ResultStatus: factcheck.StatusTopicResultNone,
-			CreatedAt:    now,
-			UpdatedAt:    nil,
-		}
+			sharedTopic := factcheck.Topic{
+				ID:           "550e8400-e29b-41d4-a716-446655440001",
+				Name:         "Shared Topic - ReadCommitted",
+				Description:  "This topic will be updated by competing transactions",
+				Status:       factcheck.StatusTopicPending,
+				Result:       "",
+				ResultStatus: factcheck.StatusTopicResultNone,
+				CreatedAt:    now,
+				UpdatedAt:    nil,
+			}
 
-		createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
-		if err != nil {
-			t.Fatalf("Failed to create shared topic: %v", err)
-		}
+			createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
+			if err != nil {
+				t.Fatalf("Failed to create shared topic: %v", err)
+			}
+			testReadCommittedIsolation_CommitAfterTx2(t, &app.Repository, createdTopic.ID)
+		})
 
-		testReadCommittedIsolation(t, &app.Repository, createdTopic.ID)
+		t.Run("CommitBeforeTx2", func(t *testing.T) {
+			app, cleanup, err := di.InitializeContainerTest()
+			if err != nil {
+				t.Fatalf("Failed to initialize test container: %v", err)
+			}
+			defer cleanup()
+			ctx := context.Background()
+
+			// Create test data with unique ID
+			now := utils.TimeNow().Round(0)
+			utils.TimeFreeze(now)
+			defer utils.TimeUnfreeze()
+
+			sharedTopic := factcheck.Topic{
+				ID:           "550e8400-e29b-41d4-a716-446655440001",
+				Name:         "Shared Topic - ReadCommitted",
+				Description:  "This topic will be updated by competing transactions",
+				Status:       factcheck.StatusTopicPending,
+				Result:       "",
+				ResultStatus: factcheck.StatusTopicResultNone,
+				CreatedAt:    now,
+				UpdatedAt:    nil,
+			}
+
+			createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
+			if err != nil {
+				t.Fatalf("Failed to create shared topic: %v", err)
+			}
+			testReadCommittedIsolation_CommitBeforeTx2(t, &app.Repository, createdTopic.ID)
+		})
 	})
 
 	t.Run("RepeatableRead_ShouldPreventDirtyReads", func(t *testing.T) {
@@ -151,12 +183,80 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 }
 
-// testReadCommittedIsolation tests that ReadCommitted allows dirty reads
-func testReadCommittedIsolation(t *testing.T, r *repo.Repository, topicID string) {
+// testReadCommittedIsolation_CommitAfterTx2 tests that ReadCommitted allows dirty reads
+// https://www.postgresql.org/docs/16/transaction-iso.html#XACT-READ-COMMITTED
+func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository, topicID string) {
+	ctx := context.Background()
+	var wg sync.WaitGroup
+	var err1, err2 error
+	ch := make(chan struct{})
+	newDescription := "Updated by TX1"
+	var topic factcheck.Topic
+
+	// Start transaction 1 (updater)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		tx1, err := r.BeginTx(ctx, repo.ReadCommitted)
+		if err != nil {
+			err1 = err
+			return
+		}
+		ch <- struct{}{}
+		defer tx1.Rollback(ctx)
+		// Update the topic
+		_, err = r.Topics.UpdateDescription(ctx, topicID, newDescription, repo.WithTx(tx1))
+		if err != nil {
+			err1 = err
+			return
+		}
+		err = tx1.Commit(t.Context())
+		if err != nil {
+			err1 = err
+			return
+		}
+	}()
+
+	// Start transaction 2 (reader)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ch
+		var err error
+		tx2, err := r.BeginTx(ctx, repo.ReadCommitted)
+		if err != nil {
+			err2 = err
+			return
+		}
+		defer tx2.Rollback(ctx)
+		// Try to read the topic - should see the uncommitted change
+		topic, err = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
+		if err != nil {
+			err2 = err
+			return
+		}
+		// In ReadCommitted, we should see the uncommitted change
+		if topic.Description != newDescription {
+			t.Errorf("Expected to see uncommitted change in ReadCommitted, got: %s", topic.Description)
+		}
+	}()
+
+	wg.Wait()
+	if err1 != nil {
+		t.Errorf("Transaction 1 failed: %v", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Transaction 2 failed: %v", err2)
+	}
+}
+
+func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository, topicID string) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
 	var tx1, tx2 repo.Tx
 	var err1, err2 error
+	ch := make(chan struct{})
+	newDescription := "Updated by TX1"
 
 	// Start transaction 1 (updater)
 	wg.Add(1)
@@ -167,44 +267,42 @@ func testReadCommittedIsolation(t *testing.T, r *repo.Repository, topicID string
 			return
 		}
 		defer tx1.Rollback(ctx)
-
 		// Update the topic
-		_, err1 = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX1", repo.WithTx(tx1))
-		if err1 != nil {
+		_, err := r.Topics.UpdateDescription(ctx, topicID, newDescription, repo.WithTx(tx1))
+		if err != nil {
+			err1 = err
 			return
 		}
-
-		// Sleep to allow TX2 to read the uncommitted data
-		time.Sleep(100 * time.Millisecond)
+		err = tx1.Commit(t.Context())
+		if err != nil {
+			err1 = err
+			return
+		}
+		ch <- struct{}{}
 	}()
 
 	// Start transaction 2 (reader)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Small delay to ensure TX1 starts first
-		time.Sleep(50 * time.Millisecond)
-
+		<-ch
 		tx2, err2 = r.BeginTx(ctx, repo.ReadCommitted)
 		if err2 != nil {
 			return
 		}
 		defer tx2.Rollback(ctx)
-
 		// Try to read the topic - should see the uncommitted change
 		topic, err2 := r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
 		if err2 != nil {
 			return
 		}
-
 		// In ReadCommitted, we should see the uncommitted change
-		if topic.Description != "Updated by TX1" {
+		if topic.Description != newDescription {
 			t.Errorf("Expected to see uncommitted change in ReadCommitted, got: %s", topic.Description)
 		}
 	}()
 
 	wg.Wait()
-
 	if err1 != nil {
 		t.Errorf("Transaction 1 failed: %v", err1)
 	}

@@ -89,7 +89,6 @@ func TestTransactionIsolationLevels(t *testing.T) {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
 		defer cleanup()
-
 		ctx := context.Background()
 
 		// Create test data with unique ID
@@ -112,7 +111,6 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create shared topic: %v", err)
 		}
-
 		testRepeatableReadIsolation(t, &app.Repository, createdTopic.ID)
 	})
 
@@ -202,7 +200,7 @@ func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository,
 			err1 = err
 			return
 		}
-		ch <- struct{}{}
+		close(ch)
 		defer tx1.Rollback(ctx)
 		// Update the topic
 		_, err = r.Topics.UpdateDescription(ctx, topicID, newDescription, repo.WithTx(tx1))
@@ -278,7 +276,7 @@ func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository
 			err1 = err
 			return
 		}
-		ch <- struct{}{}
+		close(ch)
 	}()
 
 	// Start transaction 2 (reader)
@@ -315,11 +313,17 @@ func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository
 func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID string) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
-	var tx1, tx2 repo.Tx
 	var err1, err2 error
 
+	// Channels for proper synchronization
+	tx1Started := make(chan struct{})
+	tx1Updated := make(chan struct{})
+	tx2Started := make(chan struct{})
+
 	// Reset the topic description first
-	_, err := r.Topics.UpdateDescription(ctx, topicID, "Original description")
+	originalDescription := "Original description"
+	newDescription := "Updated by TX1"
+	_, err := r.Topics.UpdateDescription(ctx, topicID, originalDescription)
 	if err != nil {
 		t.Fatalf("Failed to reset topic description: %v", err)
 	}
@@ -328,49 +332,65 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		tx1, err1 = r.BeginTx(ctx, repo.RepeatableRead)
-		if err1 != nil {
+		tx1, err := r.BeginTx(ctx, repo.RepeatableRead)
+		if err != nil {
+			err1 = err
 			return
 		}
 		defer tx1.Rollback(ctx)
 
+		// Signal that TX1 has started
+		close(tx1Started)
+
+		// Wait for TX2 to start
+		<-tx2Started
+
 		// Update the topic
-		_, err1 = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX1", repo.WithTx(tx1))
-		if err1 != nil {
+		_, err = r.Topics.UpdateDescription(ctx, topicID, newDescription, repo.WithTx(tx1))
+		if err != nil {
+			err1 = err
 			return
 		}
 
-		// Sleep to allow TX2 to read
-		time.Sleep(100 * time.Millisecond)
+		// Signal that TX1 has updated
+		close(tx1Updated)
 	}()
 
 	// Start transaction 2 (reader)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Small delay to ensure TX1 starts first
-		time.Sleep(50 * time.Millisecond)
 
-		tx2, err2 = r.BeginTx(ctx, repo.RepeatableRead)
-		if err2 != nil {
+		// Wait for TX1 to start first
+		<-tx1Started
+
+		tx2, err := r.BeginTx(ctx, repo.RepeatableRead)
+		if err != nil {
+			err2 = err
 			return
 		}
 		defer tx2.Rollback(ctx)
 
-		// Try to read the topic - should NOT see the uncommitted change
-		topic, err2 := r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
-		if err2 != nil {
+		// Signal that TX2 has started
+		close(tx2Started)
+
+		// Wait for TX1 to update
+		<-tx1Updated
+
+		// Now read the topic - should NOT see the uncommitted change
+		topic, err := r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
+		if err != nil {
+			err2 = err
 			return
 		}
 
 		// In RepeatableRead, we should NOT see the uncommitted change
-		if topic.Description != "Original description" {
+		if topic.Description != originalDescription {
 			t.Errorf("Expected to NOT see uncommitted change in RepeatableRead, got: %s", topic.Description)
 		}
 	}()
 
 	wg.Wait()
-
 	if err1 != nil {
 		t.Errorf("Transaction 1 failed: %v", err1)
 	}

@@ -403,32 +403,45 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
-	var tx1, tx2 repo.Tx
 	var err1, err2 error
+
+	// Channels for proper synchronization
+	tx1Started := make(chan struct{})
+	tx1FirstRead := make(chan struct{})
+	tx2Inserted := make(chan struct{})
 
 	// Start transaction 1 (reader that will be affected by phantom reads)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		tx1, err1 = r.BeginTx(ctx, repo.Serializable)
-		if err1 != nil {
+		tx1, err := r.BeginTx(ctx, repo.Serializable)
+		if err != nil {
+			err1 = err
 			return
 		}
 		defer tx1.Rollback(ctx)
 
+		// Signal that TX1 has started
+		close(tx1Started)
+
 		// First read - count topics
-		topics1, err1 := r.Topics.List(ctx, 0, 0, repo.WithTx(tx1))
-		if err1 != nil {
+		topics1, err := r.Topics.List(ctx, 0, 0, repo.WithTx(tx1))
+		if err != nil {
+			err1 = err
 			return
 		}
 		count1 := len(topics1)
 
-		// Sleep to allow TX2 to insert a new topic
-		time.Sleep(100 * time.Millisecond)
+		// Signal that TX1 has completed first read
+		close(tx1FirstRead)
+
+		// Wait for TX2 to insert a new topic
+		<-tx2Inserted
 
 		// Second read - should see the same count in Serializable
-		topics2, err1 := r.Topics.List(ctx, 0, 0, repo.WithTx(tx1))
-		if err1 != nil {
+		topics2, err := r.Topics.List(ctx, 0, 0, repo.WithTx(tx1))
+		if err != nil {
+			err1 = err
 			return
 		}
 		count2 := len(topics2)
@@ -443,11 +456,13 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Small delay to ensure TX1 starts first
-		time.Sleep(50 * time.Millisecond)
-
-		tx2, err2 = r.BeginTx(ctx, repo.Serializable)
-		if err2 != nil {
+		// Wait for TX1 to start first
+		<-tx1Started
+		// Wait for TX1 to complete first read
+		<-tx1FirstRead
+		tx2, err := r.BeginTx(ctx, repo.Serializable)
+		if err != nil {
+			err2 = err
 			return
 		}
 		defer tx2.Rollback(ctx)
@@ -463,18 +478,22 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 			CreatedAt:    utils.TimeNow(),
 			UpdatedAt:    nil,
 		}
-
-		_, err2 = r.Topics.Create(ctx, newTopic, repo.WithTx(tx2))
-		if err2 != nil {
+		_, err = r.Topics.Create(ctx, newTopic, repo.WithTx(tx2))
+		if err != nil {
+			err2 = err
 			return
 		}
-
 		// Commit the transaction
-		err2 = tx2.Commit(ctx)
+		err = tx2.Commit(ctx)
+		if err != nil {
+			err2 = err
+			return
+		}
+		// Signal that TX2 has inserted and committed
+		close(tx2Inserted)
 	}()
 
 	wg.Wait()
-
 	if err1 != nil {
 		t.Errorf("Transaction 1 failed: %v", err1)
 	}

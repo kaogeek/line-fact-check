@@ -139,12 +139,12 @@ func TestTransactionIsolationLevels(t *testing.T) {
 			UpdatedAt:    nil,
 		}
 
-		createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
+		_, err = app.Repository.Topics.Create(ctx, sharedTopic)
 		if err != nil {
 			t.Fatalf("Failed to create shared topic: %v", err)
 		}
 
-		testSerializableIsolation(t, &app.Repository, createdTopic.ID)
+		testSerializableIsolation(t, &app.Repository)
 	})
 
 	t.Run("ConcurrentUpdates_ShouldHandleConflicts", func(t *testing.T) {
@@ -400,7 +400,7 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 }
 
 // testSerializableIsolation tests that Serializable prevents phantom reads
-func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string) {
+func testSerializableIsolation(t *testing.T, r *repo.Repository) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
 	var err1, err2 error

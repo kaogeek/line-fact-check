@@ -8,6 +8,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 )
@@ -22,7 +23,7 @@ const (
 )
 
 type TxnManager struct {
-	c *pgx.Conn
+	c *pgxpool.Pool
 }
 
 func (t TxnManager) Begin(ctx context.Context) (Tx, error) {
@@ -35,18 +36,18 @@ func (t TxnManager) BeginTx(ctx context.Context, level IsoLevel) (Tx, error) {
 	})
 }
 
-func NewTxnManager(conn *pgx.Conn) TxnManager {
+func NewTxnManager(conn *pgxpool.Pool) TxnManager {
 	return TxnManager{c: conn}
 }
 
-func NewConn(c config.Config) (*pgx.Conn, func(), error) {
+func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 	slog.Info("connecting to postgres",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
 		"dbname", c.Postgres.DBName,
 	)
-	conn, err := pgx.Connect(
+	pool, err := pgxpool.New(
 		context.Background(),
 		fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -66,15 +67,15 @@ func NewConn(c config.Config) (*pgx.Conn, func(), error) {
 
 	cleanup := func() {
 		defer slog.Info("postgres conn closed or cleaned up")
-		if conn == nil {
+		if pool == nil {
 			slog.Warn("postgres conn is nil")
 			return
 		}
-		err := conn.Close(context.Background())
+		pool.Close()
 		if err != nil {
 			slog.Error("error closing postgres conn", "error", err)
 		}
 	}
 
-	return conn, cleanup, nil
+	return pool, cleanup, nil
 }

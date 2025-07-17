@@ -22,12 +22,12 @@ func InitializeServer() (server.Server, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, cleanup, err := postgres.NewConn(configConfig)
+	pool, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
 		return nil, nil, err
 	}
-	queries := postgres.New(conn)
-	repository := repo.New(queries, conn)
+	queries := postgres.New(pool)
+	repository := repo.New(queries, pool)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	return httpServer, func() {
@@ -42,15 +42,15 @@ func InitializeContainer() (Container, func(), error) {
 	if err != nil {
 		return Container{}, nil, err
 	}
-	conn, cleanup, err := postgres.NewConn(configConfig)
+	pool, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
 		return Container{}, nil, err
 	}
-	queries := postgres.New(conn)
-	repository := repo.New(queries, conn)
+	queries := postgres.New(pool)
+	repository := repo.New(queries, pool)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	container := New(configConfig, conn, queries, repository, handlerHandler, httpServer)
+	container := New(configConfig, pool, queries, repository, handlerHandler, httpServer)
 	return container, func() {
 		cleanup()
 	}, nil
@@ -61,15 +61,15 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 	if err != nil {
 		return ContainerTest{}, nil, err
 	}
-	conn, cleanup, err := postgres.NewConn(configConfig)
+	pool, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
 		return ContainerTest{}, nil, err
 	}
-	queries := postgres.New(conn)
-	repository := repo.New(queries, conn)
+	queries := postgres.New(pool)
+	repository := repo.New(queries, pool)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	containerTest, cleanup2 := NewTest(configConfig, conn, queries, repository, handlerHandler, httpServer)
+	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, handlerHandler, httpServer)
 	return containerTest, func() {
 		cleanup2()
 		cleanup()

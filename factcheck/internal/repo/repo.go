@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 )
@@ -28,12 +28,12 @@ type ErrNotFound struct {
 }
 
 // New creates a new repository with all implementations
-func New(queries *postgres.Queries, conn *pgx.Conn) Repository {
+func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 	return Repository{
 		Topics:       NewTopics(queries),
 		Messages:     NewMessages(queries),
 		UserMessages: NewUserMessages(queries),
-		TxnManager:   postgres.NewTxnManager(conn),
+		TxnManager:   postgres.NewTxnManager(pool),
 	}
 }
 

@@ -15,7 +15,7 @@ WITH numbered_topics AS (
            COUNT(*) OVER () as total_count
     FROM topics
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $1 = 0 THEN true  -- No pagination
@@ -32,7 +32,7 @@ WITH numbered_topics AS (
     FROM topics
     WHERE status = $1
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -61,7 +61,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -78,7 +78,7 @@ WITH numbered_topics AS (
     FROM topics t 
     WHERE t.id::text LIKE $1::text
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $2 = 0 THEN true  -- No pagination
@@ -102,7 +102,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -126,7 +126,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -143,7 +143,7 @@ WITH numbered_topics AS (
     FROM topics t 
     WHERE t.status = $1 AND t.id::text LIKE $2::text
 )
-SELECT id, name, description, status, result, result_status, created_at, updated_at
+SELECT id, name, description, status, result, result_status, created_at, updated_at, total_count
 FROM numbered_topics
 WHERE CASE 
     WHEN $3 = 0 THEN true  -- No pagination
@@ -167,7 +167,7 @@ numbered_topics AS (
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
     FROM filtered_topics
 )
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
+SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at, total_count.total_count
 FROM numbered_topics nt, total_count
 WHERE CASE 
     WHEN $4 = 0 THEN true  -- No pagination

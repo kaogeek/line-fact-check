@@ -430,7 +430,7 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 			err1 = err
 			return
 		}
-		count1 := len(topics1)
+		count1 := len(topics1.Data)
 
 		// Signal that TX1 has completed first read
 		close(tx1FirstRead)
@@ -444,7 +444,7 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 			err1 = err
 			return
 		}
-		count2 := len(topics2)
+		count2 := len(topics2.Data)
 
 		// In Serializable, both reads should return the same count
 		if count1 != count2 {

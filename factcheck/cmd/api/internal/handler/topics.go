@@ -13,7 +13,11 @@ import (
 
 func (h *handler) ListAllTopics(w http.ResponseWriter, r *http.Request) {
 	list(w, r, func(ctx context.Context) ([]factcheck.Topic, error) {
-		return h.topics.List(r.Context(), 0, 0)
+		result, err := h.topics.List(r.Context(), 0, 0)
+		if err != nil {
+			return nil, err
+		}
+		return result.Data, nil
 	})
 }
 

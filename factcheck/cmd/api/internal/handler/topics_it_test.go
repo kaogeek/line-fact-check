@@ -18,6 +18,34 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
+// decodePaginationResponse decodes a pagination response and returns the data array
+func decodePaginationResponse[T any](t *testing.T, resp *http.Response) []T {
+	var m map[string]any
+	err := json.NewDecoder(resp.Body).Decode(&m)
+	if err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	dataAny, ok := m["data"]
+	if !ok {
+		t.Fatalf("Response missing 'data' field")
+	}
+
+	// Convert the data to JSON and back to properly handle the type conversion
+	dataJSON, err := json.Marshal(dataAny)
+	if err != nil {
+		t.Fatalf("Failed to marshal data: %v", err)
+	}
+
+	var result []T
+	err = json.Unmarshal(dataJSON, &result)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal data to []%T: %v", *new(T), err)
+	}
+
+	return result
+}
+
 func TestHandlerTopic_Stateful(t *testing.T) {
 	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {
@@ -486,9 +514,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 3)
 	})
 
@@ -500,9 +526,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 2)
 
 		// Verify we got the expected topics
@@ -530,9 +554,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 1)
 
 		if topics[0].ID != createdTopic1.ID {
@@ -548,9 +570,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 1)
 
 		if topics[0].ID != createdTopic1.ID {
@@ -566,9 +586,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 1)
 
 		if topics[0].ID != createdTopic1.ID {
@@ -584,9 +602,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 0)
 	})
 
@@ -598,9 +614,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 3)
 	})
 
@@ -612,9 +626,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 1)
 
 		if topics[0].ID != createdTopic3.ID {
@@ -630,9 +642,7 @@ func TestHandlerTopic_ListTopicsHome(t *testing.T) {
 		defer resp.Body.Close()
 		assertEq(t, resp.StatusCode, http.StatusOK)
 
-		var topics []factcheck.Topic
-		err = json.NewDecoder(resp.Body).Decode(&topics)
-		assertEq(t, err, nil)
+		topics := decodePaginationResponse[factcheck.Topic](t, resp)
 		assertEq(t, len(topics), 2)
 
 		// Verify we got the expected topics

@@ -15,18 +15,21 @@ type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
-	ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
-	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopicDynamic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
-	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
-	ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
-	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
 	CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error)
 	UpdateName(ctx context.Context, id string, name string, opts ...Option) (factcheck.Topic, error)
+
+	// TODO: deprecate, replace with ListDynamic
+	ListHome(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
+	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 }
 
 // topics implements RepositoryTopic
@@ -57,6 +60,17 @@ func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([
 // ListAll retrieves all topics (backward compatibility)
 func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 	return t.List(ctx, 0, 0)
+}
+
+func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopicDynamic) ([]factcheck.Topic, error) {
+	limit, offset = sanitizeV2(limit, offset)
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
+	rows, err := queries.ListTopicsDynamic(ctx, options.ListDynamicParams((offset), (limit)))
+	if err != nil {
+		return nil, err
+	}
+	return utils.MapSliceNoError(rows, postgres.ToTopic), nil
 }
 
 // ListByStatus retrieves topics by status with pagination

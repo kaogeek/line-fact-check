@@ -415,7 +415,7 @@ func FromUUID(id pgtype.UUID) (string, error) {
 
 func Text[S ~string](s S) (pgtype.Text, error) {
 	var text pgtype.Text
-	err := text.Scan(s)
+	err := text.Scan(string(s))
 	return text, err
 }
 
@@ -424,7 +424,7 @@ func TextNullable[S ~string](s S) pgtype.Text {
 	if s == "" {
 		return text
 	}
-	err := text.Scan(s)
+	err := text.Scan(string(s))
 	if err != nil {
 		text = pgtype.Text{}
 		slog.Error("bad language text", "language", s, "err", err)

@@ -859,7 +859,7 @@ WHERE 1=1
     AND CASE 
         WHEN $3::text != '' THEN (
             CASE 
-                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "th_TH.utf8"
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
                 WHEN m.language = 'en' THEN m.text ILIKE $3::text
                 ELSE m.text ILIKE $3::text  -- fallback for unknown language
             END

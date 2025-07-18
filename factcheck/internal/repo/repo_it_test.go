@@ -1891,3 +1891,359 @@ func TestRepository_TopicPagination(t *testing.T) {
 		}
 	})
 }
+
+func TestRepository_ListDynamic(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create topics with different statuses
+	topic1 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440001",
+		Name:         "Topic 1 - COVID Pending",
+		Description:  "COVID-19 related news (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic2 := factcheck.Topic{
+		ID:           "550e8400-e29b-41d4-a716-446655440002",
+		Name:         "Topic 2 - Politics Resolved",
+		Description:  "Political news and updates (resolved)",
+		Status:       factcheck.StatusTopicResolved,
+		Result:       "Verified as true",
+		ResultStatus: factcheck.StatusTopicResultAnswered,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	topic3 := factcheck.Topic{
+		ID:           "660e8400-e29b-41d4-a716-446655440003",
+		Name:         "Topic 3 - Technology Pending",
+		Description:  "Technology news and updates (pending)",
+		Status:       factcheck.StatusTopicPending,
+		Result:       "",
+		ResultStatus: factcheck.StatusTopicResultNone,
+		CreatedAt:    now,
+		UpdatedAt:    nil,
+	}
+
+	// Create topics in database
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	// Create user messages first
+	userMessage1 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440001",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-1"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage2 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440002",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-2"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	userMessage3 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440003",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "test-user-3"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create user messages in database
+	createdUserMessage1, err := app.Repository.UserMessages.Create(ctx, userMessage1)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage1: %v", err)
+	}
+
+	createdUserMessage2, err := app.Repository.UserMessages.Create(ctx, userMessage2)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage2: %v", err)
+	}
+
+	createdUserMessage3, err := app.Repository.UserMessages.Create(ctx, userMessage3)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage3: %v", err)
+	}
+
+	// Create messages with different languages
+	message1 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440001",
+		UserMessageID: createdUserMessage1.ID,
+		TopicID:       createdTopic1.ID,
+		Text:          "COVID-19 vaccine is effective against new variants",
+		Language:      factcheck.LanguageEnglish,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	message2 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440002",
+		UserMessageID: createdUserMessage2.ID,
+		TopicID:       createdTopic2.ID,
+		Text:          "ข่าวปลอมเกี่ยวกับการเลือกตั้ง",
+		Language:      factcheck.LanguageThai,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	message3 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440003",
+		UserMessageID: createdUserMessage3.ID,
+		TopicID:       createdTopic3.ID,
+		Text:          "New AI technology breakthrough",
+		Language:      factcheck.LanguageEnglish,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	// Create messages in database
+	_, err = app.Repository.Messages.Create(ctx, message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	// Helper function to create dynamic options
+	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopicDynamic {
+		return []repo.OptionTopicDynamic{
+			func(opts *repo.OptionsTopicDynamic) {
+				opts.LikeID = likeID
+				opts.Statuses = statuses
+				opts.LikeMessageText = likeMessageText
+			},
+		}
+	}
+
+	t.Run("ListDynamic - no options (all topics)", func(t *testing.T) {
+		// Debug: Check if topics exist in database
+		allTopics, err := app.Repository.Topics.List(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("Failed to list all topics: %v", err)
+		}
+		t.Logf("Total topics in database: %d", len(allTopics))
+		for i, topic := range allTopics {
+			t.Logf("Topic %d: ID=%s, Name=%s, Status=%s", i+1, topic.ID, topic.Name, topic.Status)
+		}
+
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("ListDynamic with no options failed: %v", err)
+		}
+		t.Logf("ListDynamic returned %d topics", len(topics))
+		if len(topics) != 3 {
+			t.Fatalf("Expected 3 topics, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListDynamic - status filter only (single status)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with status filter failed: %v", err)
+		}
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 pending topics, got %d", len(topics))
+		}
+		// Verify we got the pending topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 (pending) to be in results")
+		}
+		if !topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 (pending) to be in results")
+		}
+		if topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 (resolved) to NOT be in results")
+		}
+	})
+
+	t.Run("ListDynamic - status filter only (multiple statuses)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending, factcheck.StatusTopicResolved}, "")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with multiple statuses failed: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Fatalf("Expected 3 topics (pending + resolved), got %d", len(topics))
+		}
+	})
+
+	t.Run("ListDynamic - message text filter only (English)", func(t *testing.T) {
+		opts := createDynamicOpts("", nil, "COVID")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with English text filter failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with 'COVID' in message, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 to be returned, got %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListDynamic - message text filter only (Thai)", func(t *testing.T) {
+		opts := createDynamicOpts("", nil, "ข่าวปลอม")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with Thai text filter failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with 'ข่าวปลอม' in message, got %d", len(topics))
+		}
+		if topics[0].ID != createdTopic2.ID {
+			t.Errorf("Expected topic2 to be returned, got %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListDynamic - ID filter only", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", nil, "")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with ID filter failed: %v", err)
+		}
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 topics with ID starting with '550e8400', got %d", len(topics))
+		}
+		// Verify we got the expected topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 to be in results")
+		}
+		if !topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 to be in results")
+		}
+		if topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 to NOT be in results")
+		}
+	})
+
+	t.Run("ListDynamic - combined filters (status + message text)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with status + message text filter failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic (pending + COVID), got %d", len(topics))
+		}
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 to be returned, got %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListDynamic - combined filters (ID + message text)", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", nil, "COVID")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with ID + message text filter failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic (550e8400 + COVID), got %d", len(topics))
+		}
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 to be returned, got %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListDynamic - all filters combined", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with all filters failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic (550e8400 + pending + COVID), got %d", len(topics))
+		}
+		if topics[0].ID != createdTopic1.ID {
+			t.Errorf("Expected topic1 to be returned, got %s", topics[0].ID)
+		}
+	})
+
+	t.Run("ListDynamic - pagination", func(t *testing.T) {
+		// Test limit
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 2, 0)
+		if err != nil {
+			t.Fatalf("ListDynamic with limit failed: %v", err)
+		}
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 topics with limit=2, got %d", len(topics))
+		}
+
+		// Test offset
+		topics, err = app.Repository.Topics.ListDynamic(ctx, 1, 1)
+		if err != nil {
+			t.Fatalf("ListDynamic with offset failed: %v", err)
+		}
+		if len(topics) != 1 {
+			t.Fatalf("Expected 1 topic with limit=1, offset=1, got %d", len(topics))
+		}
+	})
+
+	t.Run("ListDynamic - empty results", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicResolved}, "nonexistent")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with no matching results failed: %v", err)
+		}
+		if len(topics) != 0 {
+			t.Fatalf("Expected 0 topics, got %d", len(topics))
+		}
+	})
+}

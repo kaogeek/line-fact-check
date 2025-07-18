@@ -35,8 +35,8 @@ const (
 	TypeUserMessageLINEGroupChat TypeUserMessage = "GROUPCHAT"
 	TypeUserMessageAdmin         TypeUserMessage = "ADMIN"
 
-	LanguageEnglish Language = "english"
-	LanguageThai    Language = "thai"
+	LanguageEnglish Language = "en"
+	LanguageThai    Language = "th"
 )
 
 type Topic struct {

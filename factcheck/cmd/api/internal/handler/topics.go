@@ -78,16 +78,16 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
-	var opts []repo.OptionTopic
+	var opts []repo.OptionTopicDynamic
 	query := r.URL.Query().Get
 	id, text := query("like_id"), query("like_message_text")
 	if id != "" {
-		opts = append(opts, repo.WithTopicLikeID(id))
+		opts = append(opts, repo.WithTopicDynamicLikeID(id))
 	}
 	if text != "" {
-		opts = append(opts, repo.WithTopicLikeMessageText(text))
+		opts = append(opts, repo.WithTopicDynamicLikeMessageText(text))
 	}
-	counts, err := h.topics.CountByStatusHome(r.Context(), opts...)
+	counts, err := h.topics.CountByStatusDynamic(r.Context(), opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

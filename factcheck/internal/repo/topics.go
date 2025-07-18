@@ -19,7 +19,7 @@ type Topics interface {
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error)
@@ -30,6 +30,7 @@ type Topics interface {
 	ListLikeMessageText(ctx context.Context, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListLikeIDLikeMessageText(ctx context.Context, idPattern string, pattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
+	CountByStatusHome(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 }
 
 // topics implements RepositoryTopic
@@ -71,6 +72,30 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 		return nil, err
 	}
 	return utils.MapSliceNoError(rows, postgres.ToTopic), nil
+}
+
+func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error) {
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
+	params := options.ListDynamicParams(0, 0)
+	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
+		Column1: params.Column1,
+		Column2: params.Column2,
+		Column3: params.Column3,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[factcheck.StatusTopic]int64)
+	for i := range rows {
+		r := &rows[i]
+		s := factcheck.StatusTopic(r.Status)
+		if !s.IsValid() {
+			return nil, fmt.Errorf("unexpected invalid status '%s' with %d count", s, r.Count)
+		}
+		result[s] = r.Count
+	}
+	return result, nil
 }
 
 // ListByStatus retrieves topics by status with pagination

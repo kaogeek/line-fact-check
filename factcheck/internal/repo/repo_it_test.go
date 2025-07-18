@@ -2247,3 +2247,293 @@ func TestRepository_ListDynamic(t *testing.T) {
 		}
 	})
 }
+
+func TestRepository_CountByStatusDynamic(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	ctx := context.Background()
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create test topics
+	topic1 := factcheck.Topic{
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - COVID Pending",
+		Description: "COVID-19 related topic",
+		Status:      factcheck.StatusTopicPending,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+	topic2 := factcheck.Topic{
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Politics Resolved",
+		Description: "Politics related topic",
+		Status:      factcheck.StatusTopicResolved,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+	topic3 := factcheck.Topic{
+		ID:          "660e8400-e29b-41d4-a716-446655440003",
+		Name:        "Topic 3 - Technology Pending",
+		Description: "Technology related topic",
+		Status:      factcheck.StatusTopicPending,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	// Create test messages
+	userMessage1 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440001",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "user1"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+	userMessage2 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440002",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "user2"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+	userMessage3 := factcheck.UserMessage{
+		ID:        "770e8400-e29b-41d4-a716-446655440003",
+		Type:      factcheck.TypeUserMessageAdmin,
+		RepliedAt: nil,
+		Metadata:  []byte(`{"user_id": "user3"}`),
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	_, err = app.Repository.UserMessages.Create(ctx, userMessage1)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage1: %v", err)
+	}
+	_, err = app.Repository.UserMessages.Create(ctx, userMessage2)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage2: %v", err)
+	}
+	_, err = app.Repository.UserMessages.Create(ctx, userMessage3)
+	if err != nil {
+		t.Fatalf("Failed to create userMessage3: %v", err)
+	}
+
+	message1 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440001",
+		UserMessageID: userMessage1.ID,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		TopicID:       createdTopic1.ID,
+		Text:          "This is a COVID-19 related message",
+		Language:      "en",
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+	message2 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440002",
+		UserMessageID: userMessage2.ID,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		TopicID:       createdTopic2.ID,
+		Text:          "นี่คือข่าวปลอมเกี่ยวกับการเมือง",
+		Language:      "th",
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+	message3 := factcheck.Message{
+		ID:            "660e8400-e29b-41d4-a716-446655440003",
+		UserMessageID: userMessage3.ID,
+		Type:          factcheck.TypeMessageText,
+		Status:        factcheck.StatusMessageTopicSubmitted,
+		TopicID:       createdTopic3.ID,
+		Text:          "This is a technology related message",
+		Language:      "en",
+		CreatedAt:     now,
+		UpdatedAt:     nil,
+	}
+
+	_, err = app.Repository.Messages.Create(ctx, message1)
+	if err != nil {
+		t.Fatalf("Failed to create message1: %v", err)
+	}
+	_, err = app.Repository.Messages.Create(ctx, message2)
+	if err != nil {
+		t.Fatalf("Failed to create message2: %v", err)
+	}
+	_, err = app.Repository.Messages.Create(ctx, message3)
+	if err != nil {
+		t.Fatalf("Failed to create message3: %v", err)
+	}
+
+	// Helper function to create dynamic options
+	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopicDynamic {
+		return []repo.OptionTopicDynamic{
+			func(opts *repo.OptionsTopicDynamic) {
+				opts.LikeID = likeID
+				opts.Statuses = statuses
+				opts.LikeMessageText = likeMessageText
+			},
+		}
+	}
+
+	t.Run("CountByStatusDynamic - no options (all topics)", func(t *testing.T) {
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with no options failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 2 {
+			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - status filter only (single status)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with status filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 2 {
+			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - status filter only (multiple statuses)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending, factcheck.StatusTopicResolved}, "")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with multiple statuses failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 2 {
+			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - message text filter only (English)", func(t *testing.T) {
+		opts := createDynamicOpts("", nil, "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with English text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic with 'COVID' in message, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics with 'COVID' in message, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - message text filter only (Thai)", func(t *testing.T) {
+		opts := createDynamicOpts("", nil, "ข่าวปลอม")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with Thai text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic with 'ข่าวปลอม' in message, got %d", counts[factcheck.StatusTopicResolved])
+		}
+		if counts[factcheck.StatusTopicPending] != 0 {
+			t.Errorf("Expected 0 pending topics with 'ข่าวปลอม' in message, got %d", counts[factcheck.StatusTopicPending])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - ID filter only", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", nil, "")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with ID filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic with ID starting with '550e8400', got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic with ID starting with '550e8400', got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - combined filters (status + message text)", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with status + message text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic (pending + COVID), got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - combined filters (ID + message text)", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", nil, "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with ID + message text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic (550e8400 + COVID), got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - all filters combined", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with all filters failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic (550e8400 + pending + COVID), got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamic - empty results", func(t *testing.T) {
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicResolved}, "nonexistent")
+		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamic with no matching results failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics with 'nonexistent' in message, got %d", counts[factcheck.StatusTopicResolved])
+		}
+		if counts[factcheck.StatusTopicPending] != 0 {
+			t.Errorf("Expected 0 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+	})
+}

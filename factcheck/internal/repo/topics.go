@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
@@ -78,6 +79,9 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error) {
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
+	if len(options.Statuses) != 0 {
+		slog.Warn("Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
+	}
 	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
 		Column1: options.LikeID,
 		Column2: options.LikeMessageText,

@@ -1018,13 +1018,10 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 	}
 
 	// Helper function to create dynamic options
-	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopicDynamic {
+	createDynamicOpts := func(likeID string, likeMessageText string) []repo.OptionTopicDynamic {
 		return []repo.OptionTopicDynamic{
-			func(opts *repo.OptionsTopicDynamic) {
-				opts.LikeID = likeID
-				opts.Statuses = statuses
-				opts.LikeMessageText = likeMessageText
-			},
+			repo.WithTopicDynamicLikeID(likeID),
+			repo.WithTopicDynamicLikeMessageText(likeMessageText),
 		}
 	}
 
@@ -1041,36 +1038,8 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusDynamic - status filter only (single status)", func(t *testing.T) {
-		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "")
-		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
-		if err != nil {
-			t.Fatalf("CountByStatusDynamic with status filter failed: %v", err)
-		}
-		if counts[factcheck.StatusTopicPending] != 2 {
-			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
-		}
-		if counts[factcheck.StatusTopicResolved] != 0 {
-			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
-		}
-	})
-
-	t.Run("CountByStatusDynamic - status filter only (multiple statuses)", func(t *testing.T) {
-		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending, factcheck.StatusTopicResolved}, "")
-		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
-		if err != nil {
-			t.Fatalf("CountByStatusDynamic with multiple statuses failed: %v", err)
-		}
-		if counts[factcheck.StatusTopicPending] != 2 {
-			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
-		}
-		if counts[factcheck.StatusTopicResolved] != 1 {
-			t.Errorf("Expected 1 resolved topic, got %d", counts[factcheck.StatusTopicResolved])
-		}
-	})
-
 	t.Run("CountByStatusDynamic - message text filter only (English)", func(t *testing.T) {
-		opts := createDynamicOpts("", nil, "COVID")
+		opts := createDynamicOpts("", "COVID")
 		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
 		if err != nil {
 			t.Fatalf("CountByStatusDynamic with English text filter failed: %v", err)
@@ -1084,7 +1053,7 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 	})
 
 	t.Run("CountByStatusDynamic - message text filter only (Thai)", func(t *testing.T) {
-		opts := createDynamicOpts("", nil, "ข่าวปลอม")
+		opts := createDynamicOpts("", "ข่าวปลอม")
 		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
 		if err != nil {
 			t.Fatalf("CountByStatusDynamic with Thai text filter failed: %v", err)
@@ -1098,7 +1067,7 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 	})
 
 	t.Run("CountByStatusDynamic - ID filter only", func(t *testing.T) {
-		opts := createDynamicOpts("550e8400", nil, "")
+		opts := createDynamicOpts("550e8400", "")
 		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
 		if err != nil {
 			t.Fatalf("CountByStatusDynamic with ID filter failed: %v", err)
@@ -1111,22 +1080,8 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusDynamic - combined filters (status + message text)", func(t *testing.T) {
-		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
-		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
-		if err != nil {
-			t.Fatalf("CountByStatusDynamic with status + message text filter failed: %v", err)
-		}
-		if counts[factcheck.StatusTopicPending] != 1 {
-			t.Errorf("Expected 1 pending topic (pending + COVID), got %d", counts[factcheck.StatusTopicPending])
-		}
-		if counts[factcheck.StatusTopicResolved] != 0 {
-			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
-		}
-	})
-
 	t.Run("CountByStatusDynamic - combined filters (ID + message text)", func(t *testing.T) {
-		opts := createDynamicOpts("550e8400", nil, "COVID")
+		opts := createDynamicOpts("550e8400", "COVID")
 		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
 		if err != nil {
 			t.Fatalf("CountByStatusDynamic with ID + message text filter failed: %v", err)
@@ -1139,22 +1094,8 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 		}
 	})
 
-	t.Run("CountByStatusDynamic - all filters combined", func(t *testing.T) {
-		opts := createDynamicOpts("550e8400", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "COVID")
-		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
-		if err != nil {
-			t.Fatalf("CountByStatusDynamic with all filters failed: %v", err)
-		}
-		if counts[factcheck.StatusTopicPending] != 1 {
-			t.Errorf("Expected 1 pending topic (550e8400 + pending + COVID), got %d", counts[factcheck.StatusTopicPending])
-		}
-		if counts[factcheck.StatusTopicResolved] != 0 {
-			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
-		}
-	})
-
 	t.Run("CountByStatusDynamic - empty results", func(t *testing.T) {
-		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicResolved}, "nonexistent")
+		opts := createDynamicOpts("", "nonexistent")
 		counts, err := app.Repository.Topics.CountByStatusDynamic(ctx, opts...)
 		if err != nil {
 			t.Fatalf("CountByStatusDynamic with no matching results failed: %v", err)

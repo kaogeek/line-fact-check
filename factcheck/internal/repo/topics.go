@@ -67,8 +67,8 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 		Column1: options.LikeID,
 		Column2: utils.MapSliceNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
 		Column3: options.LikeMessageText,
-		Column4: int32(limit),
-		Column5: int32(offset),
+		Column4: int32(limit),  //nolint:gosec
+		Column5: int32(offset), //nolint:gosec
 	})
 	if err != nil {
 		return nil, err

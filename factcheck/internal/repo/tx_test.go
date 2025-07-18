@@ -184,7 +184,9 @@ func TestTransactionIsolationLevels(t *testing.T) {
 // testReadCommittedIsolation_CommitAfterTx2 tests that ReadCommitted allows dirty reads
 // https://www.postgresql.org/docs/16/transaction-iso.html#XACT-READ-COMMITTED
 func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository, topicID string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	var err1, err2 error
 	ch := make(chan struct{})
@@ -208,7 +210,7 @@ func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository,
 			err1 = err
 			return
 		}
-		err = tx1.Commit(t.Context())
+		err = tx1.Commit(ctx)
 		if err != nil {
 			err1 = err
 			return
@@ -219,7 +221,14 @@ func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository,
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		<-ch
+		select {
+		case <-ch:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
+
 		var err error
 		tx2, err := r.BeginTx(ctx, repo.ReadCommitted)
 		if err != nil {
@@ -249,7 +258,9 @@ func testReadCommittedIsolation_CommitAfterTx2(t *testing.T, r *repo.Repository,
 }
 
 func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository, topicID string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	var tx1, tx2 repo.Tx
 	var err1, err2 error
@@ -271,7 +282,7 @@ func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository
 			err1 = err
 			return
 		}
-		err = tx1.Commit(t.Context())
+		err = tx1.Commit(ctx)
 		if err != nil {
 			err1 = err
 			return
@@ -283,7 +294,14 @@ func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		<-ch
+		select {
+		case <-ch:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
+
 		tx2, err2 = r.BeginTx(ctx, repo.ReadCommitted)
 		if err2 != nil {
 			return
@@ -311,7 +329,9 @@ func testReadCommittedIsolation_CommitBeforeTx2(t *testing.T, r *repo.Repository
 
 // testRepeatableReadIsolation tests that RepeatableRead prevents dirty reads
 func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	var err1, err2 error
 
@@ -343,7 +363,13 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 		close(tx1Started)
 
 		// Wait for TX2 to start
-		<-tx2Started
+		select {
+		case <-tx2Started:
+			// Continue
+		case <-ctx.Done():
+			err1 = ctx.Err()
+			return
+		}
 
 		// Update the topic
 		_, err = r.Topics.UpdateDescription(ctx, topicID, newDescription, repo.WithTx(tx1))
@@ -362,7 +388,13 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 		defer wg.Done()
 
 		// Wait for TX1 to start first
-		<-tx1Started
+		select {
+		case <-tx1Started:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
 
 		tx2, err := r.BeginTx(ctx, repo.RepeatableRead)
 		if err != nil {
@@ -375,7 +407,13 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 		close(tx2Started)
 
 		// Wait for TX1 to update
-		<-tx1Updated
+		select {
+		case <-tx1Updated:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
 
 		// Now read the topic - should NOT see the uncommitted change
 		topic, err := r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
@@ -401,7 +439,9 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 
 // testSerializableIsolation tests that Serializable prevents phantom reads
 func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	var err1, err2 error
 
@@ -436,7 +476,13 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 		close(tx1FirstRead)
 
 		// Wait for TX2 to insert a new topic
-		<-tx2Inserted
+		select {
+		case <-tx2Inserted:
+			// Continue
+		case <-ctx.Done():
+			err1 = ctx.Err()
+			return
+		}
 
 		// Second read - should see the same count in Serializable
 		topics2, err := r.Topics.List(ctx, 0, 0, repo.WithTx(tx1))
@@ -457,9 +503,21 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 	go func() {
 		defer wg.Done()
 		// Wait for TX1 to start first
-		<-tx1Started
+		select {
+		case <-tx1Started:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
 		// Wait for TX1 to complete first read
-		<-tx1FirstRead
+		select {
+		case <-tx1FirstRead:
+			// Continue
+		case <-ctx.Done():
+			err2 = ctx.Err()
+			return
+		}
 		tx2, err := r.BeginTx(ctx, repo.Serializable)
 		if err != nil {
 			err2 = err
@@ -504,7 +562,9 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string)
 
 // testConcurrentUpdates tests concurrent updates to the same resource
 func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	var success1, success2 bool
 
@@ -538,7 +598,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 		close(tx1Started)
 
 		// Wait for TX2 to start
-		<-tx2Started
+		select {
+		case <-tx2Started:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 
 		// Read the topic
 		_, err = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx1))
@@ -550,7 +615,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 		close(tx1Read)
 
 		// Wait for both transactions to have read
-		<-bothRead
+		select {
+		case <-bothRead:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 
 		// Update the topic
 		_, err = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX1", repo.WithTx(tx1))
@@ -571,7 +641,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 		defer wg.Done()
 
 		// Wait for TX1 to start first
-		<-tx1Started
+		select {
+		case <-tx1Started:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 
 		tx2, err := r.BeginTx(ctx, repo.Serializable)
 		if err != nil {
@@ -587,7 +662,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 		close(tx2Started)
 
 		// Wait for TX1 to read
-		<-tx1Read
+		select {
+		case <-tx1Read:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 
 		// Read the topic
 		_, err = r.Topics.GetByID(ctx, topicID, repo.WithTx(tx2))
@@ -599,7 +679,12 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 		close(tx2Read)
 
 		// Wait for both transactions to have read
-		<-bothRead
+		select {
+		case <-bothRead:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 
 		// Update the topic
 		_, err = r.Topics.UpdateDescription(ctx, topicID, "Updated by TX2", repo.WithTx(tx2))
@@ -616,8 +701,18 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 
 	// Wait for both transactions to read, then signal them to proceed
 	go func() {
-		<-tx1Read
-		<-tx2Read
+		select {
+		case <-tx1Read:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
+		select {
+		case <-tx2Read:
+			// Continue
+		case <-ctx.Done():
+			return
+		}
 		close(bothRead)
 	}()
 

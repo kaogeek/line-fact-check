@@ -61,15 +61,11 @@ WHERE 1=1
         ELSE true 
     END
     AND CASE 
-        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
-        ELSE true 
-    END
-    AND CASE 
-        WHEN $3::text != '' THEN (
+        WHEN $2::text != '' THEN (
             CASE 
-                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
-                WHEN m.language = 'en' THEN m.text ILIKE $3::text
-                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+                WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $2::text
+                ELSE m.text ILIKE $2::text  -- fallback for unknown language
             END
         )
         ELSE true 
@@ -78,9 +74,8 @@ GROUP BY t.status
 `
 
 type CountTopicsGroupByStatusDynamicParams struct {
-	Column1 string   `json:"column_1"`
-	Column2 []string `json:"column_2"`
-	Column3 string   `json:"column_3"`
+	Column1 string `json:"column_1"`
+	Column2 string `json:"column_2"`
 }
 
 type CountTopicsGroupByStatusDynamicRow struct {
@@ -89,7 +84,7 @@ type CountTopicsGroupByStatusDynamicRow struct {
 }
 
 func (q *Queries) CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error) {
-	rows, err := q.db.Query(ctx, countTopicsGroupByStatusDynamic, arg.Column1, arg.Column2, arg.Column3)
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusDynamic, arg.Column1, arg.Column2)
 	if err != nil {
 		return nil, err
 	}

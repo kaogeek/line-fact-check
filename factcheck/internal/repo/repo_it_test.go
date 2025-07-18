@@ -2056,11 +2056,9 @@ func TestRepository_ListDynamic(t *testing.T) {
 	// Helper function to create dynamic options
 	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopicDynamic {
 		return []repo.OptionTopicDynamic{
-			func(opts *repo.OptionsTopicDynamic) {
-				opts.LikeID = likeID
-				opts.Statuses = statuses
-				opts.LikeMessageText = likeMessageText
-			},
+			repo.WithTopicDynamicLikeID(likeID),
+			repo.WithTopicDynamicStatuses(statuses),
+			repo.WithTopicDynamicLikeMessageText(likeMessageText),
 		}
 	}
 

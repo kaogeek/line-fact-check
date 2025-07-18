@@ -69,7 +69,13 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 	limit, offset = sanitize(limit, offset)
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
-	rows, err := queries.ListTopicsDynamic(ctx, options.ListDynamicParams(offset, limit))
+	rows, err := queries.ListTopicsDynamic(ctx, postgres.ListTopicsDynamicParams{
+		Column1: options.LikeID,
+		Column2: utils.MapSliceNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
+		Column3: options.LikeMessageText,
+		Column4: int32(limit),
+		Column5: int32(offset),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +85,9 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error) {
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
-	params := options.ListDynamicParams(0, 0)
 	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
-		Column1: params.Column1,
-		Column2: params.Column2,
-		Column3: params.Column3,
+		Column1: options.LikeID,
+		Column2: options.LikeMessageText,
 	})
 	if err != nil {
 		return nil, err

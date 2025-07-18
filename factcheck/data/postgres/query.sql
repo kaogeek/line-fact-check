@@ -227,9 +227,9 @@ DELETE FROM topics WHERE id = $1;
 
 -- name: CreateMessage :one
 INSERT INTO messages (
-    id, user_message_id, type, status, topic_id, text, created_at, updated_at
+    id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
 
 -- name: GetMessage :one
@@ -237,14 +237,6 @@ SELECT * FROM messages WHERE id = $1;
 
 -- name: ListMessagesByTopic :many
 SELECT * FROM messages WHERE topic_id = $1 ORDER BY created_at ASC;
-
--- name: UpdateMessage :one
-UPDATE messages SET 
-    text = $2,
-    type = $3,
-    status = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING *;
 
 -- name: AssignMessageToTopic :one
 UPDATE messages SET 
@@ -265,13 +257,56 @@ INSERT INTO user_messages (
 -- name: GetUserMessage :one
 SELECT * FROM user_messages WHERE id = $1;
 
--- name: UpdateUserMessage :one
-UPDATE user_messages SET 
-    type = $2,
-    replied_at = $3,
-    metadata = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING *;
-
 -- name: DeleteUserMessage :exec
 DELETE FROM user_messages WHERE id = $1; 
+
+-- name: ListTopicsDynamic :many
+SELECT DISTINCT t.*
+FROM topics t
+LEFT JOIN messages m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $3::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "th_TH.utf8"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+ORDER BY t.created_at DESC
+LIMIT $4 OFFSET $5;
+
+-- name: CountTopicsGroupByStatusDynamic :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+LEFT JOIN messages m ON t.id = m.topic_id 
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $3::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "th_TH.utf8"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+GROUP BY t.status; 

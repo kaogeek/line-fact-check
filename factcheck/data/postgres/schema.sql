@@ -28,6 +28,7 @@ CREATE TABLE messages (
     status         text NOT NULL,
     topic_id       UUID REFERENCES topics(id) ON DELETE SET NULL,
     text           text NOT NULL,
+    language       text,
     created_at     timestamptz NOT NULL,
     updated_at     timestamptz
 );
@@ -40,4 +41,5 @@ CREATE INDEX idx_user_messages_created_at ON user_messages(created_at);
 CREATE INDEX idx_messages_user_message_id ON messages(user_message_id);
 CREATE INDEX idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX idx_messages_status ON messages(status);
-CREATE INDEX idx_messages_created_at ON messages(created_at); 
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+CREATE INDEX idx_messages_language ON messages(language); 

@@ -296,29 +296,12 @@ func MessageCreator(m factcheck.Message) (CreateMessageParams, error) {
 		ID:            id,
 		UserMessageID: userMessageID,
 		Type:          string(m.Type),
+		Language:      TextNullable(m.Language),
 		Status:        string(m.Status),
 		TopicID:       topicID,
 		Text:          m.Text,
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,
-	}, nil
-}
-
-func MessageUpdater(m factcheck.Message) (UpdateMessageParams, error) {
-	id, err := UUID(m.ID)
-	if err != nil {
-		return UpdateMessageParams{}, err
-	}
-	updatedAt, err := TimestamptzNullable(m.UpdatedAt)
-	if err != nil {
-		return UpdateMessageParams{}, err
-	}
-	return UpdateMessageParams{
-		ID:        id,
-		Text:      m.Text,
-		Type:      string(m.Type),
-		Status:    string(m.Status),
-		UpdatedAt: updatedAt,
 	}, nil
 }
 
@@ -377,32 +360,6 @@ func UserMessageCreator(u factcheck.UserMessage) (CreateUserMessageParams, error
 	}, nil
 }
 
-func UserMessageUpdater(um factcheck.UserMessage) (UpdateUserMessageParams, error) {
-	id, err := UUID(um.ID)
-	if err != nil {
-		return UpdateUserMessageParams{}, err
-	}
-	updatedAt, err := TimestamptzNullable(um.UpdatedAt)
-	if err != nil {
-		return UpdateUserMessageParams{}, err
-	}
-	repliedAt, err := TimestamptzNullable(um.RepliedAt)
-	if err != nil {
-		return UpdateUserMessageParams{}, err
-	}
-	metadata, err := json.Marshal(um.Metadata)
-	if err != nil {
-		return UpdateUserMessageParams{}, err
-	}
-	return UpdateUserMessageParams{
-		ID:        id,
-		Type:      string(um.Type),
-		RepliedAt: repliedAt,
-		Metadata:  metadata,
-		UpdatedAt: updatedAt,
-	}, nil
-}
-
 func ToUserMessage(data UserMessage) (factcheck.UserMessage, error) {
 	id, err := FromUUID(data.ID)
 	if err != nil {
@@ -456,10 +413,23 @@ func FromUUID(id pgtype.UUID) (string, error) {
 	return id.String(), nil
 }
 
-func Text(s string) (pgtype.Text, error) {
+func Text[S ~string](s S) (pgtype.Text, error) {
 	var text pgtype.Text
 	err := text.Scan(s)
 	return text, err
+}
+
+func TextNullable[S ~string](s S) pgtype.Text {
+	var text pgtype.Text
+	if s == "" {
+		return text
+	}
+	err := text.Scan(s)
+	if err != nil {
+		text = pgtype.Text{}
+		slog.Error("bad language text", "language", s, "err", err)
+	}
+	return text
 }
 
 func FromText(s pgtype.Text) (string, error) {

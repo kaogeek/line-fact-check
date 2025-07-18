@@ -15,7 +15,7 @@ const assignMessageToTopic = `-- name: AssignMessageToTopic :one
 UPDATE messages SET 
     topic_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
+WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
 `
 
 type AssignMessageToTopicParams struct {
@@ -33,6 +33,7 @@ func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToT
 		&i.Status,
 		&i.TopicID,
 		&i.Text,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -48,6 +49,63 @@ func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const countTopicsGroupByStatusDynamic = `-- name: CountTopicsGroupByStatusDynamic :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+LEFT JOIN messages m ON t.id = m.topic_id 
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $3::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "th_TH.utf8"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+GROUP BY t.status
+`
+
+type CountTopicsGroupByStatusDynamicParams struct {
+	Column1 string   `json:"column_1"`
+	Column2 []string `json:"column_2"`
+	Column3 string   `json:"column_3"`
+}
+
+type CountTopicsGroupByStatusDynamicRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusDynamic, arg.Column1, arg.Column2, arg.Column3)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsGroupByStatusDynamicRow
+	for rows.Next() {
+		var i CountTopicsGroupByStatusDynamicRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const countTopicsGroupByStatusLikeID = `-- name: CountTopicsGroupByStatusLikeID :many
@@ -186,10 +244,10 @@ func (q *Queries) CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopics
 
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (
-    id, user_message_id, type, status, topic_id, text, created_at, updated_at
+    id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
 `
 
 type CreateMessageParams struct {
@@ -199,6 +257,7 @@ type CreateMessageParams struct {
 	Status        string             `json:"status"`
 	TopicID       pgtype.UUID        `json:"topic_id"`
 	Text          string             `json:"text"`
+	Language      pgtype.Text        `json:"language"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
@@ -211,6 +270,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		arg.Status,
 		arg.TopicID,
 		arg.Text,
+		arg.Language,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -222,6 +282,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		&i.Status,
 		&i.TopicID,
 		&i.Text,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -338,7 +399,7 @@ func (q *Queries) DeleteUserMessage(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getMessage = `-- name: GetMessage :one
-SELECT id, user_message_id, type, status, topic_id, text, created_at, updated_at FROM messages WHERE id = $1
+SELECT id, user_message_id, type, status, topic_id, text, language, created_at, updated_at FROM messages WHERE id = $1
 `
 
 func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, error) {
@@ -351,6 +412,7 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 		&i.Status,
 		&i.TopicID,
 		&i.Text,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -396,7 +458,7 @@ func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessa
 }
 
 const listMessagesByTopic = `-- name: ListMessagesByTopic :many
-SELECT id, user_message_id, type, status, topic_id, text, created_at, updated_at FROM messages WHERE topic_id = $1 ORDER BY created_at ASC
+SELECT id, user_message_id, type, status, topic_id, text, language, created_at, updated_at FROM messages WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error) {
@@ -415,6 +477,7 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 			&i.Status,
 			&i.TopicID,
 			&i.Text,
+			&i.Language,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -780,6 +843,76 @@ func (q *Queries) ListTopicsByStatusLikeMessageText(ctx context.Context, arg Lis
 	return items, nil
 }
 
+const listTopicsDynamic = `-- name: ListTopicsDynamic :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+FROM topics t
+LEFT JOIN messages m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $3::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "th_TH.utf8"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+ORDER BY t.created_at DESC
+LIMIT $4 OFFSET $5
+`
+
+type ListTopicsDynamicParams struct {
+	Column1 string   `json:"column_1"`
+	Column2 []string `json:"column_2"`
+	Column3 string   `json:"column_3"`
+	Limit   int32    `json:"limit"`
+	Offset  int32    `json:"offset"`
+}
+
+func (q *Queries) ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsDynamic,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTopicsInIDs = `-- name: ListTopicsInIDs :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
 WHERE t.id = ANY($1::uuid[]) 
@@ -1027,45 +1160,6 @@ func (q *Queries) ListTopicsLikeMessageText(ctx context.Context, arg ListTopicsL
 	return items, nil
 }
 
-const updateMessage = `-- name: UpdateMessage :one
-UPDATE messages SET 
-    text = $2,
-    type = $3,
-    status = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, created_at, updated_at
-`
-
-type UpdateMessageParams struct {
-	ID        pgtype.UUID        `json:"id"`
-	Text      string             `json:"text"`
-	Type      string             `json:"type"`
-	Status    string             `json:"status"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error) {
-	row := q.db.QueryRow(ctx, updateMessage,
-		arg.ID,
-		arg.Text,
-		arg.Type,
-		arg.Status,
-		arg.UpdatedAt,
-	)
-	var i Message
-	err := row.Scan(
-		&i.ID,
-		&i.UserMessageID,
-		&i.Type,
-		&i.Status,
-		&i.TopicID,
-		&i.Text,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const updateTopicDescription = `-- name: UpdateTopicDescription :one
 UPDATE topics SET 
     description = $2,
@@ -1144,43 +1238,6 @@ func (q *Queries) UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusPa
 		&i.Status,
 		&i.Result,
 		&i.ResultStatus,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateUserMessage = `-- name: UpdateUserMessage :one
-UPDATE user_messages SET 
-    type = $2,
-    replied_at = $3,
-    metadata = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING id, type, replied_at, metadata, created_at, updated_at
-`
-
-type UpdateUserMessageParams struct {
-	ID        pgtype.UUID        `json:"id"`
-	Type      string             `json:"type"`
-	RepliedAt pgtype.Timestamptz `json:"replied_at"`
-	Metadata  []byte             `json:"metadata"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) UpdateUserMessage(ctx context.Context, arg UpdateUserMessageParams) (UserMessage, error) {
-	row := q.db.QueryRow(ctx, updateUserMessage,
-		arg.ID,
-		arg.Type,
-		arg.RepliedAt,
-		arg.Metadata,
-		arg.UpdatedAt,
-	)
-	var i UserMessage
-	err := row.Scan(
-		&i.ID,
-		&i.Type,
-		&i.RepliedAt,
-		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

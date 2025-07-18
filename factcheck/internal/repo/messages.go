@@ -12,7 +12,6 @@ type Messages interface {
 	Create(ctx context.Context, message factcheck.Message, opts ...Option) (factcheck.Message, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Message, error)
 	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.Message, error)
-	Update(ctx context.Context, message factcheck.Message, opts ...Option) (factcheck.Message, error)
 	AssignTopic(ctx context.Context, messageID string, topicID string, opts ...Option) (factcheck.Message, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 }
@@ -73,20 +72,6 @@ func (m *messages) ListByTopic(ctx context.Context, topicID string, opts ...Opti
 		messages[i] = postgres.ToMessage(dbMessage)
 	}
 	return messages, nil
-}
-
-// Update updates a message using the messageUpdate adapter
-func (m *messages) Update(ctx context.Context, msg factcheck.Message, opts ...Option) (factcheck.Message, error) {
-	queries := queries(m.queries, options(opts...))
-	params, err := postgres.MessageUpdater(msg)
-	if err != nil {
-		return factcheck.Message{}, err
-	}
-	message, err := queries.UpdateMessage(ctx, params)
-	if err != nil {
-		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": msg.ID})
-	}
-	return postgres.ToMessage(message), nil
 }
 
 // AssignTopic assigns a message to a different topic

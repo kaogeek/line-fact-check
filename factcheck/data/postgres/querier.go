@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
+	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)
 	CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsGroupByStatusLikeIDRow, error)
 	CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsGroupByStatusLikeIDLikeMessageTextParams) ([]CountTopicsGroupByStatusLikeIDLikeMessageTextRow, error)
 	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)
@@ -32,15 +33,14 @@ type Querier interface {
 	ListTopicsByStatusLikeID(ctx context.Context, arg ListTopicsByStatusLikeIDParams) ([]ListTopicsByStatusLikeIDRow, error)
 	ListTopicsByStatusLikeIDLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeIDLikeMessageTextParams) ([]ListTopicsByStatusLikeIDLikeMessageTextRow, error)
 	ListTopicsByStatusLikeMessageText(ctx context.Context, arg ListTopicsByStatusLikeMessageTextParams) ([]ListTopicsByStatusLikeMessageTextRow, error)
+	ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error)
 	ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error)
 	ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error)
 	ListTopicsLikeIDLikeMessageText(ctx context.Context, arg ListTopicsLikeIDLikeMessageTextParams) ([]ListTopicsLikeIDLikeMessageTextRow, error)
 	ListTopicsLikeMessageText(ctx context.Context, arg ListTopicsLikeMessageTextParams) ([]ListTopicsLikeMessageTextRow, error)
-	UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error)
 	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
 	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)
 	UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error)
-	UpdateUserMessage(ctx context.Context, arg UpdateUserMessageParams) (UserMessage, error)
 }
 
 var _ Querier = (*Queries)(nil)

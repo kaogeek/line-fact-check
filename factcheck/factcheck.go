@@ -14,6 +14,7 @@ type (
 	StatusMessage     string
 	TypeMessage       string
 	TypeUserMessage   string
+	Language          string
 )
 
 const (
@@ -33,6 +34,9 @@ const (
 	TypeUserMessageLINEChat      TypeUserMessage = "CHAT"
 	TypeUserMessageLINEGroupChat TypeUserMessage = "GROUPCHAT"
 	TypeUserMessageAdmin         TypeUserMessage = "ADMIN"
+
+	LanguageEnglish Language = "en"
+	LanguageThai    Language = "th"
 )
 
 type Topic struct {
@@ -53,6 +57,7 @@ type Message struct {
 	Status        StatusMessage `json:"status"`
 	TopicID       string        `json:"topic_id"`
 	Text          string        `json:"text"`
+	Language      Language      `json:"language"`
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     *time.Time    `json:"updated_at"`
 }

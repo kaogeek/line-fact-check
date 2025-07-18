@@ -1,37 +1,47 @@
 package repo
 
 import (
+	"strings"
+
 	"github.com/kaogeek/line-fact-check/factcheck"
 )
 
-// OptionTopic represents topic-specific options
-type OptionTopic func(*OptionsTopic)
+// OptionTopicDynamic represents topic-specific options
+type OptionTopicDynamic func(*OptionsTopicDynamic)
 
-// OptionsTopic contains topic operation configuration
-type OptionsTopic struct {
+type OptionsTopicDynamic struct {
 	Options
-	// Topic-specific filters
 	LikeID          string
 	LikeMessageText string
-	Status          factcheck.StatusTopic
+	Statuses        []factcheck.StatusTopic
 }
 
-// WithTopicLikeID sets the topic ID pattern filter
-func WithTopicLikeID(id string) OptionTopic {
-	return func(opts *OptionsTopic) { opts.LikeID = id }
+func substringAuto(pattern string) string {
+	if pattern != "" && !strings.Contains(pattern, "%") {
+		pattern = substring(pattern)
+	}
+	return pattern
 }
 
-// WithTopicLikeMessageText sets the message text pattern filter
-func WithTopicLikeMessageText(text string) OptionTopic {
-	return func(opts *OptionsTopic) { opts.LikeMessageText = text }
+func WithTopicDynamicLikeID(id string) OptionTopicDynamic {
+	return func(opts *OptionsTopicDynamic) {
+		opts.LikeID = substringAuto(id)
+	}
 }
 
-// WithTopicStatus sets the topic status filter
-func WithTopicStatus(status factcheck.StatusTopic) OptionTopic {
-	return func(opts *OptionsTopic) { opts.Status = status }
+func WithTopicDynamicLikeMessageText(text string) OptionTopicDynamic {
+	return func(opts *OptionsTopicDynamic) {
+		opts.LikeMessageText = substringAuto(text)
+	}
+}
+
+func WithTopicDynamicStatuses(statuses []factcheck.StatusTopic) OptionTopicDynamic {
+	return func(opts *OptionsTopicDynamic) {
+		opts.Statuses = statuses
+	}
 }
 
 // WithTopicTx sets the transaction for topic operations
-func WithTopicTx(tx Tx) OptionTopic {
-	return func(opts *OptionsTopic) { opts.tx = tx }
+func WithTopicDynamicTx(tx Tx) OptionTopicDynamic {
+	return func(opts *OptionsTopicDynamic) { opts.tx = tx }
 }

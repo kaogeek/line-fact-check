@@ -46,30 +46,6 @@ SELECT DISTINCT t.* FROM topics t
 WHERE t.id = ANY($1::uuid[]) 
 ORDER BY t.created_at DESC;
 
--- name: ListTopicsLikeMessageText :many
-WITH filtered_topics AS (
-    SELECT DISTINCT t.*
-    FROM topics t
-    INNER JOIN messages m ON t.id = m.topic_id
-    WHERE m.text ILIKE $1
-),
-total_count AS (
-    SELECT COUNT(*) as total_count FROM filtered_topics
-),
-numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
-    FROM filtered_topics
-)
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
-FROM numbered_topics nt, total_count
-WHERE CASE 
-    WHEN $2 = 0 THEN true  -- No pagination
-    WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
-    WHEN $2 < 0 THEN rn BETWEEN total_count.total_count + $2 + 1 AND total_count.total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
 -- name: ListTopicsLikeID :many
 WITH numbered_topics AS (
     SELECT *, 
@@ -84,95 +60,6 @@ WHERE CASE
     WHEN $2 = 0 THEN true  -- No pagination
     WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
     WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
--- name: ListTopicsLikeIDLikeMessageText :many
-WITH filtered_topics AS (
-    SELECT DISTINCT t.*
-    FROM topics t
-    INNER JOIN messages m ON t.id = m.topic_id
-    WHERE t.id::text LIKE $1::text AND m.text ILIKE $2
-),
-total_count AS (
-    SELECT COUNT(*) as total_count FROM filtered_topics
-),
-numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
-    FROM filtered_topics
-)
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
-FROM numbered_topics nt, total_count
-WHERE CASE 
-    WHEN $3 = 0 THEN true  -- No pagination
-    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
-    WHEN $3 < 0 THEN rn BETWEEN total_count.total_count + $3 + 1 AND total_count.total_count + $4  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
--- name: ListTopicsByStatusLikeMessageText :many
-WITH filtered_topics AS (
-    SELECT DISTINCT t.*
-    FROM topics t
-    INNER JOIN messages m ON t.id = m.topic_id
-    WHERE t.status = $1 AND m.text ILIKE $2
-),
-total_count AS (
-    SELECT COUNT(*) as total_count FROM filtered_topics
-),
-numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
-    FROM filtered_topics
-)
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
-FROM numbered_topics nt, total_count
-WHERE CASE 
-    WHEN $3 = 0 THEN true  -- No pagination
-    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
-    WHEN $3 < 0 THEN rn BETWEEN total_count.total_count + $3 + 1 AND total_count.total_count + $4  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
--- name: ListTopicsByStatusLikeID :many
-WITH numbered_topics AS (
-    SELECT *, 
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics t 
-    WHERE t.status = $1 AND t.id::text LIKE $2::text
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE 
-    WHEN $3 = 0 THEN true  -- No pagination
-    WHEN $3 > 0 THEN rn BETWEEN $4 + 1 AND $4 + $3  -- Normal pagination
-    WHEN $3 < 0 THEN rn BETWEEN total_count + $3 + 1 AND total_count + $4  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
--- name: ListTopicsByStatusLikeIDLikeMessageText :many
-WITH filtered_topics AS (
-    SELECT DISTINCT t.*
-    FROM topics t
-    INNER JOIN messages m ON t.id = m.topic_id
-    WHERE t.status = $1 AND t.id::text LIKE $2::text AND m.text ILIKE $3
-),
-total_count AS (
-    SELECT COUNT(*) as total_count FROM filtered_topics
-),
-numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
-    FROM filtered_topics
-)
-SELECT nt.id, nt.name, nt.description, nt.status, nt.result, nt.result_status, nt.created_at, nt.updated_at
-FROM numbered_topics nt, total_count
-WHERE CASE 
-    WHEN $4 = 0 THEN true  -- No pagination
-    WHEN $4 > 0 THEN rn BETWEEN $5 + 1 AND $5 + $4  -- Normal pagination
-    WHEN $4 < 0 THEN rn BETWEEN total_count.total_count + $4 + 1 AND total_count.total_count + $5  -- Negative pagination
 END
 ORDER BY created_at DESC;
 
@@ -227,9 +114,9 @@ DELETE FROM topics WHERE id = $1;
 
 -- name: CreateMessage :one
 INSERT INTO messages (
-    id, user_message_id, type, status, topic_id, text, created_at, updated_at
+    id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
 
 -- name: GetMessage :one
@@ -237,14 +124,6 @@ SELECT * FROM messages WHERE id = $1;
 
 -- name: ListMessagesByTopic :many
 SELECT * FROM messages WHERE topic_id = $1 ORDER BY created_at ASC;
-
--- name: UpdateMessage :one
-UPDATE messages SET 
-    text = $2,
-    type = $3,
-    status = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING *;
 
 -- name: AssignMessageToTopic :one
 UPDATE messages SET 
@@ -265,13 +144,53 @@ INSERT INTO user_messages (
 -- name: GetUserMessage :one
 SELECT * FROM user_messages WHERE id = $1;
 
--- name: UpdateUserMessage :one
-UPDATE user_messages SET 
-    type = $2,
-    replied_at = $3,
-    metadata = $4,
-    updated_at = $5
-WHERE id = $1 RETURNING *;
-
 -- name: DeleteUserMessage :exec
 DELETE FROM user_messages WHERE id = $1; 
+
+-- name: ListTopicsDynamic :many
+SELECT DISTINCT t.*
+FROM topics t
+LEFT JOIN messages m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $3::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END;
+
+-- name: CountTopicsGroupByStatusDynamic :many
+SELECT t.status, COUNT(DISTINCT t.id) as count 
+FROM topics t 
+LEFT JOIN messages m ON t.id = m.topic_id 
+WHERE 1=1
+    AND CASE 
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
+        ELSE true 
+    END
+    AND CASE 
+        WHEN $2::text != '' THEN (
+            CASE 
+                WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $2::text
+                ELSE m.text ILIKE $2::text  -- fallback for unknown language
+            END
+        )
+        ELSE true 
+    END
+GROUP BY t.status; 

@@ -11,7 +11,6 @@ import (
 type UserMessages interface {
 	Create(ctx context.Context, userMessage factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.UserMessage, error)
-	Update(ctx context.Context, userMessage factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 }
 
@@ -51,20 +50,6 @@ func (u *userMessages) GetByID(ctx context.Context, id string, opts ...Option) (
 	dbUserMessage, err := queries.GetUserMessage(ctx, uuid)
 	if err != nil {
 		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": id})
-	}
-	return postgres.ToUserMessage(dbUserMessage)
-}
-
-// Update updates a user message using the userMessageUpdate adapter
-func (u *userMessages) Update(ctx context.Context, um factcheck.UserMessage, opts ...Option) (factcheck.UserMessage, error) {
-	queries := queries(u.queries, options(opts...))
-	params, err := postgres.UserMessageUpdater(um)
-	if err != nil {
-		return factcheck.UserMessage{}, err
-	}
-	dbUserMessage, err := queries.UpdateUserMessage(ctx, params)
-	if err != nil {
-		return factcheck.UserMessage{}, handleNotFound(err, map[string]string{"id": um.ID})
 	}
 	return postgres.ToUserMessage(dbUserMessage)
 }

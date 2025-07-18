@@ -15,6 +15,7 @@ type Message struct {
 	Status        string             `json:"status"`
 	TopicID       pgtype.UUID        `json:"topic_id"`
 	Text          string             `json:"text"`
+	Language      pgtype.Text        `json:"language"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }

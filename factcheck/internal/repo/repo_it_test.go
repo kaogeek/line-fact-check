@@ -2246,6 +2246,99 @@ func TestRepository_ListDynamic(t *testing.T) {
 			t.Fatalf("Expected 0 topics, got %d", len(topics))
 		}
 	})
+
+	t.Run("ListDynamic - no pagination (limit=0, offset=0)", func(t *testing.T) {
+		// Test that when both limit and offset are 0, we get all results without pagination
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("ListDynamic with no pagination failed: %v", err)
+		}
+		if len(topics) != 3 {
+			t.Fatalf("Expected all 3 topics with no pagination, got %d", len(topics))
+		}
+
+		// Verify we got all topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 to be in results")
+		}
+		if !topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 to be in results")
+		}
+		if !topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 to be in results")
+		}
+	})
+
+	t.Run("ListDynamic - no pagination with filters (limit=0, offset=0)", func(t *testing.T) {
+		// Test no pagination with filters
+		opts := createDynamicOpts("", []factcheck.StatusTopic{factcheck.StatusTopicPending}, "")
+		topics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with no pagination and filters failed: %v", err)
+		}
+		if len(topics) != 2 {
+			t.Fatalf("Expected 2 pending topics with no pagination, got %d", len(topics))
+		}
+
+		// Verify we got the pending topics
+		topicIDs := make(map[string]bool)
+		for _, topic := range topics {
+			topicIDs[topic.ID] = true
+		}
+		if !topicIDs[createdTopic1.ID] {
+			t.Errorf("Expected topic1 (pending) to be in results")
+		}
+		if !topicIDs[createdTopic3.ID] {
+			t.Errorf("Expected topic3 (pending) to be in results")
+		}
+		if topicIDs[createdTopic2.ID] {
+			t.Errorf("Expected topic2 (resolved) to NOT be in results")
+		}
+	})
+
+	t.Run("ListDynamic - pagination vs no pagination comparison", func(t *testing.T) {
+		// Test that pagination works differently from no pagination
+
+		// With pagination (limit=2, offset=0)
+		paginatedTopics, err := app.Repository.Topics.ListDynamic(ctx, 2, 0)
+		if err != nil {
+			t.Fatalf("ListDynamic with pagination failed: %v", err)
+		}
+		if len(paginatedTopics) != 2 {
+			t.Fatalf("Expected 2 topics with pagination limit=2, got %d", len(paginatedTopics))
+		}
+
+		// Without pagination (limit=0, offset=0)
+		allTopics, err := app.Repository.Topics.ListDynamic(ctx, 0, 0)
+		if err != nil {
+			t.Fatalf("ListDynamic with no pagination failed: %v", err)
+		}
+		if len(allTopics) != 3 {
+			t.Fatalf("Expected all 3 topics with no pagination, got %d", len(allTopics))
+		}
+
+		// Verify that paginated results are a subset of all results
+		paginatedIDs := make(map[string]bool)
+		for _, topic := range paginatedTopics {
+			paginatedIDs[topic.ID] = true
+		}
+
+		allIDs := make(map[string]bool)
+		for _, topic := range allTopics {
+			allIDs[topic.ID] = true
+		}
+
+		// All paginated topics should be in all topics
+		for id := range paginatedIDs {
+			if !allIDs[id] {
+				t.Errorf("Paginated topic ID %s not found in all topics", id)
+			}
+		}
+	})
 }
 
 func TestRepository_CountByStatusDynamic(t *testing.T) {

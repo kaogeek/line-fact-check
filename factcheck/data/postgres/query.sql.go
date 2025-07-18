@@ -867,15 +867,16 @@ WHERE 1=1
         ELSE true 
     END
 ORDER BY t.created_at DESC
-LIMIT $4 OFFSET $5
+LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END
 `
 
 type ListTopicsDynamicParams struct {
 	Column1 string   `json:"column_1"`
 	Column2 []string `json:"column_2"`
 	Column3 string   `json:"column_3"`
-	Limit   int32    `json:"limit"`
-	Offset  int32    `json:"offset"`
+	Column4 int32    `json:"column_4"`
+	Column5 int32    `json:"column_5"`
 }
 
 func (q *Queries) ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error) {
@@ -883,8 +884,8 @@ func (q *Queries) ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicPa
 		arg.Column1,
 		arg.Column2,
 		arg.Column3,
-		arg.Limit,
-		arg.Offset,
+		arg.Column4,
+		arg.Column5,
 	)
 	if err != nil {
 		return nil, err

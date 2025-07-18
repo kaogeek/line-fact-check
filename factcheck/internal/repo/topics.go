@@ -64,10 +64,12 @@ func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 }
 
 func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopicDynamic) ([]factcheck.Topic, error) {
-	limit, offset = sanitizeV2(limit, offset)
+	// Special case: if both limit and offset are 0, return all results without pagination
+	// Otherwise, apply default pagination behavior
+	limit, offset = sanitize(limit, offset)
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
-	rows, err := queries.ListTopicsDynamic(ctx, options.ListDynamicParams((offset), (limit)))
+	rows, err := queries.ListTopicsDynamic(ctx, options.ListDynamicParams(offset, limit))
 	if err != nil {
 		return nil, err
 	}

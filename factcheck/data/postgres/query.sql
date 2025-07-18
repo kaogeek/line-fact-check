@@ -284,7 +284,8 @@ WHERE 1=1
         ELSE true 
     END
 ORDER BY t.created_at DESC
-LIMIT $4 OFFSET $5;
+LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END;
 
 -- name: CountTopicsGroupByStatusDynamic :many
 SELECT t.status, COUNT(DISTINCT t.id) as count 

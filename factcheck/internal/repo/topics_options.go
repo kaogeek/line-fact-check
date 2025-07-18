@@ -83,7 +83,7 @@ func (o OptionsTopicDynamic) ListDynamicParams(offset, limit int) postgres.ListT
 		Column1: likeIDPattern,
 		Column2: utils.MapSliceNoError(o.Statuses, utils.String[factcheck.StatusTopic, string]),
 		Column3: likeMessagePattern,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+		Column4: int32(limit),
+		Column5: int32(offset),
 	}
 }

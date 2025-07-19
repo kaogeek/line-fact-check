@@ -50,7 +50,7 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	return &http.Server{
 		Addr:         utils.DefaultIfZero(conf.HTTP.ListenAddr, ":8080"),
 		Handler:      r,
-		ReadTimeout:  utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutReadMS)*time.Millisecond, time.Second),
-		WriteTimeout: utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutWriteMS)*time.Millisecond, time.Second),
+		ReadTimeout:  utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutMsRead)*time.Millisecond, time.Second),
+		WriteTimeout: utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutMsWrite)*time.Millisecond, time.Second),
 	}
 }

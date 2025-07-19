@@ -11,12 +11,12 @@ const AppName = "factcheck-api"
 
 type HTTP struct {
 	ListenAddr     string `env:"FACTCHECKAPI_LISTEN_ADDRESS, required"`
-	TimeoutReadMS  int    `env:"FACTCHECKAPI_TIMEOUT_READ_MS, default=1000"`
-	TimeoutWriteMS int    `env:"FACTCHECKAPI_TIMEOUT_WRITE_MS, default=1000"`
+	TimeoutMsRead  int    `env:"FACTCHECKAPI_TIMEOUTMS_READ, default=1000"`
+	TimeoutMsWrite int    `env:"FACTCHECKAPI_TIMEOUTMS_WRITE, default=1000"`
 }
 
 type Postgres struct {
-	Host     string `env:"POSTGRES_HOST"`
+	Host     string `env:"POSTGRES_HOST, default=localhost"`
 	Port     int    `env:"POSTGRES_PORT"`
 	User     string `env:"POSTGRES_USER"`
 	Password string `env:"POSTGRES_PASSWORD"`
@@ -44,8 +44,8 @@ func NewTest() (Config, error) {
 		AppName: AppName + "-test",
 		HTTP: HTTP{
 			ListenAddr:     ":8080",
-			TimeoutReadMS:  10000,
-			TimeoutWriteMS: 10000,
+			TimeoutMsRead:  10000,
+			TimeoutMsWrite: 10000,
 		},
 		Postgres: Postgres{
 			Host:     "localhost",

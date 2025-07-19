@@ -71,10 +71,10 @@ func TestParseEnvConfig(t *testing.T) {
 		if conf.HTTP.ListenAddr != addr {
 			t.Fatalf("unexpected listen address: %+v", conf.HTTP)
 		}
-		if conf.HTTP.TimeoutReadMS == 0 {
+		if conf.HTTP.TimeoutMsRead == 0 {
 			t.Fatalf("unexpected 0 timeout read: %+v", conf.HTTP)
 		}
-		if conf.HTTP.TimeoutWriteMS == 0 {
+		if conf.HTTP.TimeoutMsWrite == 0 {
 			t.Fatalf("unexpected 0 timeout write: %+v", conf.HTTP)
 		}
 	})
@@ -98,10 +98,10 @@ func TestParseEnvConfig(t *testing.T) {
 		if conf.HTTP.ListenAddr != addr {
 			t.Fatalf("unexpected listen address: %+v", conf.HTTP)
 		}
-		if conf.HTTP.TimeoutReadMS != 2000 {
+		if conf.HTTP.TimeoutMsRead != 2000 {
 			t.Fatalf("unexpected timeout read: %+v", conf.HTTP)
 		}
-		if conf.HTTP.TimeoutWriteMS != 1000 {
+		if conf.HTTP.TimeoutMsWrite != 1000 {
 			t.Fatalf("unexpected timeout write: %+v", conf.HTTP)
 		}
 	})

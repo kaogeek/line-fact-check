@@ -13,8 +13,10 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 )
 
-type Tx pgx.Tx
-type IsoLevel pgx.TxIsoLevel
+type (
+	Tx       pgx.Tx
+	IsoLevel pgx.TxIsoLevel
+)
 
 const (
 	IsoLevelReadCommitted  IsoLevel = IsoLevel(pgx.ReadCommitted)
@@ -45,13 +47,13 @@ func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
-		"dbname", c.Postgres.DBName,
+		"dbname", c.Postgres.DB,
 	)
 	pool, err := pgxpool.New(
 		context.Background(),
 		fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Password, c.Postgres.DBName,
+			c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Password, c.Postgres.DB,
 		),
 	)
 	if err != nil {
@@ -62,7 +64,7 @@ func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
-		"dbname", c.Postgres.DBName,
+		"dbname", c.Postgres.DB,
 	)
 
 	cleanup := func() {

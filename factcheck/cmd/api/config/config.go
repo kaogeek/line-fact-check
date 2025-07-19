@@ -1,40 +1,41 @@
 // Package config provides configuration
 package config
 
+import (
+	"context"
+
+	"github.com/sethvargo/go-envconfig"
+)
+
 const AppName = "factcheck-api"
 
 type HTTP struct {
-	ListenAddr     string `mapstructure:"listen_address"`
-	TimeoutReadMS  int    `mapstructure:"timeout_read_ms"`
-	TimeoutWriteMS int    `mapstructure:"timeout_write_ms"`
+	ListenAddr     string `env:"FACTCHECKAPI_LISTEN_ADDRESS, required"`
+	TimeoutMsRead  int    `env:"FACTCHECKAPI_TIMEOUTMS_READ, default=1000"`
+	TimeoutMsWrite int    `env:"FACTCHECKAPI_TIMEOUTMS_WRITE, default=1000"`
 }
 
 type Postgres struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	DBName   string `mapstructure:"dbname"`
+	Host     string `env:"POSTGRES_HOST, default=localhost"`
+	Port     int    `env:"POSTGRES_PORT"`
+	User     string `env:"POSTGRES_USER"`
+	Password string `env:"POSTGRES_PASSWORD"`
+	DB       string `env:"POSTGRES_DB, required"`
 }
 
 type Config struct {
-	AppName  string   `mapstructure:"app_name"`
-	HTTP     HTTP     `mapstructure:"http"`
-	Postgres Postgres `mapstructure:"postgres"`
+	AppName  string `env:"APP_NAME"`
+	HTTP     HTTP
+	Postgres Postgres
 }
 
 func New() (Config, error) {
-	// return hard-coded config for now
-	return Config{
-		AppName: AppName,
-		Postgres: Postgres{
-			Host:     "localhost",
-			Port:     5432,
-			User:     "postgres",
-			Password: hack(),
-			DBName:   "factcheck",
-		},
-	}, nil
+	var conf Config
+	err := envconfig.Process(context.Background(), &conf)
+	if err != nil {
+		return Config{}, err
+	}
+	return conf, nil
 }
 
 func NewTest() (Config, error) {
@@ -43,15 +44,15 @@ func NewTest() (Config, error) {
 		AppName: AppName + "-test",
 		HTTP: HTTP{
 			ListenAddr:     ":8080",
-			TimeoutReadMS:  10000,
-			TimeoutWriteMS: 10000,
+			TimeoutMsRead:  10000,
+			TimeoutMsWrite: 10000,
 		},
 		Postgres: Postgres{
 			Host:     "localhost",
 			Port:     5432,
 			User:     "postgres",
 			Password: hack(),
-			DBName:   "factcheck",
+			DB:       "factcheck",
 		},
 	}, nil
 }

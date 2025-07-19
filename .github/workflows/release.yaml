@@ -37,18 +37,14 @@ jobs:
           nix build .#version
           zip -r line-fact-check-x86_64_linux.zip result
 
-      - name: Build Docker images with Nix
+      - name: Build Docker images with Nix and load them into Docker daemon
         run: |
           echo "Building Docker images..."
-          nix build .#docker-factcheck
-          nix build .#docker-foo
+          nix build .#docker-factcheck && docker load < result
+          nix build .#docker-foo && docker load < result
 
-      - name: Load Docker images and push to GHCR
+      - name: Push to GHCR
         run: |
-          # Load images into Docker daemon
-          docker load < result-docker-factcheck
-          docker load < result-docker-foo
-
           # Login to GitHub Container Registry
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 

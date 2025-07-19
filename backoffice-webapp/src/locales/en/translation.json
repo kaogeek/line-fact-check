@@ -17,5 +17,63 @@
     "totalNews": "Total news",
     "realNews": "Real news",
     "fakeNews": "Fake news"
+  },
+  "common": {
+    "searchButton": "Search",
+    "error": {
+      "defaultTitle": "Error occurred",
+      "defaultMessage": "Something went wrong. Please try again later."
+    },
+    "loading": "Loading...",
+    "noData": {
+      "defaultTitle": "No data available",
+      "defaultMessage": "There is no data to display at this time."
+    }
+  },
+  "topic": {
+    "title": "Topic",
+    "createNew": "Create new topic",
+    "edit": "Edit topic",
+    "delete": "Delete topic",
+    "list": "Topic list",
+    "search": "Search topic",
+    "noTopics": "No topics",
+    "name": "Topic name",
+    "description": "Description",
+    "actions": "Actions",
+    "deleteSuccess": "Topic deleted successfully",
+    "deleteError": "Failed to delete topic",
+    "rejectTitle": "Reject Topic",
+    "rejectDescription": "Are you sure you want to reject this topic?",
+    "rejectConfirm": "Reject",
+    "total": "Total",
+    "status": {
+      "label": "Status",
+      "pending": "Pending",
+      "answered": "Answered",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "searchPlaceholder": {
+      "code": "Enter code...",
+      "message": "Enter message..."
+    },
+    "searchLabel": {
+      "code": "Code",
+      "message": "Message"
+    },
+    "totalMessages": "Total messages",
+    "createDate": "Create date",
+    "viewDetail": "View detail"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "The page you are looking for doesn't exist or has been moved.",
+    "goHome": "Go back home"
+  },
+  "menu": {
+    "topic": "Topic",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
   }
 }

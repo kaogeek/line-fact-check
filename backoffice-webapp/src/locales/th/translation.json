@@ -17,5 +17,63 @@
     "totalNews": "ข่าวทั้งหมด",
     "realNews": "ข่าวจริง",
     "fakeNews": "ข่าวปลอม"
+  },
+  "common": {
+    "searchButton": "ค้นหา",
+    "error": {
+      "defaultTitle": "เกิดข้อผิดพลาด",
+      "defaultMessage": "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้งในภายหลัง"
+    },
+    "loading": "กำลังโหลด...",
+    "noData": {
+      "defaultTitle": "ไม่มีข้อมูล",
+      "defaultMessage": "ไม่มีข้อมูลที่จะแสดงในขณะนี้"
+    }
+  },
+  "topic": {
+    "title": "หัวข้อ",
+    "createNew": "สร้างหัวข้อใหม่",
+    "edit": "แก้ไขหัวข้อ",
+    "delete": "ลบหัวข้อ",
+    "list": "รายการหัวข้อ",
+    "search": "ค้นหาหัวข้อ",
+    "noTopics": "ไม่มีหัวข้อ",
+    "name": "ชื่อหัวข้อ",
+    "description": "คำอธิบาย",
+    "total": "ทั้งหมด",
+    "status": {
+      "label": "สถานะ",
+      "pending": "รอดำเนินการ",
+      "answered": "ตอบแล้ว",
+      "rejected": "ปฏิเสธแล้ว",
+      "approved": "อนุมัติแล้ว"
+    },
+    "actions": "การดำเนินการ",
+    "deleteSuccess": "ลบหัวข้อสำเร็จ",
+    "deleteError": "ลบหัวข้อไม่สำเร็จ",
+    "rejectTitle": "ปฏิเสธหัวข้อ",
+    "rejectDescription": "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธหัวข้อนี้",
+    "rejectConfirm": "ปฏิเสธ",
+    "searchPlaceholder": {
+      "code": "กรอกรหัส...",
+      "message": "กรอกข้อความ..."
+    },
+    "searchLabel": {
+      "code": "รหัส",
+      "message": "ข้อความ"
+    },
+    "totalMessages": "ข้อความทั้งหมด",
+    "createDate": "วันที่สร้าง",
+    "viewDetail": "ดูรายละเอียด"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "ไม่พบหน้าที่คุณกำลังมองหาหรือถูกย้ายไปที่อื่น",
+    "goHome": "กลับหน้าหลัก"
+  },
+  "menu": {
+    "topic": "หัวข้อ",
+    "dashboard": "แดชบอร์ด",
+    "logout": "ออกจากระบบ"
   }
 }

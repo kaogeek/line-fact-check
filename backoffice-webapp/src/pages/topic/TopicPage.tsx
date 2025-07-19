@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import TopicSearchBar from './components/TopicSearchBar';
 
 import TopicData from './components/TopicData';
@@ -15,6 +16,31 @@ import { useLoader } from '@/hooks/loader';
 import { ConfirmAlertDialog } from '@/components/ConfirmAlertDialog';
 
 export default function TopicPage() {
+  const { t } = useTranslation();
+
+  const tabs = [
+    {
+      label: t('topic.total'),
+      statusIn: [TopicStatus.PENDING, TopicStatus.ANSWERED],
+    },
+    {
+      label: t('topic.status.pending'),
+      statusIn: [TopicStatus.PENDING],
+    },
+    {
+      label: t('topic.status.answered'),
+      statusIn: [TopicStatus.ANSWERED],
+    },
+    {
+      label: t('topic.status.rejected'),
+      statusIn: [TopicStatus.REJECTED],
+    },
+    {
+      label: t('topic.status.approved'),
+      statusIn: [TopicStatus.APPROVED],
+    },
+  ];
+
   const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0]);
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     statusIn: tabs[0].statusIn,
@@ -38,11 +64,10 @@ export default function TopicPage() {
       stopLoading();
     },
     onSuccess: () => {
-      toast.success('Topic rejected successfully');
-      // Optionally refresh the data here
+      toast.success(t('topic.deleteSuccess'));
     },
     onError: (err) => {
-      toast.error('Failed to reject topic');
+      toast.error(t('topic.deleteError'));
       console.error(err);
     },
   });
@@ -92,7 +117,7 @@ export default function TopicPage() {
 
   return (
     <div className="flex flex-col gap-4 p-4 h-full">
-      <TYH3>Topic</TYH3>
+      <TYH3>{t('topic.title')}</TYH3>
       <TopicSearchBar
         initCodeLike={criteria.codeLike}
         initMessageLike={criteria.messageLike}
@@ -106,37 +131,14 @@ export default function TopicPage() {
       <ConfirmAlertDialog
         open={showRejectDialog}
         onOpenChange={setShowRejectDialog}
-        title="Reject Topic"
-        description="Are you sure you want to reject this topic?"
-        confirmText="Reject"
+        title={t('topic.rejectTitle')}
+        description={t('topic.rejectDescription')}
+        confirmText={t('topic.rejectConfirm')}
         onConfirm={handleConfirmReject}
       />
     </div>
   );
 }
-
-const tabs = [
-  {
-    label: 'Total',
-    statusIn: [TopicStatus.PENDING, TopicStatus.ANSWERED],
-  },
-  {
-    label: 'Pending',
-    statusIn: [TopicStatus.PENDING],
-  },
-  {
-    label: 'Answered',
-    statusIn: [TopicStatus.ANSWERED],
-  },
-  {
-    label: 'Rejected',
-    statusIn: [TopicStatus.REJECTED],
-  },
-  {
-    label: 'Approved',
-    statusIn: [TopicStatus.APPROVED],
-  },
-];
 
 export interface TopicPageTab {
   label: string;

@@ -1,3 +1,5 @@
+import { t } from 'i18next';
+
 export enum TopicStatus {
   PENDING = 'PENDING',
   ANSWERED = 'ANSWERED',
@@ -16,19 +18,19 @@ type TopicStatusOption = Record<TopicStatus, TopicStatusOptionSpec>;
 export const topicStatusOption: TopicStatusOption = {
   PENDING: {
     variant: 'warning',
-    label: 'Pending',
+    label: 'topic.status.pending',
   },
   ANSWERED: {
     variant: 'blue',
-    label: 'Answered',
+    label: 'topic.status.answered',
   },
   REJECTED: {
     variant: 'danger',
-    label: 'Rejected',
+    label: 'topic.status.rejected',
   },
   APPROVED: {
     variant: 'success',
-    label: 'Approved',
+    label: 'topic.status.approved',
   },
 };
 

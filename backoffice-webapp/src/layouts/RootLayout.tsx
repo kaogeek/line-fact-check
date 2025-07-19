@@ -8,8 +8,9 @@ import { useTranslation } from 'react-i18next';
 export default function RootLayout() {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <SideBar
         brand={APP_NAME}
         menuList={[
@@ -32,9 +33,11 @@ export default function RootLayout() {
         setIsOpen={setIsOpen}
       />
 
-      <main className="flex-1 h-screen">
+      <main className="flex-1 flex flex-col h-full">
         <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} />
-        <Outlet />
+        <div className="flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

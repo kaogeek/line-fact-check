@@ -82,13 +82,13 @@ func TestParseEnvConfig(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		addr := ":8888"
 		os.Setenv("FACTCHECKAPI_LISTEN_ADDRESS", addr)
-		os.Setenv("FACTCHECKAPI_TIMEOUT_READ_MS", "2000")
-		os.Setenv("FACTCHECKAPI_TIMEOUT_WRITE_MS", "1000")
+		os.Setenv("FACTCHECKAPI_TIMEOUTMS_READ", "2000")
+		os.Setenv("FACTCHECKAPI_TIMEOUTMS_WRITE", "1000")
 		os.Setenv("POSTGRES_DB", "some_db")
 		defer func() {
-			os.Setenv("FACTCHECKAPI_LISTEN_ADDRESS", addr)
-			os.Unsetenv("FACTCHECKAPI_TIMEOUT_READ_MS")
-			os.Unsetenv("FACTCHECKAPI_TIMEOUT_WRITE_MS")
+			os.Unsetenv("FACTCHECKAPI_LISTEN_ADDRESS")
+			os.Unsetenv("FACTCHECKAPI_TIMEOUTMS_READ")
+			os.Unsetenv("FACTCHECKAPI_TIMEOUTMS_WRITE")
 			os.Unsetenv("POSTGRES_DB")
 		}()
 		conf, err := config.New()

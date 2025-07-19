@@ -154,13 +154,14 @@ rec {
         # Shell for running integration tests with PostgreSQL
         shell-it-test = pkgs.mkShell {
           packages = packagesDevelop ++ packagesItTest;
-          
+
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
           FACTCHECKAPI_TIMEOUTMS_WRITE = "3000";
           POSTGRES_USER = "postgres";
           POSTGRES_PASSWORD = "postgres";
           POSTGRES_DB = "factcheck";
+          POSTGRES_PORT = "5432";
 
           shellHook = ''
             echo "Loading PostgreSQL image from Nix..."

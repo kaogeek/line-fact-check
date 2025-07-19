@@ -593,11 +593,11 @@ func TestRepository_ListDynamic(t *testing.T) {
 	}
 
 	// Helper function to create dynamic options
-	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopicDynamic {
-		return []repo.OptionTopicDynamic{
-			repo.WithTopicDynamicLikeID(likeID),
-			repo.WithTopicDynamicStatuses(statuses),
-			repo.WithTopicDynamicLikeMessageText(likeMessageText),
+	createDynamicOpts := func(likeID string, statuses []factcheck.StatusTopic, likeMessageText string) []repo.OptionTopic {
+		return []repo.OptionTopic{
+			repo.TopicLikeID(likeID),
+			repo.TopicInStatuses(statuses),
+			repo.TopicLikeMessageText(likeMessageText),
 		}
 	}
 
@@ -1018,10 +1018,10 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 	}
 
 	// Helper function to create dynamic options
-	createDynamicOpts := func(likeID string, likeMessageText string) []repo.OptionTopicDynamic {
-		return []repo.OptionTopicDynamic{
-			repo.WithTopicDynamicLikeID(likeID),
-			repo.WithTopicDynamicLikeMessageText(likeMessageText),
+	createDynamicOpts := func(likeID string, likeMessageText string) []repo.OptionTopic {
+		return []repo.OptionTopic{
+			repo.TopicLikeID(likeID),
+			repo.TopicLikeMessageText(likeMessageText),
 		}
 	}
 

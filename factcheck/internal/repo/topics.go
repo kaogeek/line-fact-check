@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -16,11 +15,11 @@ type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
-	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopicDynamic) ([]factcheck.Topic, error)
+	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error)
@@ -49,7 +48,7 @@ func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapSliceNoError(rows, postgres.ToTopicFromRow), nil
+	return utils.MapNoError(rows, postgres.ToTopicFromRow), nil
 }
 
 // ListAll retrieves all topics (backward compatibility)
@@ -57,7 +56,7 @@ func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 	return t.List(ctx, 0, 0)
 }
 
-func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopicDynamic) ([]factcheck.Topic, error) {
+func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
 	// Special case: if both limit and offset are 0, return all results without pagination
 	// Otherwise, apply default pagination behavior
 	limit, offset = sanitize(limit, offset)
@@ -65,7 +64,7 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 	queries := queries(t.queries, options.Options)
 	rows, err := queries.ListTopicsDynamic(ctx, postgres.ListTopicsDynamicParams{
 		Column1: options.LikeID,
-		Column2: utils.MapSliceNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
+		Column2: utils.MapNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
 		Column3: options.LikeMessageText,
 		Column4: int32(limit),  //nolint:gosec
 		Column5: int32(offset), //nolint:gosec
@@ -73,10 +72,10 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapSliceNoError(rows, postgres.ToTopic), nil
+	return utils.MapNoError(rows, postgres.ToTopic), nil
 }
 
-func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopicDynamic) (map[factcheck.StatusTopic]int64, error) {
+func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
 	if len(options.Statuses) != 0 {
@@ -113,27 +112,22 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapSliceNoError(rows, postgres.ToTopicFromStatusRow), nil
+	return utils.MapNoError(rows, postgres.ToTopicFromStatusRow), nil
 }
 
 // ListLikeID retrieves topics by ID pattern matching using SQL LIKE with pagination
 func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
 	queries := queries(t.queries, options(opts...))
-	// Add wildcards for LIKE query if not already present
-	likePattern := idPattern
-	if !strings.Contains(likePattern, "%") {
-		likePattern = substring(idPattern)
-	}
 	rows, err := queries.ListTopicsLikeID(ctx, postgres.ListTopicsLikeIDParams{
-		Column1: likePattern,
+		Column1: substringAuto(idPattern),
 		Column2: limit,
 		Column3: offset,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapSliceNoError(rows, postgres.ToTopicFromIDRow), nil
+	return utils.MapNoError(rows, postgres.ToTopicFromIDRow), nil
 }
 
 // Create creates a new topic using the topic adapter
@@ -178,7 +172,7 @@ func (t *topics) ListInIDs(ctx context.Context, ids []string, opts ...Option) ([
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapSliceNoError(rows, postgres.ToTopic), nil
+	return utils.MapNoError(rows, postgres.ToTopic), nil
 }
 
 func (t *topics) CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error) {

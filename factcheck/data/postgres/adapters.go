@@ -70,7 +70,7 @@ func ToTopic(data Topic) factcheck.Topic {
 }
 
 func ToTopics(topics []Topic) []factcheck.Topic {
-	return utils.MapSliceNoError(topics, ToTopic)
+	return utils.MapNoError(topics, ToTopic)
 }
 
 // ToTopicFromRow converts a ListTopicsRow to factcheck.Topic
@@ -259,7 +259,7 @@ func ToUserMessage(data UserMessage) (factcheck.UserMessage, error) {
 }
 
 func ToUserMessages(data []UserMessage) ([]factcheck.UserMessage, error) {
-	return utils.MapSlice(data, ToUserMessage)
+	return utils.Map(data, ToUserMessage)
 }
 
 func UUID(id string) (pgtype.UUID, error) {
@@ -269,7 +269,7 @@ func UUID(id string) (pgtype.UUID, error) {
 }
 
 func UUIDs(ids []string) ([]pgtype.UUID, error) {
-	return utils.MapSlice(ids, UUID)
+	return utils.Map(ids, UUID)
 }
 
 func UUIDNullable(id string) pgtype.UUID {

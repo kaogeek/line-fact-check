@@ -438,7 +438,7 @@ func testRepeatableReadIsolation(t *testing.T, r *repo.Repository, topicID strin
 }
 
 // testSerializableIsolation tests that Serializable prevents phantom reads
-func testSerializableIsolation(t *testing.T, r *repo.Repository, topicID string) {
+func testSerializableIsolation(t *testing.T, r *repo.Repository, _ string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

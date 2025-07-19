@@ -1,0 +1,128 @@
+{
+  "welcome": "ยินดีต้อนรับ",
+  "greeting": "สวัสดี, {{name}}!",
+  "notification": {
+    "messageCreated": "สร้างข้อความเรียบร้อยแล้ว",
+    "answerUpdated": "อัปเดตคำตอบสำเร็จ",
+    "topicApproved": "อนุมัติหัวข้อเรียบร้อยแล้ว",
+    "topicRejected": "ปฏิเสธหัวข้อเรียบร้อยแล้ว",
+    "messageCreateFailed": "สร้างข้อความล้มเหลว",
+    "answerUpdateFailed": "อัปเดตคำตอบล้มเหลว",
+    "topicApproveFailed": "อนุมัติหัวข้อล้มเหลว",
+    "topicRejectFailed": "ปฏิเสธหัวข้อล้มเหลว"
+  },
+  "localeSwitcher": {
+    "switchTo": "เปลี่ยนเป็น",
+    "thai": "ไทย",
+    "english": "อังกฤษ"
+  },
+  "dashboard": {
+    "title": "แดชบอร์ด",
+    "totalTicket": "ตั๋วทั้งหมด",
+    "pending": "รอดำเนินการ",
+    "answer": "ตอบแล้ว",
+    "rejected": "ปฏิเสธ",
+    "statusTimeline": "ไทม์ไลน์สถานะ",
+    "approveStat": "สถิติการอนุมัติ",
+    "totalNews": "ข่าวทั้งหมด",
+    "realNews": "ข่าวจริง",
+    "fakeNews": "ข่าวปลอม"
+  },
+  "common": {
+    "searchButton": "ค้นหา",
+    "error": {
+      "defaultTitle": "เกิดข้อผิดพลาด",
+      "defaultMessage": "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้งในภายหลัง"
+    },
+    "loading": "กำลังโหลด...",
+    "noData": {
+      "defaultTitle": "ไม่มีข้อมูล",
+      "defaultMessage": "ไม่มีข้อมูลที่จะแสดงในขณะนี้"
+    }
+  },
+  "topic": {
+    "title": "หัวข้อ",
+    "createNew": "สร้างหัวข้อใหม่",
+    "edit": "แก้ไขหัวข้อ",
+    "delete": "ลบหัวข้อ",
+    "list": "รายการหัวข้อ",
+    "search": "ค้นหาหัวข้อ",
+    "noTopics": "ไม่มีหัวข้อ",
+    "name": "ชื่อหัวข้อ",
+    "description": "คำอธิบาย",
+    "total": "ทั้งหมด",
+    "status": {
+      "label": "สถานะ",
+      "pending": "รอดำเนินการ",
+      "answered": "ตอบแล้ว",
+      "rejected": "ปฏิเสธแล้ว",
+      "approved": "อนุมัติแล้ว"
+    },
+    "actions": "การดำเนินการ",
+    "deleteSuccess": "ลบหัวข้อสำเร็จ",
+    "deleteError": "ลบหัวข้อไม่สำเร็จ",
+    "rejectTitle": "ปฏิเสธหัวข้อ",
+    "rejectDescription": "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธหัวข้อนี้",
+    "rejectConfirm": "ปฏิเสธ",
+    "searchPlaceholder": {
+      "code": "กรอกรหัส...",
+      "message": "กรอกข้อความ..."
+    },
+    "searchLabel": {
+      "code": "รหัส",
+      "message": "ข้อความ"
+    },
+    "totalMessages": "ข้อความทั้งหมด",
+    "createDate": "วันที่สร้าง",
+    "viewDetail": "ดูรายละเอียด",
+    "approveTitle": "อนุมัติหัวข้อ",
+    "approveDescription": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติหัวข้อนี้?",
+    "approve": "อนุมัติ",
+    "reject": "ปฏิเสธ",
+    "topic": "หัวข้อ",
+    "history": "ประวัติ",
+    "createdAt": "สร้างเมื่อ"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "ไม่พบหน้าที่คุณกำลังมองหาหรือถูกย้ายไปที่อื่น",
+    "goHome": "กลับหน้าหลัก"
+  },
+  "menu": {
+    "topic": "หัวข้อ",
+    "dashboard": "แดชบอร์ด",
+    "logout": "ออกจากระบบ"
+  },
+  "topicAuditLog": {
+    "updateAnswer": "อัปเดตคำตอบ",
+    "approved": "อนุมัติ",
+    "rejected": "ปฏิเสธ"
+  },
+  "topicMessageAnswer": {
+    "answerLabel": "คำตอบ",
+    "historyButton": "ประวัติ",
+    "saveButton": "บันทึก",
+    "answerPlaceholder": "พิมพ์คำตอบของคุณที่นี่",
+    "typeLabel": "ประเภท",
+    "realOption": "จริง",
+    "fakeOption": "ปลอม",
+    "typeError": "คุณต้องเลือกประเภทคำตอบ"
+  },
+  "topicMessageDetail": {
+    "title": "ข้อความ",
+    "createButton": "สร้าง",
+    "tableHeaders": {
+      "code": "รหัส",
+      "message": "ข้อความ",
+      "totalMessage": "จำนวนข้อความทั้งหมด",
+      "createDate": "วันที่สร้าง"
+    },
+    "moveButton": "ย้าย"
+  },
+  "addMessageDialog": {
+    "title": "เพิ่มข้อความ",
+    "messageLabel": "ข้อความ",
+    "placeholder": "กรอกข้อความของคุณ",
+    "submitButton": "ส่ง"
+  }
+}

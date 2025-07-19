@@ -3,24 +3,27 @@ import SideBar from '@/components/navigator/SideBar';
 import { APP_NAME } from '@/constants/app';
 import { useState } from 'react';
 import { Outlet } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <SideBar
         brand={APP_NAME}
         menuList={[
           {
-            label: 'Topic',
+            label: t('menu.topic'),
             link: '/topic',
           },
           {
-            label: 'Dashboard',
+            label: t('menu.dashboard'),
             link: '/dashboard',
           },
           {
-            label: 'Logout',
+            label: t('menu.logout'),
             onClick: () => {
               console.log('Logout');
             },
@@ -30,9 +33,11 @@ export default function RootLayout() {
         setIsOpen={setIsOpen}
       />
 
-      <main className="flex-1">
-        <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} className="md:hidden" />
-        <Outlet />
+      <main className="flex-1 flex flex-col h-full">
+        <NavigatorBar brand={APP_NAME} setIsOpen={setIsOpen} />
+        <div className="flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

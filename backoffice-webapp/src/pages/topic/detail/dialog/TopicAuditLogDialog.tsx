@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useGetTopicAuditLogs } from '@/hooks/api/useTopicAuditLog';
+import { useGetTopicAuditLogs } from '@/hooks/api/topicAuditLog';
 import TopicAuditLogCard from '../components/TopicAuditLogCard';
 import NoDataState from '@/components/state/NoDataState';
 import ErrorState from '@/components/state/ErrorState';
@@ -31,7 +31,7 @@ export default function TopicAuditLogDialog({ open, onOpenChange, topicId }: Top
                 <LoadingState />
               ) : error ? (
                 <ErrorState />
-              ) : !topicAuditLogs ? (
+              ) : !topicAuditLogs || topicAuditLogs.length === 0 ? (
                 <NoDataState />
               ) : (
                 topicAuditLogs.map((log, idx) => (

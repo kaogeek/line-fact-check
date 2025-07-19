@@ -1,0 +1,128 @@
+{
+  "welcome": "Welcome",
+  "greeting": "Hello, {{name}}!",
+  "notification": {
+    "messageCreated": "Message has been created",
+    "answerUpdated": "Answer updated successfully",
+    "topicApproved": "Topic approved successfully",
+    "topicRejected": "Topic rejected successfully",
+    "messageCreateFailed": "Failed to create message",
+    "answerUpdateFailed": "Failed to update answer",
+    "topicApproveFailed": "Failed to approve topic",
+    "topicRejectFailed": "Failed to reject topic"
+  },
+  "localeSwitcher": {
+    "switchTo": "Switch to",
+    "thai": "Thai",
+    "english": "English"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalTicket": "Total ticket",
+    "pending": "Pending",
+    "answer": "Answer",
+    "rejected": "Rejected",
+    "statusTimeline": "Status Timeline",
+    "approveStat": "Approval Statistics",
+    "totalNews": "Total news",
+    "realNews": "Real news",
+    "fakeNews": "Fake news"
+  },
+  "common": {
+    "searchButton": "Search",
+    "error": {
+      "defaultTitle": "Error occurred",
+      "defaultMessage": "Something went wrong. Please try again later."
+    },
+    "loading": "Loading...",
+    "noData": {
+      "defaultTitle": "No data available",
+      "defaultMessage": "There is no data to display at this time."
+    }
+  },
+  "topic": {
+    "title": "Topic",
+    "createNew": "Create new topic",
+    "edit": "Edit topic",
+    "delete": "Delete topic",
+    "list": "Topic list",
+    "search": "Search topic",
+    "noTopics": "No topics",
+    "name": "Topic name",
+    "description": "Description",
+    "actions": "Actions",
+    "deleteSuccess": "Topic deleted successfully",
+    "deleteError": "Failed to delete topic",
+    "approveTitle": "Approve Topic",
+    "approveDescription": "Are you sure you want to approve this topic?",
+    "approve": "Approve",
+    "rejectTitle": "Reject Topic",
+    "rejectDescription": "Are you sure you want to reject this topic?",
+    "reject": "Reject",
+    "rejectConfirm": "Reject",
+    "total": "Total",
+    "status": {
+      "label": "Status",
+      "pending": "Pending",
+      "answered": "Answered",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "searchPlaceholder": {
+      "code": "Enter code...",
+      "message": "Enter message..."
+    },
+    "searchLabel": {
+      "code": "Code",
+      "message": "Message"
+    },
+    "totalMessages": "Total messages",
+    "createDate": "Create date",
+    "viewDetail": "View detail",
+    "topic": "Topic",
+    "history": "History",
+    "createdAt": "Created at"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "The page you are looking for doesn't exist or has been moved.",
+    "goHome": "Go back home"
+  },
+  "menu": {
+    "topic": "Topic",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "topicAuditLog": {
+    "updateAnswer": "Update answer",
+    "approved": "Approve",
+    "rejected": "Reject"
+  },
+  "topicMessageAnswer": {
+    "answerLabel": "Answer",
+    "historyButton": "History",
+    "saveButton": "Save",
+    "answerPlaceholder": "Type your answer here.",
+    "typeLabel": "Type",
+    "realOption": "Real",
+    "fakeOption": "Fake",
+    "typeError": "You need to select an answer type."
+  },
+  "topicMessageDetail": {
+    "title": "Message",
+    "createButton": "Create",
+    "tableHeaders": {
+      "code": "Code",
+      "message": "Message",
+      "totalMessage": "Total message",
+      "createDate": "Create date"
+    },
+    "moveButton": "Move"
+  },
+  "addMessageDialog": {
+    "title": "Add Message",
+    "messageLabel": "Message",
+    "placeholder": "Enter your message",
+    "submitButton": "Submit"
+  }
+}

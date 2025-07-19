@@ -16,8 +16,8 @@ export default function NoDataState({ title, msg, icon, showIcon = true, action,
 
   return (
     <EmptyState
-      title={title || t('common.error.defaultTitle')}
-      msg={msg || t('common.error.defaultMessage')}
+      title={title || t('common.noData.defaultTitle')}
+      msg={msg || t('common.noData.defaultMessage')}
       icon={!icon ? <img src="/assets/state/task-empty.svg"></img> : icon}
       showIcon={showIcon}
       action={action}

@@ -1,7 +1,7 @@
 import { TYH3, TYMuted } from '@/components/Typography';
 import { Navigate, useParams } from 'react-router';
 import TopicStatusBadge from '../components/TopicStatusBadge';
-import { useGetTopicById } from '@/hooks/api/useTopic';
+import { useGetTopicById } from '@/hooks/api/topic';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,15 +20,17 @@ import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import TopicPickerDialog from '@/picker/topic-picker/TopicPickerDialog';
 import AddMessageDialog from './dialog/AddMessageDialog';
-import { useLoader } from '@/hooks/useLoader';
+import { useLoader } from '@/hooks/loader';
 import { createMessage } from '@/lib/api/service/message';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateAnswer } from '@/lib/api/service/topic-answer';
 import { approveTopic, rejectTopic } from '@/lib/api/service/topic';
 import { ConfirmAlertDialog } from '../../../components/ConfirmAlertDialog';
+import { useTranslation } from 'react-i18next';
 
 export default function TopicDetailPage() {
+  const { t } = useTranslation();
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [openAddMessageDialog, setOpenAddMessageDialog] = useState<boolean>(false);
   const [openTopicPickerDialog, setOpenTopicPickerDialog] = useState<boolean>(false);
@@ -51,10 +53,10 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
-      toast.success('Message has been created.');
+      toast.success(t('notification.messageCreated'));
     },
     onError: (err) => {
-      toast.error('Failed to create message.');
+      toast.error(t('notification.messageCreateFailed'));
       console.error(err);
     },
   });
@@ -65,10 +67,10 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
-      toast.success('Answer updated successfully');
+      toast.success(t('notification.answerUpdated'));
     },
     onError: (err) => {
-      toast.error('Failed to update answer');
+      toast.error(t('notification.answerUpdateFailed'));
       console.error(err);
     },
   });
@@ -79,10 +81,10 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
-      toast.success('Topic approved successfully');
+      toast.success(t('notification.topicApproved'));
     },
     onError: (err) => {
-      toast.error('Failed to approve topic');
+      toast.error(t('notification.topicApproveFailed'));
       console.error(err);
     },
   });
@@ -93,10 +95,10 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
-      toast.success('Topic rejected successfully');
+      toast.success(t('notification.topicRejected'));
     },
     onError: (err) => {
-      toast.error('Failed to reject topic');
+      toast.error(t('notification.topicRejectFailed'));
       console.error(err);
     },
   });
@@ -186,26 +188,28 @@ export default function TopicDetailPage() {
           <ConfirmAlertDialog
             open={showApproveDialog}
             onOpenChange={setShowApproveDialog}
-            title="Approve Topic"
-            description="Are you sure you want to approve this topic?"
-            confirmText="Approve"
+            title={t('topic.approveTitle')}
+            description={t('topic.approveDescription')}
+            confirmText={t('topic.approve')}
             onConfirm={handleConfirmApprove}
           />
           <ConfirmAlertDialog
             open={showRejectDialog}
             onOpenChange={setShowRejectDialog}
-            title="Reject Topic"
-            description="Are you sure you want to reject this topic?"
-            confirmText="Reject"
+            title={t('topic.rejectTitle')}
+            description={t('topic.rejectDescription')}
+            confirmText={t('topic.reject')}
             onConfirm={handleConfirmReject}
           />
-          <div className="flex flex-col gap-4 p-4 h-full overflow-auto">
+          <div className="flex flex-col gap-4 p-4">
             <div className="flex flex-col">
               <div className="flex gap-2">
-                <TYH3 className="flex-1">Topic: {topic.code}</TYH3>
+                <TYH3 className="flex-1">
+                  {t('topic.topic')}: {topic.code}
+                </TYH3>
                 <TopicStatusBadge status={topic.status} />
                 <Button variant="outline" onClick={handleClickTopicHistory}>
-                  History
+                  {t('topic.history')}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -214,12 +218,14 @@ export default function TopicDetailPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleApproveClick}>Approve</DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleRejectClick}>Reject</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleApproveClick}>{t('topic.approve')}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleRejectClick}>{t('topic.reject')}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <TYMuted>Create at: {formatDate(topic.createDate)}</TYMuted>
+              <TYMuted>
+                {t('topic.createdAt')}: {formatDate(topic.createDate)}
+              </TYMuted>
             </div>
             <TopicMessageDetail
               topicId={topic.id}

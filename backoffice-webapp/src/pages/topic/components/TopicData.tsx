@@ -17,6 +17,7 @@ import ErrorState from '@/components/state/ErrorState';
 import TableStateRow from '@/components/table/TableStateRow';
 import NoDataState from '@/components/state/NoDataState';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface TopicDataProps {
   isLoading: boolean;
@@ -28,15 +29,17 @@ interface TopicDataProps {
 const colSpan = 6;
 
 export default function TopicData({ isLoading, dataList, error, onReject }: TopicDataProps) {
+  const { t } = useTranslation();
+
   return (
     <Table containerClassName="table-round h-full">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">Code</TableHead>
-          <TableHead>Message</TableHead>
-          <TableHead className="w-[100px]">Total message</TableHead>
-          <TableHead className="w-[100px]">Create date</TableHead>
-          <TableHead className="w-[100px]">Status</TableHead>
+          <TableHead className="w-[100px]">{t('topic.searchLabel.code')}</TableHead>
+          <TableHead>{t('topic.searchLabel.message')}</TableHead>
+          <TableHead className="w-[100px]">{t('topic.totalMessages')}</TableHead>
+          <TableHead className="w-[100px]">{t('topic.createDate')}</TableHead>
+          <TableHead className="w-[100px]">{t('topic.status.label')}</TableHead>
           <TableHead className="w-[20px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -49,36 +52,41 @@ export default function TopicData({ isLoading, dataList, error, onReject }: Topi
           <TableStateRow colSpan={colSpan}>
             <ErrorState />
           </TableStateRow>
-        ) : !dataList || !dataList.length ? (
+        ) : !dataList || dataList.length === 0 ? (
           <TableStateRow colSpan={colSpan}>
             <NoDataState />
           </TableStateRow>
         ) : (
-          dataList.map((data, idx) => (
-            <TableRow key={idx} className="odd:bg-muted/50 [&>*]:whitespace-nowrap">
+          dataList.map((topic, idx) => (
+            <TableRow key={topic.id}>
               <TableCell>
-                <Link to={`/topic/${data.id}`}>
-                  <TYLink>{data.code}</TYLink>
+                <Link to={`/topic/${topic.id}`}>
+                  <TYLink>{topic.code}</TYLink>
                 </Link>
               </TableCell>
               <TableCell>
-                {data.description}{' '}
-                {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
+                {topic.description}{' '}
+                {topic.countOfMessageGroup > 0 && <Badge variant="secondary">+{topic.countOfMessageGroup}</Badge>}
               </TableCell>
-              <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
-              <TableCell>{formatDate(data.createDate)}</TableCell>
+              <TableCell className="text-right">{topic.countOfTotalMessage}</TableCell>
+              <TableCell>{formatDate(topic.createDate)}</TableCell>
               <TableCell>
-                <TopicStatusBadge status={data.status}></TopicStatusBadge>
+                <TopicStatusBadge status={topic.status} />
               </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <EllipsisVertical />
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <EllipsisVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onSelect={() => onReject && onReject(data, idx)}>Reject</DropdownMenuItem>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to={`/topic/${topic.id}`}>{t('topic.viewDetail')}</Link>
+                    </DropdownMenuItem>
+                    {onReject && (
+                      <DropdownMenuItem onClick={() => onReject(topic, idx)}>{t('topic.reject')}</DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

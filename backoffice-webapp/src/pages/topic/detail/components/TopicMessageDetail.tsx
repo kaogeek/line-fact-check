@@ -1,9 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { TYH3 } from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 import { MoveRight, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/formatter/date-formatter';
-import { useGetMessageByTopicId } from '@/hooks/api/userMessage';
+import { useGetMessageByTopicId } from '@/hooks/api/message';
 import TableStateRow from '@/components/table/TableStateRow';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
@@ -18,6 +19,8 @@ interface TopicMessageDetailProps {
 const colSpan = 4;
 
 export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate }: TopicMessageDetailProps) {
+  const { t } = useTranslation();
+
   if (!topicId) {
     return <></>;
   }
@@ -27,7 +30,7 @@ export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <TYH3 className="flex-1">Message</TYH3>
+        <TYH3 className="flex-1">{t('topicMessageDetail.title')}</TYH3>
         <Button variant="default" size="icon" onClick={onClickCreate}>
           <Plus />
         </Button>
@@ -35,10 +38,10 @@ export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate
       <Table containerClassName="table-round h-full">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Code</TableHead>
-            <TableHead>Message</TableHead>
-            <TableHead className="w-[100px]">Total message</TableHead>
-            <TableHead className="w-[100px]">Create date</TableHead>
+            <TableHead className="w-[100px]">{t('topicMessageDetail.tableHeaders.code')}</TableHead>
+            <TableHead>{t('topicMessageDetail.tableHeaders.message')}</TableHead>
+            <TableHead className="w-[100px]">{t('topicMessageDetail.tableHeaders.totalMessage')}</TableHead>
+            <TableHead className="w-[100px]">{t('topicMessageDetail.tableHeaders.createDate')}</TableHead>
             <TableHead className="w-[20px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -63,7 +66,12 @@ export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate
                 <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
                 <TableCell>{formatDate(data.createDate)}</TableCell>
                 <TableCell>
-                  <Button variant="outline" size="icon" onClick={() => onClickMove(data.id)}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onClickMove(data.id)}
+                    aria-label={t('topicMessageDetail.moveButton')}
+                  >
                     <MoveRight />
                   </Button>
                 </TableCell>

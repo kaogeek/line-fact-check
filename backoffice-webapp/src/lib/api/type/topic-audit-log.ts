@@ -12,13 +12,13 @@ type TopicAuditLogTypeOption = Record<TopicAuditLogType, TopicAuditLogTypeSpec>;
 
 export const topicAuditLogTypeOption: TopicAuditLogTypeOption = {
   UPDATE_ANSWER: {
-    actionDescription: 'Update answer',
+    actionDescription: 'topicAuditLog.updateAnswer',
   },
   APPROVED: {
-    actionDescription: 'Approve',
+    actionDescription: 'topicAuditLog.approved',
   },
   REJECTED: {
-    actionDescription: 'Reject',
+    actionDescription: 'topicAuditLog.rejected',
   },
 };
 

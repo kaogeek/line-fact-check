@@ -11,6 +11,7 @@ import { useGetTopicAnswerByTopicId } from '@/hooks/api/topicAnswer';
 import { TopicAnswerType } from '@/lib/api/type/topic-answer';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
+import { useTranslation } from 'react-i18next';
 
 interface TopicMessageAnswerProps {
   onClickHistory: () => void;
@@ -19,13 +20,12 @@ interface TopicMessageAnswerProps {
 }
 
 const formSchema = z.object({
-  type: z.enum([TopicAnswerType.REAL, TopicAnswerType.FAKE], {
-    required_error: 'You need to select a answser type.',
-  }),
+  type: z.enum([TopicAnswerType.REAL, TopicAnswerType.FAKE]),
   answer: z.string(),
 });
 
 export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAnswer }: TopicMessageAnswerProps) {
+  const { t } = useTranslation();
   const { isLoading, data: answer, error } = useGetTopicAnswerByTopicId(topicId);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,12 +61,12 @@ export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAn
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="flex flex-col gap-2">
             <div className="flex gap-2">
-              <TYH3 className="flex-1">Answer</TYH3>
+              <TYH3 className="flex-1">{t('topicMessageAnswer.answerLabel')}</TYH3>
               <Button variant="outline" type="button" onClick={onClickHistory}>
-                History
+                {t('topicMessageAnswer.historyButton')}
               </Button>
               <Button variant="default" type="submit">
-                Save
+                {t('topicMessageAnswer.saveButton')}
               </Button>
             </div>
             <FormField
@@ -76,7 +76,7 @@ export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAn
                 <FormItem>
                   <FormControl>
                     <Textarea
-                      placeholder="Type your answer here."
+                      placeholder={t('topicMessageAnswer.answerPlaceholder')}
                       rows={20}
                       value={field.value}
                       onChange={field.onChange}
@@ -91,20 +91,20 @@ export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAn
               name="type"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Type</FormLabel>
+                  <FormLabel>{t('topicMessageAnswer.typeLabel')}</FormLabel>
                   <FormControl>
                     <RadioGroup onValueChange={field.onChange} value={field.value}>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
                           <RadioGroupItem value={TopicAnswerType.REAL} />
                         </FormControl>
-                        <FormLabel className="font-normal">Real</FormLabel>
+                        <FormLabel className="font-normal">{t('topicMessageAnswer.realOption')}</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center gap-3">
                         <FormControl>
                           <RadioGroupItem value={TopicAnswerType.FAKE} />
                         </FormControl>
-                        <FormLabel className="font-normal">Fake</FormLabel>
+                        <FormLabel className="font-normal">{t('topicMessageAnswer.fakeOption')}</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>

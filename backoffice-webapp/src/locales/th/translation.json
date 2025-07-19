@@ -1,6 +1,16 @@
 {
   "welcome": "ยินดีต้อนรับ",
   "greeting": "สวัสดี, {{name}}!",
+  "notification": {
+    "messageCreated": "สร้างข้อความเรียบร้อยแล้ว",
+    "answerUpdated": "อัปเดตคำตอบสำเร็จ",
+    "topicApproved": "อนุมัติหัวข้อเรียบร้อยแล้ว",
+    "topicRejected": "ปฏิเสธหัวข้อเรียบร้อยแล้ว",
+    "messageCreateFailed": "สร้างข้อความล้มเหลว",
+    "answerUpdateFailed": "อัปเดตคำตอบล้มเหลว",
+    "topicApproveFailed": "อนุมัติหัวข้อล้มเหลว",
+    "topicRejectFailed": "ปฏิเสธหัวข้อล้มเหลว"
+  },
   "localeSwitcher": {
     "switchTo": "เปลี่ยนเป็น",
     "thai": "ไทย",
@@ -64,7 +74,14 @@
     },
     "totalMessages": "ข้อความทั้งหมด",
     "createDate": "วันที่สร้าง",
-    "viewDetail": "ดูรายละเอียด"
+    "viewDetail": "ดูรายละเอียด",
+    "approveTitle": "อนุมัติหัวข้อ",
+    "approveDescription": "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติหัวข้อนี้?",
+    "approve": "อนุมัติ",
+    "reject": "ปฏิเสธ",
+    "topic": "หัวข้อ",
+    "history": "ประวัติ",
+    "createdAt": "สร้างเมื่อ"
   },
   "notFound": {
     "title": "404",
@@ -75,5 +92,37 @@
     "topic": "หัวข้อ",
     "dashboard": "แดชบอร์ด",
     "logout": "ออกจากระบบ"
+  },
+  "topicAuditLog": {
+    "updateAnswer": "อัปเดตคำตอบ",
+    "approved": "อนุมัติ",
+    "rejected": "ปฏิเสธ"
+  },
+  "topicMessageAnswer": {
+    "answerLabel": "คำตอบ",
+    "historyButton": "ประวัติ",
+    "saveButton": "บันทึก",
+    "answerPlaceholder": "พิมพ์คำตอบของคุณที่นี่",
+    "typeLabel": "ประเภท",
+    "realOption": "จริง",
+    "fakeOption": "ปลอม",
+    "typeError": "คุณต้องเลือกประเภทคำตอบ"
+  },
+  "topicMessageDetail": {
+    "title": "ข้อความ",
+    "createButton": "สร้าง",
+    "tableHeaders": {
+      "code": "รหัส",
+      "message": "ข้อความ",
+      "totalMessage": "จำนวนข้อความทั้งหมด",
+      "createDate": "วันที่สร้าง"
+    },
+    "moveButton": "ย้าย"
+  },
+  "addMessageDialog": {
+    "title": "เพิ่มข้อความ",
+    "messageLabel": "ข้อความ",
+    "placeholder": "กรอกข้อความของคุณ",
+    "submitButton": "ส่ง"
   }
 }

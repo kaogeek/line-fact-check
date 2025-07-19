@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface AddMessageDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ const formSchema = z.object({
 });
 
 export default function AddMessageDialog({ open, onOpenChange, onSubmit }: AddMessageDialogProps) {
+  const { t } = useTranslation();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,7 +36,7 @@ export default function AddMessageDialog({ open, onOpenChange, onSubmit }: AddMe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Message</DialogTitle>
+          <DialogTitle>{t('addMessageDialog.title')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -43,16 +45,20 @@ export default function AddMessageDialog({ open, onOpenChange, onSubmit }: AddMe
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Message</FormLabel>
+                  <FormLabel>{t('addMessageDialog.messageLabel')}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter your message" {...field} rows={10} />
+                    <Textarea 
+                      placeholder={t('addMessageDialog.placeholder')} 
+                      {...field} 
+                      rows={10} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full">
-              Submit
+              {t('addMessageDialog.submitButton')}
             </Button>
           </form>
         </Form>

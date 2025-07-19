@@ -31,7 +31,7 @@ export default function TopicAuditLogDialog({ open, onOpenChange, topicId }: Top
                 <LoadingState />
               ) : error ? (
                 <ErrorState />
-              ) : !topicAuditLogs ? (
+              ) : !topicAuditLogs || topicAuditLogs.length === 0 ? (
                 <NoDataState />
               ) : (
                 topicAuditLogs.map((log, idx) => (

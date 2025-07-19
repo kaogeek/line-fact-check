@@ -173,7 +173,7 @@ rec {
               -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
               -e POSTGRES_USER=$POSTGRES_USER \
               -e POSTGRES_DB=$POSTGRES_DB \
-              -p 5432:5432 \
+              -p 5432:$POSTGRES_PORT \
               postgres-factcheck:16
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"

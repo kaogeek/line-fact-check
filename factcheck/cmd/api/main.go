@@ -14,11 +14,7 @@ import (
 )
 
 func main() {
-	const (
-		name = "factcheck-api"
-		addr = ":8080"
-	)
-	srv, cleanup, err := di.InitializeServer()
+	container, cleanup, err := di.InitializeContainer()
 	if err != nil {
 		panic(err)
 	}
@@ -29,8 +25,8 @@ func main() {
 	}()
 
 	go func() {
-		slog.Info("server starting", "addr", addr)
-		err := srv.ListenAndServe()
+		slog.Info("server starting", "addr", container.Conf.HTTP.ListenAddr)
+		err := container.Server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("server error", "error", err)
 		}
@@ -46,7 +42,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := container.Server.Shutdown(ctx); err != nil {
 		slog.Error("server forced to shutdown", "timeout", timeout.String(), "error", err)
 	}
 }

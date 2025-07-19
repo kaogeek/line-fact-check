@@ -154,12 +154,14 @@ rec {
         # Shell for running integration tests with PostgreSQL
         shell-it-test = pkgs.mkShell {
           packages = packagesDevelop ++ packagesItTest;
+
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
           FACTCHECKAPI_TIMEOUTMS_WRITE = "3000";
           POSTGRES_USER = "postgres";
           POSTGRES_PASSWORD = "postgres";
           POSTGRES_DB = "factcheck";
+          POSTGRES_PORT = "5432";
 
           shellHook = ''
             echo "Loading PostgreSQL image from Nix..."
@@ -171,7 +173,7 @@ rec {
               -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
               -e POSTGRES_USER=$POSTGRES_USER \
               -e POSTGRES_DB=$POSTGRES_DB \
-              -p 5432:5432 \
+              -p 5432:$POSTGRES_PORT \
               postgres-factcheck:16
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"

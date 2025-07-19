@@ -1,5 +1,5 @@
 import { getTopicAuditLogs } from '@/lib/api/service/topic-audit-log';
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { TopicAuditLog } from '@/lib/api/type/topic-audit-log';
 import type { BaseQueryOptions } from './type';
 

@@ -154,6 +154,7 @@ rec {
         # Shell for running integration tests with PostgreSQL
         shell-it-test = pkgs.mkShell {
           packages = packagesDevelop ++ packagesItTest;
+          
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
           FACTCHECKAPI_TIMEOUTMS_WRITE = "3000";

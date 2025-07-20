@@ -64,7 +64,7 @@ rec {
           pname = "backoffice-webapp";
           src = ./backoffice-webapp;
           
-          npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # This will be updated after first build
+          npmDepsHash = "sha256-oWGQ/jfqkm3emN96Wx9i3hhryS8BOQhoIZ3TdRqU/yI="; # This will be updated after first build
           
           installPhase = ''
             mkdir -p $out

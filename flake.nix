@@ -59,24 +59,12 @@ rec {
           };
         };
 
-        backoffice-webapp = pkgs.stdenv.mkDerivation {
+        backoffice-webapp = pkgs.buildNpmPackage {
           inherit version;
           pname = "backoffice-webapp";
           src = ./backoffice-webapp;
           
-          nativeBuildInputs = with pkgs; [
-            nodejs_22
-            nodePackages.npm
-          ];
-          
-          configurePhase = ''
-            export HOME=$TMPDIR
-            npm ci --cache $TMPDIR/.npm --prefer-offline
-          '';
-          
-          buildPhase = ''
-            npm run build
-          '';
+          npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # This will be updated after first build
           
           installPhase = ''
             mkdir -p $out

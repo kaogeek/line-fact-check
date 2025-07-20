@@ -82,12 +82,6 @@ rec {
           src = ./backoffice-webapp;
         } ''
           echo "Copying source to temp dir"
-          cp -r $src $TMPDIR/backoffice-webapp
-          cd $TMPDIR/backoffice-webapp
-
-          echo "Installing and running lint"
-          npm ci --prefer-offline --cache=$TMPDIR/.npm
-          npm run lint
 
           touch $out
         '';

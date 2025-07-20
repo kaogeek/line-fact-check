@@ -38,11 +38,12 @@ export default function TopicDetailPage() {
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const { id } = useParams();
+  const { id: idParams } = useParams();
+  const id = idParams!;
   const { startLoading, stopLoading } = useLoader();
-  const { isLoading, data: topic, error } = useGetTopicById(id!);
+  const { isLoading, data: topic, error } = useGetTopicById(id);
   const { mutate: createMessageMutation } = useMutation({
-    mutationFn: (message: string) => createMessage(id!, message),
+    mutationFn: (message: string) => createMessage(id, message),
     onSettled: () => {
       stopLoading();
     },
@@ -125,25 +126,25 @@ export default function TopicDetailPage() {
     setOpenTopicHistoryDialog(true);
   }
 
-  const handleApproveClick = () => {
+  function handleApproveClick() {
     setShowApproveDialog(true);
-  };
+  }
 
-  const handleRejectClick = () => {
+  function handleRejectClick() {
     setShowRejectDialog(true);
-  };
+  }
 
-  const handleConfirmApprove = () => {
+  function handleConfirmApprove() {
     setShowApproveDialog(false);
     startLoading();
     approveTopicMutation();
-  };
+  }
 
-  const handleConfirmReject = () => {
+  function handleConfirmReject() {
     setShowRejectDialog(false);
     startLoading();
     rejectTopicMutation();
-  };
+  }
 
   return (
     <>

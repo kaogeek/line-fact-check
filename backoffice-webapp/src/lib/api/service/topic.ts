@@ -94,7 +94,7 @@ export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
 
 export async function approveTopic(topicId: string) {
   console.log(`Approving topic ${topicId}`);
-  const topic = dataList.find(t => t.id === topicId);
+  const topic = dataList.find((t) => t.id === topicId);
   if (topic) {
     topic.status = TopicStatus.APPROVED;
   }
@@ -103,7 +103,7 @@ export async function approveTopic(topicId: string) {
 
 export async function rejectTopic(topicId: string) {
   console.log(`Rejecting topic ${topicId}`);
-  const topic = dataList.find(t => t.id === topicId);
+  const topic = dataList.find((t) => t.id === topicId);
   if (topic) {
     topic.status = TopicStatus.REJECTED;
   }

@@ -38,7 +38,7 @@ export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAn
         answer: answer.answer,
       });
     }
-  }, [answer]);
+  }, [answer, form]);
 
   async function handleSubmit(data: z.infer<typeof formSchema>) {
     if (answer) {

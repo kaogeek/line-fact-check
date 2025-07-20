@@ -4,32 +4,30 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-interface TopicTabProps {
+interface TopicSearchBarProps {
   initCodeLike?: string;
   initMessageLike?: string;
   handleSearch: (criteria: { codeLike?: string; messageLike?: string }) => void;
 }
 
-export default function TopicSearchBar({ initCodeLike, initMessageLike, handleSearch }: TopicTabProps) {
+export default function TopicSearchBar({ initCodeLike, initMessageLike, handleSearch }: TopicSearchBarProps) {
   const { t } = useTranslation();
-  const [codeLike, setCodeLike] = useState<string>(initCodeLike ?? '');
-  const [messageLike, setMessageLike] = useState<string>(initMessageLike ?? '');
+  const [codeLike, setCodeLike] = useState<string | undefined>(initCodeLike);
+  const [messageLike, setMessageLike] = useState<string | undefined>(initMessageLike);
 
-  function handleCodeLikeChange(event: any) {
+  function handleCodeLikeChange(event: React.ChangeEvent<HTMLInputElement>) {
     setCodeLike(event.target.value);
   }
 
-  function handleMessageLikeChange(event: any) {
+  function handleMessageLikeChange(event: React.ChangeEvent<HTMLInputElement>) {
     setMessageLike(event.target.value);
   }
 
   function handleSearchClick() {
-    const searchCriteria = {
+    handleSearch({
       ...(codeLike && { codeLike }),
       ...(messageLike && { messageLike }),
-    };
-
-    handleSearch(searchCriteria);
+    });
   }
 
   return (
@@ -40,7 +38,7 @@ export default function TopicSearchBar({ initCodeLike, initMessageLike, handleSe
           <Input
             className="w-full"
             placeholder={t('topic.searchPlaceholder.code')}
-            value={codeLike}
+            value={codeLike ?? ''}
             onChange={handleCodeLikeChange}
           />
         </div>
@@ -49,7 +47,7 @@ export default function TopicSearchBar({ initCodeLike, initMessageLike, handleSe
           <Input
             className="w-full"
             placeholder={t('topic.searchPlaceholder.message')}
-            value={messageLike}
+            value={messageLike ?? ''}
             onChange={handleMessageLikeChange}
           />
         </div>

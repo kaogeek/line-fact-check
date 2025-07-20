@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGetTopics } from '@/hooks/api/topic';
 import TopicPickerData from './components/TopicPickerData';
 import { useState } from 'react';
@@ -34,7 +34,10 @@ export default function TopicPickerDialog({
   });
 
   function handleChoose(topicId: string) {
-    onOpenChange && onOpenChange(false);
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+
     onChoose(topicId);
   }
 
@@ -54,7 +57,6 @@ export default function TopicPickerDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription asChild></DialogDescription>
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           <TopicSearchBar
             initCodeLike={criteria.codeLike}

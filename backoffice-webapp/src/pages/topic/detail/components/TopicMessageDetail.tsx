@@ -20,12 +20,11 @@ const colSpan = 4;
 
 export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate }: TopicMessageDetailProps) {
   const { t } = useTranslation();
+  const { isLoading, data: dataList, error } = useGetMessageByTopicId(topicId || '');
 
   if (!topicId) {
     return <></>;
   }
-
-  const { isLoading, data: dataList, error } = useGetMessageByTopicId(topicId);
 
   return (
     <div className="flex flex-col gap-2">

@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useLanguageStorage } from '@/hooks/languageStorage';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getSavedLanguage, saveLanguage } from '@/lib/language-storage';
 
 interface NavigatorBarProps {
   brand: string;
@@ -17,7 +17,6 @@ interface NavigatorBarProps {
 
 export default function NavigatorBar({ brand, setIsOpen, className }: NavigatorBarProps) {
   const { t, i18n } = useTranslation();
-  const { getSavedLanguage, saveLanguage } = useLanguageStorage();
 
   const savedLanguage = getSavedLanguage() || i18n.language;
 

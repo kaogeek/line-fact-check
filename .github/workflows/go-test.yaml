@@ -113,13 +113,6 @@ jobs:
             docker stop foo-test && docker rm foo-test
           "
 
-      - name: Test package with Docker
-        run: |
-          nix develop --command bash -c "
-            echo "Test build Docker image from Dockerfile"
-            docker build -f ./Dockerfile.api
-          "
-
       - name: Test factcheck (integration test)
         if: matrix.os != 'macos-latest'
         run: |

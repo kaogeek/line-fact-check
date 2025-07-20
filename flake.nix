@@ -77,6 +77,16 @@ rec {
           };
         };
 
+        lint-backoffice-webapp = pkgs.runCommand {
+          buildInputs = [ pkgs.nodejs_22 pkgs.nodePackages.npm ];
+          src = ./backoffice-webapp;
+        } ''
+          cd $src
+          npm ci
+          npm run lint
+          touch $out
+        '';
+
         # To build and load the image:
         # nix build .#docker-factcheck && docker load < result
         docker-factcheck = pkgs.dockerTools.buildImage {

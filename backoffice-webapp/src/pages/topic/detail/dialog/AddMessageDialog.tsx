@@ -47,11 +47,7 @@ export default function AddMessageDialog({ open, onOpenChange, onSubmit }: AddMe
                 <FormItem>
                   <FormLabel>{t('addMessageDialog.messageLabel')}</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder={t('addMessageDialog.placeholder')} 
-                      {...field} 
-                      rows={10} 
-                    />
+                    <Textarea placeholder={t('addMessageDialog.placeholder')} {...field} rows={10} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

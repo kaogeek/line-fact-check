@@ -7,27 +7,24 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from '@/components/ui/pagination';
-import type { PaginationReq, PaginationRes } from '@/lib/api/type/base';
 
 interface PaginationControlProps {
-  paginationRes?: PaginationRes<any>;
-  onPageChange: (paginationReq: PaginationReq) => void;
+  paginationRes?: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  onPageChange: (paginationReq: { page: number; pageSize: number }) => void;
 }
 
 export default function PaginationControl({ paginationRes, onPageChange }: PaginationControlProps) {
-  if (!paginationRes) {
-    return <></>;
-  }
+  const { page: currentPage = 1, pageSize = 10, totalPages = 1 } = paginationRes || {};
 
-  const { page: currentPage, pageSize, totalPages } = paginationRes;
   const maxVisiblePages = 5;
   const shouldCollapse = totalPages > maxVisiblePages;
 
   function handlePageChange(page: number) {
-    onPageChange({
-      page: page,
-      pageSize: pageSize,
-    });
+    onPageChange({ page, pageSize });
   }
 
   const renderPageItems = () => {

@@ -77,12 +77,13 @@ rec {
           };
         };
 
-        lint-backoffice-webapp = pkgs.runCommand {
+        lint-backoffice-webapp = pkgs.runCommand "lint-backoffice-webapp" {
           buildInputs = [ pkgs.nodejs_22 pkgs.nodePackages.npm ];
           src = ./backoffice-webapp;
         } ''
+          echo "Running lint in $src"
           cd $src
-          npm ci
+          npm ci --prefer-offline --cache=$TMPDIR/.npm
           npm run lint
           touch $out
         '';

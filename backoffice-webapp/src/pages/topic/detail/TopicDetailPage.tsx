@@ -41,11 +41,6 @@ export default function TopicDetailPage() {
   const { id } = useParams();
   const { startLoading, stopLoading } = useLoader();
   const { isLoading, data: topic, error } = useGetTopicById(id!);
-
-  if (!id) {
-    return <Navigate to="/404" replace />;
-  }
-
   const { mutate: createMessageMutation } = useMutation({
     mutationFn: (message: string) => createMessage(id!, message),
     onSettled: () => {
@@ -59,7 +54,6 @@ export default function TopicDetailPage() {
       console.error(err);
     },
   });
-
   const { mutate: updateAnswerMutation } = useMutation({
     mutationFn: ({ answerId, content }: { answerId: string; content: string }) => updateAnswer(id!, answerId, content),
     onSettled: () => {
@@ -73,7 +67,6 @@ export default function TopicDetailPage() {
       console.error(err);
     },
   });
-
   const { mutate: approveTopicMutation } = useMutation({
     mutationFn: () => approveTopic(id!),
     onSettled: () => {
@@ -87,7 +80,6 @@ export default function TopicDetailPage() {
       console.error(err);
     },
   });
-
   const { mutate: rejectTopicMutation } = useMutation({
     mutationFn: () => rejectTopic(id!),
     onSettled: () => {

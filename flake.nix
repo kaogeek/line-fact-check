@@ -81,7 +81,9 @@ rec {
           buildInputs = [ pkgs.nodejs_22 pkgs.nodePackages.npm ];
           src = ./backoffice-webapp;
         } ''
-          echo "Copying source to temp dir"
+          echo "Installing and running lint"
+          npm ci
+          npm run lint
 
           touch $out
         '';

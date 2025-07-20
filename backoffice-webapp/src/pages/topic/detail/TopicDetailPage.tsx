@@ -31,9 +31,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function TopicDetailPage() {
   const { t } = useTranslation();
-  const { id } = useParams();
-  const { startLoading, stopLoading } = useLoader();
-  const { isLoading, data: topic, error } = useGetTopicById(id || '');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [openAddMessageDialog, setOpenAddMessageDialog] = useState<boolean>(false);
   const [openTopicPickerDialog, setOpenTopicPickerDialog] = useState<boolean>(false);
@@ -41,6 +38,13 @@ export default function TopicDetailPage() {
   const [openAnswerHistoryDialog, setOpenAnswerHistoryDialog] = useState<boolean>(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const { id } = useParams();
+  const { startLoading, stopLoading } = useLoader();
+  const { isLoading, data: topic, error } = useGetTopicById(id!);
+
+  if (!id) {
+    return <Navigate to="/404" replace />;
+  }
 
   const { mutate: createMessageMutation } = useMutation({
     mutationFn: (message: string) => createMessage(id!, message),
@@ -97,10 +101,6 @@ export default function TopicDetailPage() {
       console.error(err);
     },
   });
-
-  if (!id) {
-    return <Navigate to="/404" replace />;
-  }
 
   function handleClickMoveMessage(messageId: string) {
     setSelectedMessageId(messageId);

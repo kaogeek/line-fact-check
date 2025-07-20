@@ -59,6 +59,36 @@ rec {
           };
         };
 
+        backoffice-webapp = pkgs.stdenv.mkDerivation {
+          inherit version;
+          pname = "backoffice-webapp";
+          src = ./backoffice-webapp;
+          
+          nativeBuildInputs = with pkgs; [
+            nodejs_22
+            nodePackages.npm
+          ];
+          
+          configurePhase = ''
+            export HOME=$TMPDIR
+            npm ci --cache $TMPDIR/.npm --prefer-offline
+          '';
+          
+          buildPhase = ''
+            npm run build
+          '';
+          
+          installPhase = ''
+            mkdir -p $out
+            cp -r dist/* $out/
+          '';
+          
+          meta = {
+            inherit homepage;
+            description = "${description} - backoffice webapp";
+          };
+        };
+
         # To build and load the image:
         # nix build .#docker-factcheck && docker load < result
         docker-factcheck = pkgs.dockerTools.buildImage {
@@ -124,6 +154,10 @@ rec {
           golangci-lint
           sqlc
           wire
+          
+          # Development - webapp
+          nodejs_22
+          nodePackages.npm
         ];
         packagesItTest = with pkgs; [
           docker

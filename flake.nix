@@ -130,6 +130,65 @@ rec {
             ];
           };
         };
+
+        # NGINX Docker image for serving frontend static files
+        # nix build .#docker-backoffice-webapp && docker load < result
+        docker-backoffice-webapp = pkgs.dockerTools.buildImage {
+          name = "backoffice-webapp";
+          tag = version;
+          fromImage = pkgs.dockerTools.pullImage {
+            imageName = "nginx";
+            imageDigest = "sha256:64a376d12f051d5b97f8825514a7621bfd613ebad1cb1876354b9a42c9b17891";
+            finalImageName = "nginx";
+            finalImageTag = "alpine";
+            sha256 = if pkgs.system == "x86_64-darwin" then
+              "sha256-x86_64-darwin"
+            else if pkgs.system == "aarch64-darwin" then
+              "sha256-arch64-darwin"
+            else
+              "sha256-YZcEgn7GaL0LD8EbijdyNKR29XvV9YbCrAA3VlwbXG0=";
+          };
+          copyToRoot = pkgs.runCommand "nginx-config-backoffice-webapp" {} ''
+            mkdir -p $out/etc/nginx/conf.d
+            mkdir -p $out/usr/share/nginx/html
+            
+            # Copy static files
+            cp -r ${self.packages.${pkgs.system}.backoffice-webapp}/* $out/usr/share/nginx/html/
+            
+            # Create NGINX configuration
+            cat > $out/etc/nginx/conf.d/default.conf << 'EOF'
+            server {
+                listen 80;
+                server_name localhost;
+                root /usr/share/nginx/html;
+                index index.html;
+                
+                # Handle client-side routing
+                location / {
+                    try_files $uri $uri/ /index.html;
+                }
+                
+                # Cache static assets
+                location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+                    expires 1y;
+                    add_header Cache-Control "public, immutable";
+                }
+                
+                # Security headers
+                add_header X-Frame-Options "SAMEORIGIN" always;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+            }
+            EOF
+          '';
+          config = {
+            Entrypoint = [ "nginx" ];
+            Cmd = [ "-g" "daemon off;" ];
+            ExposedPorts = {
+              "80/tcp" = {};
+            };
+          };
+        };
       });
 
       devShells = forAllSystems ({ pkgs }: let

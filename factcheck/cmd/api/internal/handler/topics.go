@@ -51,24 +51,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
-	query := r.URL.Query().Get
-	id, text, statuses := query("like_id"), query("like_message_text"), query("in_statuses")
-	var opts []repo.OptionTopicDynamic
-	if statuses != "" {
-		parts := strings.Split(statuses, ",")
-		if len(parts) != 0 {
-			opts = append(opts, repo.WithTopicDynamicStatuses(utils.MapSliceNoError(parts, func(s string) factcheck.StatusTopic {
-				return factcheck.StatusTopic(s)
-			})))
-		}
-	}
-	if id != "" {
-		opts = append(opts, repo.WithTopicDynamicLikeID(id))
-	}
-	if text != "" {
-		opts = append(opts, repo.WithTopicDynamicLikeMessageText(text))
-	}
-
+	opts := toTopicOptions(r)
 	topics, err := h.topics.ListDynamic(r.Context(), limit, offset, opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
@@ -78,15 +61,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
-	var opts []repo.OptionTopicDynamic
-	query := r.URL.Query().Get
-	id, text := query("like_id"), query("like_message_text")
-	if id != "" {
-		opts = append(opts, repo.WithTopicDynamicLikeID(id))
-	}
-	if text != "" {
-		opts = append(opts, repo.WithTopicDynamicLikeMessageText(text))
-	}
+	opts := toTopicOptions(r)
 	counts, err := h.topics.CountByStatusDynamic(r.Context(), opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
@@ -176,4 +151,26 @@ func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendJSON(w, topic, http.StatusOK)
+}
+
+func toTopicOptions(r *http.Request) []repo.OptionTopic {
+	query := r.URL.Query().Get
+	id, text, statuses := query("like_id"), query("like_message_text"), query("in_statuses")
+	var opts []repo.OptionTopic
+	if statuses != "" {
+		parts := strings.Split(statuses, ",")
+		if len(parts) != 0 {
+			statuses := utils.MapNoError(parts, func(s string) factcheck.StatusTopic {
+				return factcheck.StatusTopic(s)
+			})
+			opts = append(opts, repo.TopicInStatuses(statuses))
+		}
+	}
+	if id != "" {
+		opts = append(opts, repo.TopicLikeID(id))
+	}
+	if text != "" {
+		opts = append(opts, repo.TopicLikeMessageText(text))
+	}
+	return opts
 }

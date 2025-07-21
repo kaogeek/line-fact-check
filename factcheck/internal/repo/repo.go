@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -69,6 +70,13 @@ func handleNotFound(err error, filter map[string]string) error {
 // substring surrounds the pattern with % for LIKE queries
 func substring(pattern string) string {
 	return "%" + pattern + "%"
+}
+
+func substringAuto(pattern string) string {
+	if pattern != "" && !strings.Contains(pattern, "%") {
+		pattern = substring(pattern)
+	}
+	return pattern
 }
 
 func sanitize(limit, offset int) (int, int) {

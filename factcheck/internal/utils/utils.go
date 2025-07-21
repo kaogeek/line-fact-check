@@ -25,7 +25,7 @@ func NewID() interface{ String() string } {
 	return uuid.New()
 }
 
-func MapSlice[T any, U any](slice []T, fn func(T) (U, error)) ([]U, error) {
+func Map[T any, U any](slice []T, fn func(T) (U, error)) ([]U, error) {
 	if len(slice) == 0 {
 		return nil, nil
 	}
@@ -40,7 +40,7 @@ func MapSlice[T any, U any](slice []T, fn func(T) (U, error)) ([]U, error) {
 	return result, nil
 }
 
-func MapSliceNoError[T any, U any](slice []T, fn func(T) U) []U {
+func MapNoError[T any, U any](slice []T, fn func(T) U) []U {
 	if len(slice) == 0 {
 		return nil
 	}

@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies and run checks
         run: |
-          nix develop .#frontend-develop --command bash -c "
+          nix develop --command bash -c "
             cd $WEBAPP_DIR
             echo 'Installing dependencies...'
             npm ci

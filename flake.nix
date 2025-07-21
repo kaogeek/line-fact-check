@@ -157,20 +157,10 @@ rec {
           bash
         ];
 
-        packagesExtra = with pkgs; [
-          # Basic LSPs
-          nixd
-          nixpkgs-fmt
-          bash-language-server
-          shellcheck
-          shfmt
-          lowdown
-        ];
-
         in {
         # Default shell has everything, but nothing running
         default = pkgs.mkShell {
-          packages = packagesBackend ++ packagesFrontend ++ packagesExtra ++ packagesItTest;
+          packages = packagesBackend ++ packagesFrontend ++ packagesItTest;
           shellHook = ''
             echo "Entering Nix default devShell"
             export FACTCHECK_VERSION=${version}
@@ -180,7 +170,7 @@ rec {
 
         # Shell with Go and code-gen tools
         go-develop = pkgs.mkShell {
-          packages = packagesBackend ++ packagesExtra;
+          packages = packagesBackend;
           shellHook = ''
             echo "Entering Nix shell go-develop"
           '';

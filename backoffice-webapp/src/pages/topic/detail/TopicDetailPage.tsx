@@ -1,7 +1,7 @@
 import { TYH3, TYMuted } from '@/components/Typography';
 import { Navigate, useParams } from 'react-router';
 import TopicStatusBadge from '../components/TopicStatusBadge';
-import { useGetTopicById } from '@/hooks/api/topic';
+import { topicQueryKeys, useGetTopicById } from '@/hooks/api/topic';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +28,12 @@ import { updateAnswer } from '@/lib/api/service/topic-answer';
 import { approveTopic, rejectTopic } from '@/lib/api/service/topic';
 import { ConfirmAlertDialog } from '../../../components/ConfirmAlertDialog';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { messageQueryKeys } from '@/hooks/api/message';
+import { topicAnswerQueryKeys } from '@/hooks/api/topicAnswer';
 
 export default function TopicDetailPage() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [openAddMessageDialog, setOpenAddMessageDialog] = useState<boolean>(false);
@@ -48,6 +52,7 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: messageQueryKeys.all });
       toast.success(t('notification.messageCreated'));
     },
     onError: (err) => {
@@ -61,6 +66,7 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: topicAnswerQueryKeys.all });
       toast.success(t('notification.answerUpdated'));
     },
     onError: (err) => {
@@ -74,6 +80,7 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: topicQueryKeys.all });
       toast.success(t('notification.topicApproved'));
     },
     onError: (err) => {
@@ -87,6 +94,7 @@ export default function TopicDetailPage() {
       stopLoading();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: topicQueryKeys.all });
       toast.success(t('notification.topicRejected'));
     },
     onError: (err) => {

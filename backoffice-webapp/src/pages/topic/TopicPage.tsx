@@ -66,6 +66,7 @@ export default function TopicPage() {
     },
     onSuccess: () => {
       toast.success(t('topic.deleteSuccess'));
+      queryClient.removeQueries({ queryKey: topicQueryKeys.all });
     },
     onError: (err) => {
       toast.error(t('topic.deleteError'));

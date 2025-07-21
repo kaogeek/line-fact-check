@@ -1,4 +1,4 @@
-import { MOCKUP_API_LOADING_MS } from '@/constants/app';
+import { mockApi } from '@/lib/utils/mock-api-utils';
 import type { Message } from '../type/message';
 
 function isHasTopicId(data: Message, topicId: string) {
@@ -6,27 +6,23 @@ function isHasTopicId(data: Message, topicId: string) {
 }
 
 export function getMessagesByTopicId(topicId: string): Promise<Message[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(dataList.filter((data) => isHasTopicId(data, topicId)));
-    }, MOCKUP_API_LOADING_MS);
+  return mockApi(() => {
+    return dataList.filter((data) => isHasTopicId(data, topicId));
   });
 }
 
 export function createMessage(topicId: string, message: string): Promise<Message> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newMessage = {
-        id: `MSG${dataList.length + 1}`.padStart(3, '0'),
-        code: `MSG${dataList.length + 1}`.padStart(3, '0'),
-        message,
-        createDate: new Date(),
-        countOfMessageGroup: 1,
-        topicId,
-      };
-      dataList.push(newMessage);
-      resolve(newMessage);
-    }, MOCKUP_API_LOADING_MS);
+  return mockApi(() => {
+    const newMessage = {
+      id: `MSG${dataList.length + 1}`.padStart(3, '0'),
+      code: `MSG${dataList.length + 1}`.padStart(3, '0'),
+      message,
+      createDate: new Date(),
+      countOfMessageGroup: 1,
+      topicId,
+    };
+    dataList.push(newMessage);
+    return newMessage;
   });
 }
 

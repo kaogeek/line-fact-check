@@ -34,7 +34,11 @@ const router = createBrowserRouter([
   },
 ]);
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {},
+  },
+});
 
 export default function App() {
   return (

@@ -1,4 +1,4 @@
-import { MOCKUP_API_LOADING_MS } from '@/constants/app';
+import { mockApi } from '@/lib/utils/mock-api-utils';
 import {
   TopicStatus,
   type CountTopic,
@@ -26,40 +26,41 @@ function isInStatus(data: Topic, statusIn: string[]): boolean {
 }
 
 export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<PaginationRes<Topic>> {
-  console.log(criteria);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const { codeLike, messageLike, statusIn, idNotIn } = criteria;
-      const conditions: ((data: Topic) => boolean)[] = [];
+  return mockApi(() => {
+    const { codeLike, messageLike, statusIn, idNotIn } = criteria;
+    const conditions: ((data: Topic) => boolean)[] = [];
 
-      if (codeLike) {
-        conditions.push((data) => isCodeLike(data, codeLike));
-      }
+    if (codeLike) {
+      conditions.push((data) => isCodeLike(data, codeLike));
+    }
 
-      if (messageLike) {
-        conditions.push((data) => isMessageLike(data, messageLike));
-      }
+    if (messageLike) {
+      conditions.push((data) => isMessageLike(data, messageLike));
+    }
 
-      if (statusIn) {
-        conditions.push((data) => isInStatus(data, statusIn));
-      }
+    if (statusIn) {
+      conditions.push((data) => isInStatus(data, statusIn));
+    }
 
-      if (idNotIn) {
-        conditions.push((data) => !isIdIn(data, idNotIn));
-      }
+    if (idNotIn) {
+      conditions.push((data) => !isIdIn(data, idNotIn));
+    }
 
-      const filteredTopics = dataList.filter((data) => conditions.every((condition) => condition(data)));
-      resolve(paginate(filteredTopics, pagination));
-    }, MOCKUP_API_LOADING_MS);
+    const filteredTopics = dataList
+      .filter((data) => conditions.every((condition) => condition(data)))
+      .map((data) => ({
+        ...data,
+        countOfMessageGroup: data.countOfMessageGroup,
+        countOfTotalMessage: data.countOfTotalMessage,
+      }));
+    return paginate(filteredTopics, pagination);
   });
 }
 
 export function getTopicById(id: string): Promise<Topic | null> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const topic = dataList.find((data) => data.id === id) || null;
-      resolve(topic);
-    }, MOCKUP_API_LOADING_MS);
+  return mockApi(() => {
+    const topic = dataList.find((data) => data.id === id) || null;
+    return topic;
   });
 }
 
@@ -81,33 +82,31 @@ function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicC
 }
 
 export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
-        pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
-        answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
-      });
-    }, MOCKUP_API_LOADING_MS);
-  });
+  return mockApi(() => ({
+    total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
+    pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
+    answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
+  }));
 }
 
 export async function approveTopic(topicId: string) {
-  console.log(`Approving topic ${topicId}`);
-  const topic = dataList.find((t) => t.id === topicId);
-  if (topic) {
-    topic.status = TopicStatus.APPROVED;
-  }
-  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+  return mockApi(() => {
+    console.log(`Approving topic ${topicId}`);
+    const topic = dataList.find((t) => t.id === topicId);
+    if (topic) {
+      topic.status = TopicStatus.APPROVED;
+    }
+  });
 }
 
 export async function rejectTopic(topicId: string) {
-  console.log(`Rejecting topic ${topicId}`);
-  const topic = dataList.find((t) => t.id === topicId);
-  if (topic) {
-    topic.status = TopicStatus.REJECTED;
-  }
-  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+  return mockApi(() => {
+    console.log(`Rejecting topic ${topicId}`);
+    const topic = dataList.find((t) => t.id === topicId);
+    if (topic) {
+      topic.status = TopicStatus.REJECTED;
+    }
+  });
 }
 
 export const dataList: Topic[] = [

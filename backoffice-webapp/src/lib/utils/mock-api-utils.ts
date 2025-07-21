@@ -9,9 +9,13 @@ export function generateTraceId(): string {
   return result;
 }
 
-export function mockApi<T>(callback: () => T | Promise<T>, delay = MOCKUP_API_LOADING_MS): Promise<T> {
+export function mockApi<T>(
+  callback: () => T | Promise<T>,
+  callerName: string = '',
+  delay = MOCKUP_API_LOADING_MS
+): Promise<T> {
   const traceId = generateTraceId();
-  console.debug(`[Mock API] [${traceId}] Request started...`);
+  console.debug(`[Mock API] [${traceId}] [${callerName}] Request started...`);
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       try {

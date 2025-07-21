@@ -8,7 +8,7 @@ function isHasTopicId(data: Message, topicId: string) {
 export function getMessagesByTopicId(topicId: string): Promise<Message[]> {
   return mockApi(() => {
     return dataList.filter((data) => isHasTopicId(data, topicId));
-  });
+  }, 'getMessagesByTopicId');
 }
 
 export function createMessage(topicId: string, message: string): Promise<Message> {
@@ -23,7 +23,7 @@ export function createMessage(topicId: string, message: string): Promise<Message
     };
     dataList.push(newMessage);
     return newMessage;
-  });
+  }, 'createMessage');
 }
 
 export const dataList: Message[] = [

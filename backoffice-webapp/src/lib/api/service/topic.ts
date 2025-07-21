@@ -54,14 +54,14 @@ export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq)
         countOfTotalMessage: data.countOfTotalMessage,
       }));
     return paginate(filteredTopics, pagination);
-  });
+  }, 'getTopics');
 }
 
 export function getTopicById(id: string): Promise<Topic | null> {
   return mockApi(() => {
     const topic = dataList.find((data) => data.id === id) || null;
     return topic;
-  });
+  }, 'getTopicById');
 }
 
 function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicCriteria): number {
@@ -82,11 +82,14 @@ function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicC
 }
 
 export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
-  return mockApi(() => ({
-    total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
-    pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
-    answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
-  }));
+  return mockApi(
+    () => ({
+      total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
+      pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
+      answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
+    }),
+    'countTopics'
+  );
 }
 
 export async function approveTopic(topicId: string) {
@@ -96,7 +99,7 @@ export async function approveTopic(topicId: string) {
     if (topic) {
       topic.status = TopicStatus.APPROVED;
     }
-  });
+  }, 'approveTopic');
 }
 
 export async function rejectTopic(topicId: string) {
@@ -106,7 +109,7 @@ export async function rejectTopic(topicId: string) {
     if (topic) {
       topic.status = TopicStatus.REJECTED;
     }
-  });
+  }, 'rejectTopic');
 }
 
 export const dataList: Topic[] = [

@@ -8,13 +8,13 @@ function isHasTopicId(data: TopicAnswer, topicId: string) {
 export function getTopicAnswerByTopicId(topicId: string): Promise<TopicAnswer | null> {
   return mockApi(() => {
     return dataList.find((data) => isHasTopicId(data, topicId)) || null;
-  });
+  }, 'getTopicAnswerByTopicId');
 }
 
 export async function updateAnswer(topicId: string, answerId: string, content: string) {
   return mockApi(() => {
     console.log(`Updating answer ${answerId} in topic ${topicId} with content: ${content}`);
-  });
+  }, 'updateAnswer');
 }
 
 export const dataList: TopicAnswer[] = [

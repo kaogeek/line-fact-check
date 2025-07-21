@@ -20,7 +20,7 @@ export function getTopicAuditLogs(topicId: string, typeIn?: string[]): Promise<T
     }
 
     return dataList.filter((data) => conditions.every((condition) => condition(data)));
-  });
+  }, 'getTopicAuditLogs');
 }
 
 export const dataList: TopicAuditLog[] = [

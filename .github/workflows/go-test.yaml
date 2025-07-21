@@ -34,7 +34,7 @@ jobs:
 
       - name: Check code generation in factcheck
         run: |
-          nix develop --command bash -c "
+          nix develop .#go-develop --command bash -c "
             cd factcheck
             echo 'Generating wire code for factcheck...'
             wire ./...
@@ -67,7 +67,7 @@ jobs:
 
       - name: Test factcheck
         run: |
-          nix develop --command bash -c "
+          nix develop .#go-develop --command bash -c "
             cd factcheck
             echo 'PWD: $PWD'
             echo Testing factcheck and writing JSON report to $ARTIFACT_FACTCHECK
@@ -76,7 +76,7 @@ jobs:
 
       - name: Test foo
         run: |
-          nix develop --command bash -c "
+          nix develop .#go-develop --command bash -c "
             cd foo
             echo 'PWD: $PWD'
             echo 'Testing foo and writing JSON report to $ARTIFACT_FOO'
@@ -85,7 +85,7 @@ jobs:
 
       - name: Test build with Docker
         run: |
-          nix develop --command bash -c "
+          nix develop .#go-develop --command bash -c "
             nix build .#docker-postgres-it-test
             nix build .#docker-foo
             nix build .#version
@@ -94,7 +94,7 @@ jobs:
       - name: Test package with Docker
         if: matrix.os != 'macos-latest'
         run: |
-          nix develop --command bash -c "
+          nix develop .#go-develop --command bash -c "
             nix build .#docker-foo
             # Test docker-foo image functionality
             echo "Loading docker-foo image..."
@@ -116,7 +116,7 @@ jobs:
       - name: Test factcheck (integration test)
         if: matrix.os != 'macos-latest'
         run: |
-          nix develop .#shell-it-test --command bash -c "
+          nix develop .#go-it-test --command bash -c "
             echo 'Waiting for PostgreSQL to be ready...'
             
             # Wait for PostgreSQL to be ready with timeout

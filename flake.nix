@@ -133,7 +133,7 @@ rec {
       });
 
       devShells = forAllSystems ({ pkgs }: let
-        packagesDevelop = with pkgs; [
+        packagesBackend = with pkgs; [
           # Development - server
           go
           gopls
@@ -142,17 +142,21 @@ rec {
           golangci-lint
           sqlc
           wire
-          
+        ];
+
+        packagesFrontend = with pkgs; [
           # Development - webapp
           nodejs_22
           nodePackages.npm
         ];
+
         packagesItTest = with pkgs; [
           docker
           docker-compose
           coreutils
           bash
         ];
+
         packagesExtra = with pkgs; [
           # Basic LSPs
           nixd
@@ -164,18 +168,27 @@ rec {
         ];
 
         in {
+        # Default shell has everything, but nothing running
         default = pkgs.mkShell {
-          packages = packagesDevelop ++ packagesExtra ++ packagesItTest;
+          packages = packagesBackend ++ packagesFrontend ++ packagesExtra ++ packagesItTest;
           shellHook = ''
-            echo "Entering devShell from flake.nix"
+            echo "Entering Nix default devShell"
             export FACTCHECK_VERSION=${version}
             echo "FACTCHECK_VERSION=$FACTCHECK_VERSION"
           '';
         };
 
+        # Shell with Go and code-gen tools
+        go-develop = pkgs.mkShell {
+          packages = packagesBackend ++ packagesExtra;
+          shellHook = ''
+            echo "Entering Nix shell go-develop"
+          '';
+        };
+
         # Shell for running integration tests with PostgreSQL
-        shell-it-test = pkgs.mkShell {
-          packages = packagesDevelop ++ packagesItTest;
+        go-it-test = pkgs.mkShell {
+          packages = packagesBackend ++ packagesItTest;
 
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
@@ -186,6 +199,7 @@ rec {
           POSTGRES_PORT = "5432";
 
           shellHook = ''
+            echo "Entering Nix shell go-it-test"
             echo "Loading PostgreSQL image from Nix..."
             docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}
             

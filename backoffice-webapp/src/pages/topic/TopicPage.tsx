@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import TopicSearchBar from './components/TopicSearchBar';
 
 import TopicData from './components/TopicData';
-import { useCountTopics, useGetTopics } from '@/hooks/api/topic';
+import { topicQueryKeys, useCountTopics, useGetTopics } from '@/hooks/api/topic';
 import { useEffect, useState } from 'react';
 import TabIndex from '../../components/TabIndex';
 import { TopicStatus, type GetTopicCriteria, type Topic } from '@/lib/api/type/topic';
@@ -10,7 +10,7 @@ import { TYH3 } from '@/components/Typography';
 import type { PaginationReq } from '@/lib/api/type/base';
 import PaginationControl from '@/components/PaginationControl';
 import { rejectTopic } from '@/lib/api/service/topic';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useLoader } from '@/hooks/loader';
 import { ConfirmAlertDialog } from '@/components/ConfirmAlertDialog';
@@ -55,6 +55,7 @@ export default function TopicPage() {
   const [topicToReject, setTopicToReject] = useState<Topic | null>(null);
   const { data: data, isLoading, error } = useGetTopics(criteria, paginationReq);
   const { data: countTopics } = useCountTopics(criteria);
+  const queryClient = useQueryClient();
 
   const { startLoading, stopLoading } = useLoader();
 
@@ -65,6 +66,7 @@ export default function TopicPage() {
     },
     onSuccess: () => {
       toast.success(t('topic.deleteSuccess'));
+      queryClient.removeQueries({ queryKey: topicQueryKeys.all });
     },
     onError: (err) => {
       toast.error(t('topic.deleteError'));
@@ -86,6 +88,7 @@ export default function TopicPage() {
     setCriteria((prev) => {
       return { ...prev, codeLike: criteria.codeLike, messageLike: criteria.messageLike };
     });
+    queryClient.removeQueries({ queryKey: topicQueryKeys.all });
   }
 
   function handleTabChange(activeTabIdx: number) {

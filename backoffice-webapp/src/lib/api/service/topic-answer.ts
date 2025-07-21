@@ -1,4 +1,4 @@
-import { MOCKUP_API_LOADING_MS } from '@/constants/app';
+import { mockApi } from '@/lib/utils/mock-api-utils';
 import { TopicAnswerType, type TopicAnswer } from '../type/topic-answer';
 
 function isHasTopicId(data: TopicAnswer, topicId: string) {
@@ -6,16 +6,15 @@ function isHasTopicId(data: TopicAnswer, topicId: string) {
 }
 
 export function getTopicAnswerByTopicId(topicId: string): Promise<TopicAnswer | null> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(dataList.find((data) => isHasTopicId(data, topicId)) || null);
-    }, MOCKUP_API_LOADING_MS);
-  });
+  return mockApi(() => {
+    return dataList.find((data) => isHasTopicId(data, topicId)) || null;
+  }, 'getTopicAnswerByTopicId');
 }
 
 export async function updateAnswer(topicId: string, answerId: string, content: string) {
-  console.log(`Updating answer ${answerId} in topic ${topicId} with content: ${content}`);
-  return new Promise((resolve) => setTimeout(resolve, MOCKUP_API_LOADING_MS));
+  return mockApi(() => {
+    console.log(`Updating answer ${answerId} in topic ${topicId} with content: ${content}`);
+  }, 'updateAnswer');
 }
 
 export const dataList: TopicAnswer[] = [

@@ -183,7 +183,7 @@ rec {
           packages = packagesBackend ++ packagesExtra;
           shellHook = ''
             echo "Entering Nix shell go-develop"
-          ''
+          '';
         };
 
         # Shell for running integration tests with PostgreSQL

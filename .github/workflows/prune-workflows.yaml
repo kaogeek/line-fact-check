@@ -2,8 +2,8 @@ name: prune-workflows
 on:
   workflow_dispatch:
   schedule:
-    # Run monthly, at 00:00 on the 1st day of month.
-    - cron: '0 0 1 * *'
+    # Run every 3 days, at 00:00.
+    - cron: '0 0 */3 * *'
 
 jobs:
   del_runs:
@@ -16,6 +16,6 @@ jobs:
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
-          retain_days: 30
-          keep_minimum_runs: 6
+          retain_days: 3
+          keep_minimum_runs: 10
 

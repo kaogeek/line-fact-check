@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NotFoundPage from './pages/404';
 import { LoaderProvider } from './hooks/loader';
 import { Toaster } from 'sonner';
+import { askRouter } from './pages/ask/askRouter';
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  ...askRouter,
   {
     path: '/404',
     Component: NotFoundPage,

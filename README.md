@@ -47,5 +47,19 @@ We do this by running a NixOS container (with mounted volume). We then use Nix i
 
 ```sh
 docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c \
- "nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes && cp result /workspace/"
+    "nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes && cp result /workspace/"
+```
+
+The command above, while simple, will write result to your `./result`. This is stateful, and will break if run back-to-back. This script will fix that by appending our flake "version" to the name of file:
+
+```sh
+docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c "
+    FLAKE_VERSION=\$(nix eval github:kaogeek/line-fact-check/main#version --extra-experimental-features nix-command --extra-experimental-features flakes --raw)
+  
+    # Build docker-factcheck with unique result name using the actual flake version
+    nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
+  
+    # Copy the result to workspace
+    cp result /workspace/result-factcheck-$FLAKE_VERSION
+"
 ```

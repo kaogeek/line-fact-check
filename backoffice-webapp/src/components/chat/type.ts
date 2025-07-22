@@ -8,6 +8,7 @@ export type ChatMessage = {
   | {
       type: 'text';
       message: string;
+      isRichText?: boolean;
     }
   | {
       type: 'sticker';

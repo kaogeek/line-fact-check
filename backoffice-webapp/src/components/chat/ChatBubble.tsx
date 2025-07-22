@@ -5,10 +5,11 @@ import type { ChatProps } from './type';
 export interface ChatBubbleProps extends ChatProps {
   message: string;
   isTyping?: boolean;
+  isRichText?: boolean;
   className?: string;
 }
 
-const wrapperVariants = cva('min-w-fit max-w-[70%]', {
+const wrapperVariants = cva('w-fit max-w-[70%] min-w-0', {
   variants: {
     sender: {
       me: 'self-end',
@@ -32,7 +33,7 @@ const chatBubbleVariants = cva('p-4', {
   },
 });
 
-export default function ChatBubble({ sender, message, isTyping = false, className }: ChatBubbleProps) {
+export default function ChatBubble({ sender, message, isTyping = false, className, isRichText }: ChatBubbleProps) {
   return (
     <div className={cn(wrapperVariants({ sender, className }))}>
       <div className={cn(chatBubbleVariants({ sender }))}>
@@ -51,6 +52,8 @@ export default function ChatBubble({ sender, message, isTyping = false, classNam
               style={{ animationDelay: '300ms' }}
             />
           </div>
+        ) : isRichText ? (
+          <div dangerouslySetInnerHTML={{ __html: message }} />
         ) : (
           message
         )}

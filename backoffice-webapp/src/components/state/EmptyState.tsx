@@ -3,12 +3,13 @@ import { Info } from 'lucide-react';
 import React, { isValidElement, type ReactElement } from 'react';
 
 interface EmptyStateProps {
-  title: string;
-  msg: string;
+  title?: string;
+  msg?: string;
   icon?: ReactElement;
   showIcon?: boolean;
   action?: ReactElement;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 const sizeClassMap: Record<'sm' | 'md' | 'lg', string> = {
@@ -17,9 +18,17 @@ const sizeClassMap: Record<'sm' | 'md' | 'lg', string> = {
   lg: 'min-h-[600px]',
 };
 
-export default function EmptyState({ title, msg, icon, showIcon = true, action, size = 'md' }: EmptyStateProps) {
+export default function EmptyState({
+  title,
+  msg,
+  icon,
+  showIcon = true,
+  action,
+  size = 'md',
+  className,
+}: EmptyStateProps) {
   return (
-    <div className={cn('container flex flex-col justify-center items-center', sizeClassMap[size])}>
+    <div className={cn('container flex flex-col justify-center items-center', sizeClassMap[size], className)}>
       {showIcon && (
         <div className="mx-auto mb-4">
           {isValidElement(icon) ? (

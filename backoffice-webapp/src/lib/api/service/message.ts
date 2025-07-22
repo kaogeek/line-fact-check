@@ -26,7 +26,7 @@ export function createMessage(topicId: string, message: string): Promise<Message
   }, 'createMessage');
 }
 
-export const dataList: Message[] = [
+const dataList: Message[] = [
   {
     id: '1',
     code: 'MSG001',

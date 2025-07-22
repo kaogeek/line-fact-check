@@ -12,7 +12,15 @@ interface ErrorStateProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export default function ErrorState({ title, msg, icon, showIcon = true, action, size = 'md' }: ErrorStateProps) {
+export default function ErrorState({
+  title,
+  msg,
+  icon,
+  showIcon = true,
+  action,
+  size = 'md',
+  className,
+}: ErrorStateProps & { className?: string }) {
   return (
     <EmptyState
       title={title || t('common.error.defaultTitle')}
@@ -21,6 +29,7 @@ export default function ErrorState({ title, msg, icon, showIcon = true, action, 
       showIcon={showIcon}
       action={action}
       size={size}
-    ></EmptyState>
+      className={className}
+    />
   );
 }

@@ -13,18 +13,18 @@ rm -f result
 echo 'Building factcheck image'
 nix build .#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
-docker images factcheck --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck:compose
+docker images factcheck/api --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck/api:compose
 
 rm -f result
 echo 'Building PostgreSQL image...'
 nix build .#docker-postgres-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
-docker images postgres-factcheck --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} postgres-factcheck:compose
+docker images factcheck/postgres --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck/postgres:compose
 
 rm -f result
 echo 'Building backoffice webapp image...'
 nix build .#docker-backoffice-webapp --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
-docker images backoffice-webapp --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} backoffice-webapp:compose
+docker images factcheck/backoffice-webapp --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck/backoffice-webapp:compose
 
 echo 'All builds completed successfully'

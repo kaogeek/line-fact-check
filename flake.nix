@@ -156,8 +156,6 @@ rec {
             cp -r ${self.packages.${pkgs.system}.backoffice-webapp}/* $out/usr/share/nginx/html/
           '';
           config = {
-            Entrypoint = [ "nginx" ];
-            Cmd = [ "-g" "daemon off;" ];
             ExposedPorts = {
               "80/tcp" = {};
             };

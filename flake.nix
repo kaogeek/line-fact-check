@@ -102,8 +102,8 @@ rec {
         };
 
         # PostgreSQL Docker image for integration tests
-        # nix build .#docker-postgres-it-test && docker load < result
-        docker-postgres-it-test = pkgs.dockerTools.buildImage {
+        # nix build .#docker-postgres-factcheck && docker load < result
+        docker-postgres-factcheck = pkgs.dockerTools.buildImage {
           name = "postgres-factcheck";
           tag = "16";
           fromImage = pkgs.dockerTools.pullImage {
@@ -111,9 +111,9 @@ rec {
             imageDigest = "sha256:c0aab7962b283cf24a0defa5d0d59777f5045a7be59905f21ba81a20b1a110c9";
             finalImageName = "postgres";
             finalImageTag = "16";
-            sha256 = if pkgs.system == "x86_64-darwin" then
-              "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-            else if pkgs.system == "aarch64-darwin" then
+            sha256 = if pkgs.system == "aarch64-darwin" then
+              "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
+            else if pkgs.system == "aarch64-linux" then
               "sha256-EdHeqBwnd84kFi2QEFbDT+eE/F1r09OFDVvp56MS+RQ="
             else
               "sha256-TWrE5ZILio0f+WKvyWjOvCIc6+diPhPeVQoPR32JSdw=";
@@ -128,6 +128,39 @@ rec {
             Env = [
               "POSTGRES_DB=factcheck"
             ];
+          };
+        };
+
+        # NGINX Docker image for serving frontend static files
+        # nix build .#docker-backoffice-webapp && docker load < result
+        docker-backoffice-webapp = pkgs.dockerTools.buildImage {
+          name = "backoffice-webapp";
+          tag = version;
+          fromImage = if pkgs.lib.strings.hasPrefix "aarch64" pkgs.system then pkgs.dockerTools.pullImage {
+            imageName = "arm64v8/nginx";
+            imageDigest = "sha256:fb634803c8e82bf44e6260504c84c1420bcd965ac32d002273d489cb7c6057d9";
+            finalImageName = "arm64v8/nginx";
+            finalImageTag = "stable-alpine";
+            sha256 = "sha256-srzTrhkuvXpOvS42Keir0rZkCsDaymlXEO3fggLu8vE=";
+          } else pkgs.dockerTools.pullImage {
+            imageName = "nginx";
+            imageDigest = "sha256:64a376d12f051d5b97f8825514a7621bfd613ebad1cb1876354b9a42c9b17891";
+            finalImageName = "nginx";
+            finalImageTag = "alpine";
+            sha256 = "sha256-YZcEgn7GaL0LD8EbijdyNKR29XvV9YbCrAA3VlwbXG0=";
+          };
+          copyToRoot = pkgs.runCommand "nginx-config-backoffice-webapp" {} ''
+            mkdir -p $out/etc/nginx/conf.d
+            mkdir -p $out/usr/share/nginx/html
+            # Copy static files
+            cp -r ${self.packages.${pkgs.system}.backoffice-webapp}/* $out/usr/share/nginx/html/
+          '';
+          config = {
+            Entrypoint = [ "/docker-entrypoint.sh" ];
+            Cmd = [ "nginx" "-g" "daemon off;" ];
+            ExposedPorts = {
+              "80/tcp" = {};
+            };
           };
         };
       });
@@ -191,7 +224,7 @@ rec {
           shellHook = ''
             echo "Entering Nix shell go-it-test"
             echo "Loading PostgreSQL image from Nix..."
-            docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}
+            docker load < ${self.packages.${pkgs.system}.docker-postgres-factcheck}
             
             echo "Starting PostgreSQL container for integration tests..."
             docker run -d \

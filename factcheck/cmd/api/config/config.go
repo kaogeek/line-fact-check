@@ -24,7 +24,7 @@ type Postgres struct {
 }
 
 type Config struct {
-	AppName  string `env:"APP_NAME"`
+	AppName  string `env:"APP_NAME, default=factcheck-api"`
 	HTTP     HTTP
 	Postgres Postgres
 }

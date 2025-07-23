@@ -4,14 +4,21 @@ line-fact-check is a free and open source fact checker platform.
 
 It is structured as a multi-language monorepo, with focus on cross-platform development.
 
-# Running this project
+# Running this project with Docker Compose (WIP 90%)
+
+> Note: this Docker Compose setup uses Docker daemon socket mount for it to be able
+> to load images to host Docker daemon. This has security implications, but since everything
+> is controlled by Nix, the risk is minimized.
+>
+> We still need a better way to pin Docker Compose's services to images built by the build service.
 
 Because Nix use is encouraged in the build process, the best way to bring up the project's environment
-is to use Docker Compose to fire up a `nixos/nix` container to build and run images locally.
+is to use Docker Compose to fire up a `nixos/nix` container to build and run images locally without
+having to install Nix on your local machine.
 
-To simplify and reduce Nix builds, we use stateful multi-stage Docker Compose definition for each compose run.
+To pre-build, build, or rebuild the images, run
 
-To pre-build the images, run
+> Note that this has a side-effect of loading whatever images we're building with `compose` tag
 
 ```sh
 # Start build-images service
@@ -26,6 +33,11 @@ After `build-images` has finished, we can bring up other components:
 docker-compose up
 ```
 
+To simplify and minimize Nix build time, we use stateful multi-stage Docker Compose definition for each compose run.
+Each run is also attached to a Docker volume, which is shared across runs, so that we can cache Nix store across builds.
+
+You must manually clean up your Nix store cache volume.
+
 ## Docker Compose build service `build-images`
 
 `build-images` is our build service for our compose.
@@ -35,12 +47,16 @@ when it starts. That is used to build images for the entire compose.
 
 The built images is tagged with `latest`, so that downstream app services can find them.
 
-To rebuild images for the compose after code changes,
-bring current compose down and bring up a new `build-images`.
-
-## Docker Compose app services
+## Docker Compose app component services
 
 The rest of services are our app components: the HTTP backend, frontend, and PostgreSQL database.
+To rebuild images for the compose after code changes, bring current compose down and bring up
+a new `build-images`.
+
+If rebuilding does not work (i.e. app components still point to old versions),
+try removing the old images before bringing up `build-images` again,
+or use [our cheat sheet](#cheat-sheet-1-using-nixos-container-to-build-docker-images-on-macos).
+to manually build new images.
 
 # Nix flake
 

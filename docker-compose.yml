@@ -13,7 +13,7 @@ services:
 
   # PostgreSQL service using the built image
   factcheck-postgres:
-    image: postgres-factcheck:16
+    image: postgres-factcheck:compose
     pull_policy: never
     depends_on:
       build-images:
@@ -34,7 +34,7 @@ services:
 
   # Factcheck API service using the built image
   factcheck-api:
-    image: factcheck:latest
+    image: factcheck:compose
     pull_policy: never
     depends_on:
       build-images:
@@ -61,7 +61,7 @@ services:
 
   # Backoffice webapp service using the built image
   backoffice-webapp:
-    image: backoffice-webapp:latest
+    image: backoffice-webapp:compose
     pull_policy: never
     depends_on:
       build-images:

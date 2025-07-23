@@ -4,6 +4,7 @@ services:
     image: nixos/nix:latest
     restart: "no"
     volumes:
+      - factcheck-nix_store:/nix/store
       - ..:/source
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/build-images.sh:/build-images.sh
@@ -24,7 +25,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - factcheck-postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d factcheck"]
       interval: 10s
@@ -69,4 +70,5 @@ services:
       - "3000:80"
 
 volumes:
-  postgres_data:
+  factcheck-nix_store:
+  factcheck-postgres_data:

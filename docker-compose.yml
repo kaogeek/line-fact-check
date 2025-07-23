@@ -5,9 +5,9 @@ services:
     restart: "no"
     volumes:
       - factcheck-nix_store:/nix/store
-      - ..:/source
+      - .:/source
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./scripts/build-images.sh:/build-images.sh
+      - ./compose/scripts/build-images.sh:/build-images.sh
     working_dir: /source
     command: nix-shell -p docker --run "bash /build-images.sh"
 
@@ -34,7 +34,7 @@ services:
 
   # Factcheck API service using the built image
   factcheck-api:
-    image: factcheck
+    image: factcheck:latest
     pull_policy: never
     depends_on:
       build-images:
@@ -51,7 +51,7 @@ services:
       POSTGRES_PASSWORD: postgres
       FACTCHECKAPI_LISTEN_ADDRESS: ":8080"
     volumes:
-      - ./scripts/wait-for-postgres.sh:/wait-for-postgres.sh
+      - ./compose/scripts/wait-for-postgres.sh:/wait-for-postgres.sh
     command: >
       sh -c "
         chmod +x /wait-for-postgres.sh &&
@@ -61,7 +61,7 @@ services:
 
   # Backoffice webapp service using the built image
   backoffice-webapp:
-    image: backoffice-webapp
+    image: backoffice-webapp:latest
     pull_policy: never
     depends_on:
       build-images:

@@ -2,6 +2,46 @@
 
 line-fact-check is a free and open source fact checker platform.
 
+It is structured as a multi-language monorepo, with focus on cross-platform development.
+
+# Running this project
+
+Because Nix use is encouraged in the build process, the best way to bring up the project's environment
+is to use Docker Compose to fire up a `nixos/nix` container to build and run images locally.
+
+To simplify and reduce Nix builds, we use stateful multi-stage Docker Compose definition for each compose run.
+
+To pre-build the images, run
+
+```sh
+# Start build-images service
+# This will build the Docker images and load it to your host Docker daemon
+
+docker-compose up build-images
+```
+
+After `build-images` has finished, we can bring up other components:
+
+```sh
+docker-compose up
+```
+
+## Docker Compose build service `build-images`
+
+`build-images` is our build service for our compose.
+
+The service *is stateful* in that it copies your working directory into the container
+when it starts. That is used to build images for the entire compose.
+
+The built images is tagged with `latest`, so that downstream app services can find them.
+
+To rebuild images for the compose after code changes,
+bring current compose down and bring up a new `build-images`.
+
+## Docker Compose app services
+
+The rest of services are our app components: the HTTP backend, frontend, and PostgreSQL database.
+
 # Nix flake
 
 We use Nix flake to pin everything and have reproducible builds.
@@ -21,7 +61,7 @@ nix build\
 
 This ensures that every one of us and the pipelines always have the same build and test environment.
 
-# Nix outputs
+# Nix sheet cheat
 
 The project's outputs or artifacts are all defined as flake outputs.
 
@@ -41,9 +81,12 @@ docker run -it nixos/nix:latest
 
 ## Cheat sheet 1: using NixOS container to build Docker images on macOS
 
-We can easily build Docker images from any Git commits in our repository.
+The simplest way to run this project via Nix is by referencing the remote GitHub repository.
+We do this by running a NixOS container (with mounted volume).
 
-We do this by running a NixOS container (with mounted volume). We then use Nix inside that to build our image within the container. We finish off by copying the result
+We then use Nix inside that to build our image within the container.
+We finish off by copying the result to host machine filesystem,
+mounted at /workspace within the container
 
 ```sh
 docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c \

@@ -22,7 +22,7 @@ docker load < result
 rm -f result
 
 echo 'Building PostgreSQL image...'
-nix build .#docker-postgres-it-test --extra-experimental-features nix-command --extra-experimental-features flakes
+nix build .#docker-postgres-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
 
 echo 'All builds completed successfully' 

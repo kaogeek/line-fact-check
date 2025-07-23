@@ -2,7 +2,6 @@ services:
   # Build service that creates all Docker images from Nix flake
   build-images:
     image: nixos/nix:latest
-    restart: "no"
     volumes:
       - ..:/source
       - /var/run/docker.sock:/var/run/docker.sock

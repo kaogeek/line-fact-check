@@ -86,7 +86,7 @@ jobs:
       - name: Test build with Docker
         run: |
           nix develop .#go-develop --command bash -c "
-            nix build .#docker-postgres-it-test
+            nix build .#docker-postgres-factcheck
             nix build .#docker-foo
             nix build .#version
           "

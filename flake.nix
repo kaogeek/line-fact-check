@@ -102,8 +102,8 @@ rec {
         };
 
         # PostgreSQL Docker image for integration tests
-        # nix build .#docker-postgres-it-test && docker load < result
-        docker-postgres-it-test = pkgs.dockerTools.buildImage {
+        # nix build .#docker-postgres-factcheck && docker load < result
+        docker-postgres-factcheck = pkgs.dockerTools.buildImage {
           name = "postgres-factcheck";
           tag = "16";
           fromImage = pkgs.dockerTools.pullImage {
@@ -250,7 +250,7 @@ rec {
           shellHook = ''
             echo "Entering Nix shell go-it-test"
             echo "Loading PostgreSQL image from Nix..."
-            docker load < ${self.packages.${pkgs.system}.docker-postgres-it-test}
+            docker load < ${self.packages.${pkgs.system}.docker-postgres-factcheck}
             
             echo "Starting PostgreSQL container for integration tests..."
             docker run -d \

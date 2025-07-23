@@ -101,7 +101,7 @@ jobs:
             docker load < result
             
             echo "Starting docker-foo container..."
-            docker run -d --name foo-test -p 8080:8080 $(docker images --format "{{.Repository}}:{{.Tag}}" | grep foo | head -1)
+            docker run -d --name foo-test -p 8080:8080 $(docker images --format "{{.Repository}}:{{.Tag}}" | grep factcheck/foo | head -1)
             
             echo "Waiting for foo container to be ready..."
             sleep 5

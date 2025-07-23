@@ -91,7 +91,7 @@ rec {
         };
 
         docker-foo = pkgs.dockerTools.buildImage {
-          name = "foo";
+          name = "factcheck/foo";
           tag = version;
           config = {
             Entrypoint = [ "${self.packages.${pkgs.system}.foo}/bin/foo" ];
@@ -233,7 +233,7 @@ rec {
               -e POSTGRES_USER=$POSTGRES_USER \
               -e POSTGRES_DB=$POSTGRES_DB \
               -p 5432:$POSTGRES_PORT \
-              postgres-factcheck:16
+              factcheck/postgres:16
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"
             echo "Waiting for PostgreSQL to be ready..."

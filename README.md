@@ -50,16 +50,29 @@ docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c \
     "nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes && cp result /workspace/"
 ```
 
-The command above, while simple, will write result to your `./result`. This is stateful, and will break if run back-to-back. This script will fix that by appending our flake "version" to the name of file:
+## Cheat sheet 2: Cached build of Docker images from local files
+The command above, while simple, will write result to your `./result`. This is stateful, and will break if run back-to-back. This script will fix that by appending our flake "version" to the name of file.
+
+Differences to example above
+
+- Read from local directory instead of remote GitHub repository with `.#docker-factcheck`
+
+- Cache Nix store with simple Docker volume with `-v line-fact-check-nix-store:/nix/store`.
+
+- Unique output, where FLAKE_VERSION is appended to the result image filename
 
 ```sh
-docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c "
-    FLAKE_VERSION=\$(nix eval github:kaogeek/line-fact-check/main#version --extra-experimental-features nix-command --extra-experimental-features flakes --raw)
-  
+docker run --rm -v $(pwd):/workspace -v line-fact-check-nix-store:/nix/store nixos/nix:latest sh -c '
+    cp -r /workspace /source
+    cd source
+
+    export FLAKE_VERSION="$(nix eval --extra-experimental-features nix-command --extra-experimental-features flakes  .#version.text --raw)"
+
     # Build docker-factcheck with unique result name using the actual flake version
-    nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
-  
+    nix build .#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
+
     # Copy the result to workspace
     cp result /workspace/result-factcheck-$FLAKE_VERSION
-"
+    echo "copied to /workspace/result-factcheck-$FLAKE_VERSION"
+'
 ```

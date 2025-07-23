@@ -136,22 +136,22 @@ rec {
         docker-backoffice-webapp = pkgs.dockerTools.buildImage {
           name = "backoffice-webapp";
           tag = version;
-          fromImage = pkgs.dockerTools.pullImage {
+          fromImage = if pkgs.lib.strings.hasPrefix "aarch64" pkgs.system then pkgs.dockerTools.pullImage {
+            imageName = "arm64v8/nginx";
+            imageDigest = "sha256:fb634803c8e82bf44e6260504c84c1420bcd965ac32d002273d489cb7c6057d9";
+            finalImageName = "arm64v8/nginx";
+            finalImageTag = "stable-alpine";
+            sha256 = "sha256-srzTrhkuvXpOvS42Keir0rZkCsDaymlXEO3fggLu8vE=";
+          } else pkgs.dockerTools.pullImage {
             imageName = "nginx";
             imageDigest = "sha256:64a376d12f051d5b97f8825514a7621bfd613ebad1cb1876354b9a42c9b17891";
             finalImageName = "nginx";
             finalImageTag = "alpine";
-            sha256 = if pkgs.system == "x86_64-darwin" then
-              "sha256-x86_64-darwin"
-            else if pkgs.system == "aarch64-darwin" then
-              "sha256-arch64-darwin"
-            else
-              "sha256-YZcEgn7GaL0LD8EbijdyNKR29XvV9YbCrAA3VlwbXG0=";
+            sha256 = "sha256-YZcEgn7GaL0LD8EbijdyNKR29XvV9YbCrAA3VlwbXG0=";
           };
           copyToRoot = pkgs.runCommand "nginx-config-backoffice-webapp" {} ''
             mkdir -p $out/etc/nginx/conf.d
             mkdir -p $out/usr/share/nginx/html
-            
             # Copy static files
             cp -r ${self.packages.${pkgs.system}.backoffice-webapp}/* $out/usr/share/nginx/html/
           '';

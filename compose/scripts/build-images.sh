@@ -18,6 +18,9 @@ echo 'Building factcheck image'
 nix build .#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
 
+# Add a latest tag for easier reference
+docker images factcheck --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck:latest
+
 # Clean up for next build
 rm -f result
 

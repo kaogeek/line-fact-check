@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
@@ -34,7 +35,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if resp.StatusCode != http.StatusOK {
-		panic(resp.StatusCode)
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			slog.Error("error closing response body",
+				"error", err,
+				"addr", addr,
+				"url", url,
+				"timeout_ms_read", conf.HTTP.TimeoutMsRead,
+				"timeout_ms_write", conf.HTTP.TimeoutMsWrite,
+			)
+		}
+	}()
+
+	if resp.StatusCode == http.StatusOK {
+		return
 	}
+	slog.Error("got wrong code",
+		"actual", resp.StatusCode,
+		"expected", http.StatusOK,
+	)
+	os.Exit(1)
 }

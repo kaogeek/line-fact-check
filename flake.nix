@@ -87,6 +87,16 @@ rec {
             ExposedPorts = {
               "8080/tcp" = {};
             };
+            Healthcheck = {
+              Test = [
+                "CMD"
+                "${self.packages.${pkgs.system}.factcheck}/bin/healthcheck"
+              ];
+              StartPeriod = 5000000000; # 5 seconds
+              Interval = 15000000000; # 15 seconds
+              Timeout = 5000000000;  # 5 seconds
+              Retries = 3;
+            };
           };
         };
 

@@ -83,36 +83,6 @@ jobs:
             go test -race -count=1 -json ./... | tee $ARTIFACT_FOO
           "
 
-      - name: Test build with Docker
-        run: |
-          nix develop .#go-develop --command bash -c "
-            nix build .#docker-postgres-factcheck
-            nix build .#docker-foo
-            nix build .#version
-          "
-
-      - name: Test package with Docker
-        if: matrix.os != 'macos-latest'
-        run: |
-          nix develop .#go-develop --command bash -c "
-            nix build .#docker-foo
-            # Test docker-foo image functionality
-            echo "Loading docker-foo image..."
-            docker load < result
-            
-            echo "Starting docker-foo container..."
-            docker run -d --name foo-test -p 8080:8080 $(docker images --format "{{.Repository}}:{{.Tag}}" | grep foo | head -1)
-            
-            echo "Waiting for foo container to be ready..."
-            sleep 5
-            
-            echo "Testing health endpoint..."
-            curl -f http://localhost:8080/health || (echo "Health check failed" && docker logs foo-test && exit 1)
-
-            echo "Cleaning up..."
-            docker stop foo-test && docker rm foo-test
-          "
-
       - name: Test factcheck (integration test)
         if: matrix.os != 'macos-latest'
         run: |

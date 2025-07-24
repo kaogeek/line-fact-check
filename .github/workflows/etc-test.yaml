@@ -1,0 +1,55 @@
+name: test etc
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  test:
+    name: Test other aspects of projects
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        go-version:
+          - stable
+          - "" # empty string = read version from go.mod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+        with:
+          fetch-depth: "0"
+
+      - name: Setup Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Test build with Nix
+        run: |
+          nix develop .#go-develop --command bash -c "
+            nix build .#factcheck
+            nix build .#backoffice-webapp
+            nix build .#docker-foo
+            nix build .#docker-postgres-factcheck
+            nix build .#version
+          "
+
+      - name: Test package with Docker
+        if: matrix.os != 'macos-latest'
+        run: |
+          nix develop .#go-develop --command bash -c "
+            nix build .#docker-foo
+            # Test docker-foo image functionality
+            echo "Loading docker-foo image..."
+            docker load < result
+            
+            echo "Starting docker-foo container..."
+            docker run -d --name foo-test -p 8080:8080 $(docker images --format "{{.Repository}}:{{.Tag}}" | grep foo | head -1)
+            
+            echo "Waiting for foo container to be ready..."
+            sleep 5
+            
+            echo "Testing health endpoint..."
+            curl -f http://localhost:8080/health || (echo "Health check failed" && docker logs foo-test && exit 1)
+
+            echo "Cleaning up..."
+            docker stop foo-test && docker rm foo-test
+          "

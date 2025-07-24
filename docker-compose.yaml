@@ -13,7 +13,7 @@ services:
 
   # PostgreSQL service using the built image
   factcheck-postgres:
-    image: postgres-factcheck:compose
+    image: factcheck/postgres:compose
     pull_policy: never
     depends_on:
       build-images:
@@ -27,7 +27,7 @@ services:
     volumes:
       - factcheck-postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d factcheck"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,11 +61,11 @@ services:
 
   # Backoffice webapp service using the built image
   backoffice-webapp:
-    image: backoffice-webapp:compose
+    image: factcheck/backoffice-webapp:compose
     pull_policy: never
     depends_on:
-      build-images:
-        condition: service_completed_successfully
+      factcheck-api:
+        condition: service_healthy
     ports:
       - "3000:80"
 

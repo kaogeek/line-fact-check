@@ -87,11 +87,21 @@ rec {
             ExposedPorts = {
               "8080/tcp" = {};
             };
+            Healthcheck = {
+              Test = [
+                "CMD"
+                "${self.packages.${pkgs.system}.factcheck}/bin/healthcheck"
+              ];
+              StartPeriod = 5000000000; # 5 seconds
+              Interval = 15000000000; # 15 seconds
+              Timeout = 5000000000;  # 5 seconds
+              Retries = 3;
+            };
           };
         };
 
         docker-foo = pkgs.dockerTools.buildImage {
-          name = "foo";
+          name = "factcheck/foo";
           tag = version;
           config = {
             Entrypoint = [ "${self.packages.${pkgs.system}.foo}/bin/foo" ];
@@ -104,7 +114,7 @@ rec {
         # PostgreSQL Docker image for integration tests
         # nix build .#docker-postgres-factcheck && docker load < result
         docker-postgres-factcheck = pkgs.dockerTools.buildImage {
-          name = "postgres-factcheck";
+          name = "factcheck/postgres";
           tag = "16";
           fromImage = pkgs.dockerTools.pullImage {
             imageName = "postgres";
@@ -134,7 +144,7 @@ rec {
         # NGINX Docker image for serving frontend static files
         # nix build .#docker-backoffice-webapp && docker load < result
         docker-backoffice-webapp = pkgs.dockerTools.buildImage {
-          name = "backoffice-webapp";
+          name = "factcheck/backoffice-webapp";
           tag = version;
           fromImage = if pkgs.lib.strings.hasPrefix "aarch64" pkgs.system then pkgs.dockerTools.pullImage {
             imageName = "arm64v8/nginx";
@@ -233,7 +243,7 @@ rec {
               -e POSTGRES_USER=$POSTGRES_USER \
               -e POSTGRES_DB=$POSTGRES_DB \
               -p 5432:$POSTGRES_PORT \
-              postgres-factcheck:16
+              factcheck/postgres:16
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"
             echo "Waiting for PostgreSQL to be ready..."

@@ -80,7 +80,7 @@ rec {
         # To build and load the image:
         # nix build .#docker-factcheck && docker load < result
         docker-factcheck = pkgs.dockerTools.buildImage {
-          name = "factcheck/api";
+          name = "factcheck";
           tag = version;
           config = {
             Entrypoint = [ "${self.packages.${pkgs.system}.factcheck}/bin/api" ];

@@ -13,7 +13,7 @@ rm -f result
 echo 'Building factcheck image'
 nix build .#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
 docker load < result
-docker images factcheck/api --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck/api:compose
+docker images factcheck --format "table {{.Repository}}:{{.Tag}}" | grep -v "TAG" | head -1 | xargs -I {} docker tag {} factcheck:compose
 
 rm -f result
 echo 'Building PostgreSQL image...'

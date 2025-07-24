@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,6 +19,10 @@ func main() {
 	c := http.Client{
 		Timeout: time.Millisecond * time.Duration(timeoutMs),
 	}
+
+	url := fmt.Sprintf("http://localhost%s/health", addr)
+	slog.Info("healthcheck", "url", url, "FACTCHECKAPI_LISTEN_ADDRESS", addr, "timeout_ms", timeoutMs)
+
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost%s/health", addr), nil)
 	if err != nil {
 		panic(err)

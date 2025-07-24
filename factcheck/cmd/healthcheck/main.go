@@ -4,25 +4,28 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
+
+	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 )
 
 func main() {
-	addr := os.Getenv("FACTCHECKAPI_LISTEN_ADDRESS")
-	timeoutEnv := os.Getenv("FACTCHECKAPI_TIMEOUTMS_WRITE")
-	timeoutMs, err := strconv.Atoi(timeoutEnv)
+	conf, err := config.New()
 	if err != nil {
-		timeoutMs = 2000
+		panic(err)
 	}
 	c := http.Client{
-		Timeout: time.Millisecond * time.Duration(timeoutMs),
+		Timeout: time.Millisecond * time.Duration(conf.HTTP.TimeoutMsRead),
 	}
+	addr := conf.HTTP.ListenAddr
+	url := fmt.Sprintf("http://0.0.0.0%s/health", addr) // TODO: port or addr config?
 
-	url := fmt.Sprintf("http://0.0.0.0%s/health", addr)
-	slog.Info("healthcheck", "url", url, "FACTCHECKAPI_LISTEN_ADDRESS", addr, "timeout_ms", timeoutMs)
-
+	slog.Info("healthcheck",
+		"addr", addr,
+		"url", url,
+		"timeout_ms_read", conf.HTTP.TimeoutMsRead,
+		"timeout_ms_write", conf.HTTP.TimeoutMsWrite,
+	)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		panic(err)

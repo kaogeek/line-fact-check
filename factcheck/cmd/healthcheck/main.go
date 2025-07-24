@@ -23,7 +23,7 @@ func main() {
 	url := fmt.Sprintf("http://0.0.0.0%s/health", addr)
 	slog.Info("healthcheck", "url", url, "FACTCHECKAPI_LISTEN_ADDRESS", addr, "timeout_ms", timeoutMs)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost%s/health", addr), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://0.0.0.0%s/health", addr), nil)
 	if err != nil {
 		panic(err)
 	}

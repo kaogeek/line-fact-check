@@ -38,12 +38,24 @@ CREATE TABLE messages_v2 (
     id         UUID NOT NULL PRIMARY KEY,
     user_id    text NOT NULL,
     topic_id   UUID REFERENCES topics(id) ON DELETE SET NULL,
+    group_id   UUID REFERENCES messages_v2_group(id) ON DELETE SET NULL,
     type       text NOT NULL,
     text       text NOT NULL,
     language   text,
     metadata   jsonb,
     created_at timestamptz NOT NULL,
     updated_at timestamptz
+);
+
+-- MessagesV2Group table (groups messages with identical text)
+CREATE TABLE messages_v2_group (
+    id         UUID NOT NULL PRIMARY KEY,
+    topic_id   UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+    name       text,
+    text       text,
+    text_sha1  text,
+    created_at timestamptz,
+    updated_at timestamptz NOT NULL
 );
 
 -- Indexes for better performance
@@ -58,6 +70,10 @@ CREATE INDEX idx_messages_created_at ON messages(created_at);
 CREATE INDEX idx_messages_language ON messages(language);
 CREATE INDEX idx_messages_v2_user_id ON messages_v2(user_id);
 CREATE INDEX idx_messages_v2_topic_id ON messages_v2(topic_id);
+CREATE INDEX idx_messages_v2_group_id ON messages_v2(group_id);
 CREATE INDEX idx_messages_v2_type ON messages_v2(type);
 CREATE INDEX idx_messages_v2_created_at ON messages_v2(created_at);
-CREATE INDEX idx_messages_v2_language ON messages_v2(language); 
+CREATE INDEX idx_messages_v2_language ON messages_v2(language);
+CREATE INDEX idx_messages_v2_group_topic_id ON messages_v2_group(topic_id);
+CREATE INDEX idx_messages_v2_group_text_sha1 ON messages_v2_group(text_sha1);
+CREATE INDEX idx_messages_v2_group_created_at ON messages_v2_group(created_at); 

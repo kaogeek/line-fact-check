@@ -24,10 +24,21 @@ type MessagesV2 struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    string             `json:"user_id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
 	Type      string             `json:"type"`
 	Text      string             `json:"text"`
 	Language  pgtype.Text        `json:"language"`
 	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MessagesV2Group struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Name      pgtype.Text        `json:"name"`
+	Text      pgtype.Text        `json:"text"`
+	TextSha1  pgtype.Text        `json:"text_sha1"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }

@@ -219,3 +219,43 @@ DELETE FROM messages_v2 WHERE id = $1;
 
 -- name: ListMessagesV2ByTopic :many
 SELECT * FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC;
+
+-- name: CreateMessageV2Group :one
+INSERT INTO messages_v2_group (
+    id, topic_id, name, text, text_sha1, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING *;
+
+-- name: UpdateMessageV2GroupName :one
+UPDATE messages_v2_group SET 
+    name = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: AssignMessageV2Topic :one
+UPDATE messages_v2_group SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UnassignMessageV2Topic :one
+UPDATE messages_v2_group SET 
+    topic_id = NULL,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: DeleteMessageV2Group :exec
+DELETE FROM messages_v2_group WHERE id = $1;
+
+-- name: AssignMessageV2Group :one
+UPDATE messages_v2 SET 
+    group_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UnassignMessageV2Group :one
+UPDATE messages_v2 SET 
+    group_id = NULL,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;

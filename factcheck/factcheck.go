@@ -78,11 +78,22 @@ type MessageV2 struct {
 	ID        string          `json:"id"`
 	TopicID   string          `json:"topic_id"`
 	UserID    string          `json:"user_id"`
+	GroupID   string          `json:"group_id"`
 	Type      TypeUserMessage `json:"type"`
 	Text      string          `json:"text"`
 	Metadata  json.RawMessage `json:"metadata"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt *time.Time      `json:"updated_at"`
+}
+
+type MessageV2Group struct {
+	ID        string     `json:"id"`
+	TopicID   string     `json:"topic_id"`
+	Name      string     `json:"name"`
+	Text      string     `json:"text"`
+	TextSHA1  string     `json:"text_sha1"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 func (s StatusTopic) IsValid() bool {

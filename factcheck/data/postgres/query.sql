@@ -8,6 +8,9 @@ INSERT INTO topics (
 -- name: GetTopic :one
 SELECT * FROM topics WHERE id = $1;
 
+-- name: TopicExists :one
+SELECT EXISTS (SELECT 1 from topics where id = $1);
+
 -- name: ListTopics :many
 WITH numbered_topics AS (
     SELECT *, 
@@ -241,6 +244,9 @@ INSERT INTO messages_v2_group (
 
 -- name: GetMessageV2Group :one
 SELECT * FROM messages_v2_group WHERE id = $1;
+
+-- name: GetMessageV2GroupBySHA1 :one
+SELECT * FROM messages_v2_group WHERE text_sha1 = $1;
 
 -- name: ListMessageV2GroupsByTopic :many
 SELECT * FROM messages_v2_group WHERE topic_id = $1 ORDER BY created_at ASC;

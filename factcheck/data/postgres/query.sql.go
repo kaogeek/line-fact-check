@@ -655,6 +655,25 @@ func (q *Queries) GetMessageV2Group(ctx context.Context, id pgtype.UUID) (Messag
 	return i, err
 }
 
+const getMessageV2GroupBySHA1 = `-- name: GetMessageV2GroupBySHA1 :one
+SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM messages_v2_group WHERE text_sha1 = $1
+`
+
+func (q *Queries) GetMessageV2GroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessagesV2Group, error) {
+	row := q.db.QueryRow(ctx, getMessageV2GroupBySHA1, textSha1)
+	var i MessagesV2Group
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTopic = `-- name: GetTopic :one
 SELECT id, name, description, status, result, result_status, created_at, updated_at FROM topics WHERE id = $1
 `
@@ -1125,6 +1144,17 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const topicExists = `-- name: TopicExists :one
+SELECT EXISTS (SELECT 1 from topics where id = $1)
+`
+
+func (q *Queries) TopicExists(ctx context.Context, id pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, topicExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const unassignMessageV2FromTopic = `-- name: UnassignMessageV2FromTopic :one

@@ -11,6 +11,7 @@ import (
 type MessagesV2Groups interface {
 	Create(context.Context, factcheck.MessageV2Group, ...Option) (factcheck.MessageV2Group, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error)
+	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageV2Group, error)
 	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageV2Group, error)
 	UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
@@ -88,6 +89,19 @@ func (m *messagesV2Groups) UnassignTopic(ctx context.Context, id string, opts ..
 	result, err := queries.UnassignMessageV2GroupFromTopic(ctx, uuid)
 	if err != nil {
 		return factcheck.MessageV2Group{}, handleNotFound(err, filter{"id": id})
+	}
+	return postgres.ToMessageV2Group(result)
+}
+
+func (m *messagesV2Groups) GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageV2Group, error) {
+	queries := queries(m.queries, options(opts...))
+	sha1Text, err := postgres.Text(sha1)
+	if err != nil {
+		return factcheck.MessageV2Group{}, err
+	}
+	result, err := queries.GetMessageV2GroupBySHA1(ctx, sha1Text)
+	if err != nil {
+		return factcheck.MessageV2Group{}, handleNotFound(err, filter{"sha1": sha1})
 	}
 	return postgres.ToMessageV2Group(result)
 }

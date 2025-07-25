@@ -154,7 +154,8 @@ func SHA1Base64(s string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("base64 error: %w", err)
 	}
-	return buf.String(), err
+	b64 := buf.String()
+	return strings.ToLower(b64), nil
 }
 
 func sha1sum(b []byte) []byte { return checksum.Sum(b) }

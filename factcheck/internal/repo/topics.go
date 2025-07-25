@@ -14,6 +14,7 @@ import (
 type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
+	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
@@ -52,6 +53,19 @@ func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([
 // ListAll retrieves all topics (backward compatibility)
 func (t *topics) ListAll(ctx context.Context) ([]factcheck.Topic, error) {
 	return t.List(ctx, 0, 0)
+}
+
+func (t *topics) Exists(ctx context.Context, id string, opts ...Option) (bool, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
+	if err != nil {
+		return false, err
+	}
+	exists, err := queries.TopicExists(ctx, uuid)
+	if err != nil {
+		return false, handleNotFound(err, filter{"id": id})
+	}
+	return exists, nil
 }
 
 func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {

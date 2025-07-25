@@ -23,9 +23,7 @@ type messages struct {
 
 // NewMessages creates a new message repository
 func NewMessages(queries *postgres.Queries) Messages {
-	return &messages{
-		queries: queries,
-	}
+	return &messages{queries: queries}
 }
 
 // Create creates a new message using the message adapter

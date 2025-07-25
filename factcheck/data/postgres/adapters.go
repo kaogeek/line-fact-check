@@ -262,6 +262,137 @@ func ToUserMessages(data []UserMessage) ([]factcheck.UserMessage, error) {
 	return utils.Map(data, ToUserMessage)
 }
 
+func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
+	id, err := UUID(m.ID)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	// Could be nil
+	topicID, _ := UUID(m.TopicID)
+	createdAt, err := Timestamptz(m.CreatedAt)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	updatedAt, err := TimestamptzNullable(m.UpdatedAt)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	metadata, err := json.Marshal(m.Metadata)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	return CreateMessageV2Params{
+		ID:        id,
+		UserID:    m.UserID,
+		TopicID:   topicID,
+		Type:      string(m.Type),
+		Text:      m.Text,
+		Language:  pgtype.Text{}, // MessageV2 doesn't have Language field
+		Metadata:  metadata,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
+
+func ToMessageV2(data MessagesV2) (factcheck.MessageV2, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.MessageV2{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.MessageV2{}, err
+	}
+	var metadata json.RawMessage
+	if len(data.Metadata) > 0 {
+		metadata = json.RawMessage(data.Metadata)
+	}
+	message := factcheck.MessageV2{
+		ID:        id,
+		UserID:    data.UserID,
+		Type:      factcheck.TypeUserMessage(data.Type),
+		Text:      data.Text,
+		Metadata:  metadata,
+		CreatedAt: createdAt,
+		UpdatedAt: TimeNullable(data.UpdatedAt),
+	}
+	if data.TopicID.Valid {
+		message.TopicID = data.TopicID.String()
+	}
+	if data.GroupID.Valid {
+		message.GroupID = data.GroupID.String()
+	}
+	// MessageV2 doesn't have Language field
+	return message, nil
+}
+
+func ToMessagesV2(data []MessagesV2) ([]factcheck.MessageV2, error) {
+	return utils.Map(data, ToMessageV2)
+}
+
+func MessageV2GroupCreator(g factcheck.MessageV2Group) (CreateMessageV2GroupParams, error) {
+	id, err := UUID(g.ID)
+	if err != nil {
+		return CreateMessageV2GroupParams{}, err
+	}
+	topicID, err := UUID(g.TopicID)
+	if err != nil {
+		return CreateMessageV2GroupParams{}, err
+	}
+	createdAt, err := Timestamptz(g.CreatedAt)
+	if err != nil {
+		return CreateMessageV2GroupParams{}, err
+	}
+	updatedAt, err := TimestamptzNullable(g.UpdatedAt)
+	if err != nil {
+		return CreateMessageV2GroupParams{}, err
+	}
+	return CreateMessageV2GroupParams{
+		ID:        id,
+		TopicID:   topicID,
+		Name:      TextNullable(g.Name),
+		Text:      TextNullable(g.Text),
+		TextSha1:  TextNullable(g.TextSHA1),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
+
+func ToMessageV2Group(data MessagesV2Group) (factcheck.MessageV2Group, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.MessageV2Group{}, err
+	}
+	topicID, err := FromUUID(data.TopicID)
+	if err != nil {
+		return factcheck.MessageV2Group{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.MessageV2Group{}, err
+	}
+	group := factcheck.MessageV2Group{
+		ID:        id,
+		TopicID:   topicID,
+		CreatedAt: createdAt,
+		UpdatedAt: TimeNullable(data.UpdatedAt),
+	}
+	if data.Name.Valid {
+		group.Name = data.Name.String
+	}
+	if data.Text.Valid {
+		group.Text = data.Text.String
+	}
+	if data.TextSha1.Valid {
+		group.TextSHA1 = data.TextSha1.String
+	}
+	return group, nil
+}
+
+func ToMessageV2Groups(data []MessagesV2Group) ([]factcheck.MessageV2Group, error) {
+	return utils.Map(data, ToMessageV2Group)
+}
+
 func UUID(id string) (pgtype.UUID, error) {
 	var uuid pgtype.UUID
 	err := uuid.Scan(id)

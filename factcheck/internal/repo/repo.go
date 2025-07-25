@@ -19,6 +19,7 @@ type Repository struct {
 	Topics       Topics
 	Messages     Messages
 	UserMessages UserMessages
+	MessagesV2   MessagesV2
 	TxnManager   postgres.TxnManager
 }
 
@@ -34,6 +35,7 @@ func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 		Topics:       NewTopics(queries),
 		Messages:     NewMessages(queries),
 		UserMessages: NewUserMessages(queries),
+		MessagesV2:   nil,
 		TxnManager:   postgres.NewTxnManager(pool),
 	}
 }

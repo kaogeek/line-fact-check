@@ -33,9 +33,7 @@ type topics struct {
 
 // NewTopics creates a new topic repository
 func NewTopics(queries *postgres.Queries) Topics {
-	return &topics{
-		queries: queries,
-	}
+	return &topics{queries: queries}
 }
 
 // List retrieves topics with pagination using the topicDomain adapter

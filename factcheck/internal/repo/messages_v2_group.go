@@ -57,6 +57,19 @@ func (m *messagesV2Groups) GetByID(ctx context.Context, id string, opts ...Optio
 	return postgres.ToMessageV2Group(result)
 }
 
+func (m *messagesV2Groups) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageV2Group, error) {
+	queries := queries(m.queries, options(opts...))
+	topicUUID, err := postgres.UUID(topicID)
+	if err != nil {
+		return nil, err
+	}
+	result, err := queries.ListMessageV2GroupsByTopic(ctx, topicUUID)
+	if err != nil {
+		return nil, err
+	}
+	return postgres.ToMessageV2Groups(result)
+}
+
 func (m *messagesV2Groups) AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageV2Group, error) {
 	queries := queries(m.queries, options(opts...))
 	uuid, err := postgres.UUID(id)

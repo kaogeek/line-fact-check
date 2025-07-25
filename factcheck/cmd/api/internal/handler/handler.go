@@ -32,16 +32,24 @@ type Handler interface {
 }
 
 type handler struct {
-	repository   repo.Repository
-	topics       repo.Topics
+	repository repo.Repository
+	topics     repo.Topics
+	messagesv2 repo.MessagesV2
+	groups     repo.MessagesV2Groups
+
+	// TO BE DEPRECATED
+
 	messages     repo.Messages
 	userMessages repo.UserMessages
 }
 
 func New(repo repo.Repository) Handler {
 	return &handler{
-		repository:   repo,
-		topics:       repo.Topics,
+		repository: repo,
+		topics:     repo.Topics,
+		messagesv2: repo.MessagesV2,
+		groups:     repo.MessagesV2Groups,
+
 		messages:     repo.Messages,
 		userMessages: repo.UserMessages,
 	}

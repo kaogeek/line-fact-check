@@ -17,13 +17,15 @@ import (
 // Repository combines all repository interfaces
 // and provides a transaction manager for beginning a transaction
 type Repository struct {
+	TxnManager       postgres.TxnManager
 	Topics           Topics
-	Messages         Messages
-	UserMessages     UserMessages
 	MessagesV2       MessagesV2
 	MessagesV2Groups MessagesV2Groups
 
-	TxnManager postgres.TxnManager
+	// TO BE DEPRECATED
+
+	Messages     Messages
+	UserMessages UserMessages
 }
 
 // ErrNotFound is returned when a requested resource is not found

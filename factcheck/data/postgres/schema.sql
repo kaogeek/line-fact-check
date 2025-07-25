@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Topics table
 CREATE TABLE topics (
     id            UUID NOT NULL PRIMARY KEY,
@@ -33,6 +35,17 @@ CREATE TABLE messages (
     updated_at     timestamptz
 );
 
+-- MessagesV2Group table (groups messages with identical text)
+CREATE TABLE messages_v2_group (
+    id         UUID NOT NULL PRIMARY KEY,
+    topic_id   UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+    name       text,
+    text       text,
+    text_sha1  text,
+    created_at timestamptz,
+    updated_at timestamptz NOT NULL
+);
+
 -- MessagesV2 table (replaces messages + user_messages relationship)
 CREATE TABLE messages_v2 (
     id         UUID NOT NULL PRIMARY KEY,
@@ -48,18 +61,6 @@ CREATE TABLE messages_v2 (
     updated_at timestamptz
 );
 
--- MessagesV2Group table (groups messages with identical text)
-CREATE TABLE messages_v2_group (
-    id         UUID NOT NULL PRIMARY KEY,
-    topic_id   UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
-    name       text,
-    text       text,
-    text_sha1  text,
-    created_at timestamptz,
-    updated_at timestamptz NOT NULL
-);
-
--- Indexes for better performance
 CREATE INDEX idx_topics_status ON topics(status);
 CREATE INDEX idx_topics_created_at ON topics(created_at);
 CREATE INDEX idx_user_messages_type ON user_messages(type);
@@ -78,4 +79,6 @@ CREATE INDEX idx_messages_v2_created_at ON messages_v2(created_at);
 CREATE INDEX idx_messages_v2_language ON messages_v2(language);
 CREATE INDEX idx_messages_v2_group_topic_id ON messages_v2_group(topic_id);
 CREATE INDEX idx_messages_v2_group_text_sha1 ON messages_v2_group(text_sha1);
-CREATE INDEX idx_messages_v2_group_created_at ON messages_v2_group(created_at); 
+CREATE INDEX idx_messages_v2_group_created_at ON messages_v2_group(created_at);
+
+COMMIT; 

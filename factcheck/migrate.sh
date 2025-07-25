@@ -13,13 +13,6 @@ SCHEMA_FILE="data/postgres/schema.sql"
 
 echo "Running database migration (DROP + CREATE)..."
 
-# Check if PostgreSQL container is running
-if ! docker ps --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
-    echo "Error: PostgreSQL container '${CONTAINER_NAME}' is not running."
-    echo "Please start it first with: ./postgres.sh"
-    exit 1
-fi
-
 # Check if schema file exists
 if [ ! -f "$SCHEMA_FILE" ]; then
     echo "Error: Schema file not found at $SCHEMA_FILE"
@@ -33,6 +26,8 @@ docker exec -i ${CONTAINER_NAME} psql -U ${DB_USER} -d ${DB_NAME} << EOF
 DROP TABLE IF EXISTS user_messages CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS topics CASCADE;
+DROP TABLE IF EXISTS messages_v2 CASCADE;
+DROP TABLE IF EXISTS messages_v2_groups CASCADE;
 EOF
 
 echo "Creating fresh schema from $SCHEMA_FILE..."

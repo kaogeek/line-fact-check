@@ -25,6 +25,7 @@ type MessagesV2 struct {
 	UserID    string             `json:"user_id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
 	GroupID   pgtype.UUID        `json:"group_id"`
+	TypeUser  string             `json:"type_user"`
 	Type      string             `json:"type"`
 	Text      string             `json:"text"`
 	Language  pgtype.Text        `json:"language"`

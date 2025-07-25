@@ -285,7 +285,8 @@ func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 		ID:        id,
 		UserID:    m.UserID,
 		TopicID:   topicID,
-		Type:      string(m.Type),
+		TypeUser:  string(m.TypeUser),
+		Type:      string(m.TypeMessage),
 		Text:      m.Text,
 		Language:  pgtype.Text{}, // MessageV2 doesn't have Language field
 		Metadata:  metadata,
@@ -308,13 +309,14 @@ func ToMessageV2(data MessagesV2) (factcheck.MessageV2, error) {
 		metadata = json.RawMessage(data.Metadata)
 	}
 	message := factcheck.MessageV2{
-		ID:        id,
-		UserID:    data.UserID,
-		Type:      factcheck.TypeUserMessage(data.Type),
-		Text:      data.Text,
-		Metadata:  metadata,
-		CreatedAt: createdAt,
-		UpdatedAt: TimeNullable(data.UpdatedAt),
+		ID:          id,
+		UserID:      data.UserID,
+		TypeUser:    factcheck.TypeUserMessage(data.TypeUser),
+		TypeMessage: factcheck.TypeMessage(data.Type),
+		Text:        data.Text,
+		Metadata:    metadata,
+		CreatedAt:   createdAt,
+		UpdatedAt:   TimeNullable(data.UpdatedAt),
 	}
 	if data.TopicID.Valid {
 		message.TopicID = data.TopicID.String()

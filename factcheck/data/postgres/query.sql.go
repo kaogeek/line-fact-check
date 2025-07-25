@@ -71,7 +71,7 @@ const assignMessageV2ToMessageV2Group = `-- name: AssignMessageV2ToMessageV2Grou
 UPDATE messages_v2 SET 
     group_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at
+WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
 type AssignMessageV2ToMessageV2GroupParams struct {
@@ -87,6 +87,7 @@ func (q *Queries) AssignMessageV2ToMessageV2Group(ctx context.Context, arg Assig
 		&i.UserID,
 		&i.TopicID,
 		&i.GroupID,
+		&i.TypeUser,
 		&i.Type,
 		&i.Text,
 		&i.Language,
@@ -101,7 +102,7 @@ const assignMessageV2ToTopic = `-- name: AssignMessageV2ToTopic :one
 UPDATE messages_v2 SET 
     topic_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at
+WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
 type AssignMessageV2ToTopicParams struct {
@@ -117,6 +118,7 @@ func (q *Queries) AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV
 		&i.UserID,
 		&i.TopicID,
 		&i.GroupID,
+		&i.TypeUser,
 		&i.Type,
 		&i.Text,
 		&i.Language,
@@ -373,16 +375,17 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 
 const createMessageV2 = `-- name: CreateMessageV2 :one
 INSERT INTO messages_v2 (
-    id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+    id, user_id, topic_id, type_user, type, text, language, metadata, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+) RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
 type CreateMessageV2Params struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    string             `json:"user_id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
+	TypeUser  string             `json:"type_user"`
 	Type      string             `json:"type"`
 	Text      string             `json:"text"`
 	Language  pgtype.Text        `json:"language"`
@@ -396,6 +399,7 @@ func (q *Queries) CreateMessageV2(ctx context.Context, arg CreateMessageV2Params
 		arg.ID,
 		arg.UserID,
 		arg.TopicID,
+		arg.TypeUser,
 		arg.Type,
 		arg.Text,
 		arg.Language,
@@ -409,6 +413,7 @@ func (q *Queries) CreateMessageV2(ctx context.Context, arg CreateMessageV2Params
 		&i.UserID,
 		&i.TopicID,
 		&i.GroupID,
+		&i.TypeUser,
 		&i.Type,
 		&i.Text,
 		&i.Language,
@@ -609,7 +614,7 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 }
 
 const getMessageV2 = `-- name: GetMessageV2 :one
-SELECT id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE id = $1
+SELECT id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE id = $1
 `
 
 func (q *Queries) GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error) {
@@ -620,6 +625,7 @@ func (q *Queries) GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2,
 		&i.UserID,
 		&i.TopicID,
 		&i.GroupID,
+		&i.TypeUser,
 		&i.Type,
 		&i.Text,
 		&i.Language,
@@ -754,7 +760,7 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 }
 
 const listMessagesV2ByGroup = `-- name: ListMessagesV2ByGroup :many
-SELECT id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE group_id = $1 ORDER BY created_at ASC
+SELECT id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE group_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error) {
@@ -771,6 +777,7 @@ func (q *Queries) ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID
 			&i.UserID,
 			&i.TopicID,
 			&i.GroupID,
+			&i.TypeUser,
 			&i.Type,
 			&i.Text,
 			&i.Language,
@@ -789,7 +796,7 @@ func (q *Queries) ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID
 }
 
 const listMessagesV2ByTopic = `-- name: ListMessagesV2ByTopic :many
-SELECT id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC
+SELECT id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error) {
@@ -806,6 +813,7 @@ func (q *Queries) ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID
 			&i.UserID,
 			&i.TopicID,
 			&i.GroupID,
+			&i.TypeUser,
 			&i.Type,
 			&i.Text,
 			&i.Language,
@@ -1123,7 +1131,7 @@ const unassignMessageV2FromTopic = `-- name: UnassignMessageV2FromTopic :one
 UPDATE messages_v2 SET 
     topic_id = NULL,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at
+WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
 func (q *Queries) UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID) (MessagesV2, error) {
@@ -1134,6 +1142,7 @@ func (q *Queries) UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID
 		&i.UserID,
 		&i.TopicID,
 		&i.GroupID,
+		&i.TypeUser,
 		&i.Type,
 		&i.Text,
 		&i.Language,

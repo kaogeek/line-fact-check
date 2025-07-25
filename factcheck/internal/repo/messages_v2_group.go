@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
@@ -25,6 +26,12 @@ type messagesV2Groups struct {
 
 func (m *messagesV2Groups) Create(ctx context.Context, group factcheck.MessageV2Group, opts ...Option) (factcheck.MessageV2Group, error) {
 	queries := queries(m.queries, options(opts...))
+	if group.Text == "" {
+		slog.WarnContext(ctx, "empty group.text", "group_id", group.ID)
+	}
+	if group.TextSHA1 == "" {
+		slog.WarnContext(ctx, "empty group.text_sha1", "group_id", group.ID)
+	}
 	params, err := postgres.MessageV2GroupCreator(group)
 	if err != nil {
 		return factcheck.MessageV2Group{}, err

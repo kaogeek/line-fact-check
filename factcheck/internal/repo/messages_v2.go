@@ -14,18 +14,20 @@ type MessagesV2 interface {
 	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageV2, error)
 	AssignTopic(ctx context.Context, messageID string, topicID string, opts ...Option) (factcheck.MessageV2, error)
 	UnassignTopic(ctx context.Context, messageID string, opts ...Option) (factcheck.MessageV2, error)
+	ListByGroup(ctx context.Context, groupID string, opts ...Option) ([]factcheck.MessageV2, error)
+	AssignGroup(ctx context.Context, messageID string, groupID string, opts ...Option) (factcheck.MessageV2, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 }
 
 func NewMessagesV2(queries *postgres.Queries) MessagesV2 {
-	return &messagesv2{queries: queries}
+	return &messagesV2{queries: queries}
 }
 
-type messagesv2 struct {
+type messagesV2 struct {
 	queries *postgres.Queries
 }
 
-func (m *messagesv2) Create(ctx context.Context, msg factcheck.MessageV2, opts ...Option) (factcheck.MessageV2, error) {
+func (m *messagesV2) Create(ctx context.Context, msg factcheck.MessageV2, opts ...Option) (factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
 	params, err := postgres.MessageV2Creator(msg)
 	if err != nil {
@@ -38,20 +40,20 @@ func (m *messagesv2) Create(ctx context.Context, msg factcheck.MessageV2, opts .
 	return postgres.ToMessageV2(created)
 }
 
-func (m *messagesv2) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2, error) {
+func (m *messagesV2) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
-	messageID, err := postgres.UUID(id)
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.MessageV2{}, err
 	}
-	result, err := queries.GetMessageV2(ctx, messageID)
+	result, err := queries.GetMessageV2(ctx, uuid)
 	if err != nil {
 		return factcheck.MessageV2{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return postgres.ToMessageV2(result)
 }
 
-func (m *messagesv2) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageV2, error) {
+func (m *messagesV2) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
 	topicUUID, err := postgres.UUID(topicID)
 	if err != nil {
@@ -64,9 +66,35 @@ func (m *messagesv2) ListByTopic(ctx context.Context, topicID string, opts ...Op
 	return utils.Map(list, postgres.ToMessageV2)
 }
 
-func (m *messagesv2) AssignTopic(ctx context.Context, messageID string, topicID string, opts ...Option) (factcheck.MessageV2, error) {
+func (m *messagesV2) ListByGroup(ctx context.Context, groupID string, opts ...Option) ([]factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
-	msgUUID, err := postgres.UUID(messageID)
+	groupUUID, err := postgres.UUID(groupID)
+	if err != nil {
+		return nil, err
+	}
+	list, err := queries.ListMessagesV2ByGroup(ctx, groupUUID)
+	if err != nil {
+		return nil, err
+	}
+	return utils.Map(list, postgres.ToMessageV2)
+}
+
+func (m *messagesV2) Delete(ctx context.Context, id string, opts ...Option) error {
+	queries := queries(m.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
+	if err != nil {
+		return err
+	}
+	err = queries.DeleteMessageV2(ctx, uuid)
+	if err != nil {
+		return handleNotFound(err, map[string]string{"id": id})
+	}
+	return nil
+}
+
+func (m *messagesV2) AssignTopic(ctx context.Context, messageID string, topicID string, opts ...Option) (factcheck.MessageV2, error) {
+	queries := queries(m.queries, options(opts...))
+	uuid, err := postgres.UUID(messageID)
 	if err != nil {
 		return factcheck.MessageV2{}, err
 	}
@@ -75,7 +103,7 @@ func (m *messagesv2) AssignTopic(ctx context.Context, messageID string, topicID 
 		return factcheck.MessageV2{}, err
 	}
 	msg, err := queries.AssignMessageV2ToTopic(ctx, postgres.AssignMessageV2ToTopicParams{
-		ID:      msgUUID,
+		ID:      uuid,
 		TopicID: topicUUID,
 	})
 	if err != nil {
@@ -84,7 +112,7 @@ func (m *messagesv2) AssignTopic(ctx context.Context, messageID string, topicID 
 	return postgres.ToMessageV2(msg)
 }
 
-func (m *messagesv2) UnassignTopic(ctx context.Context, messageID string, opts ...Option) (factcheck.MessageV2, error) {
+func (m *messagesV2) UnassignTopic(ctx context.Context, messageID string, opts ...Option) (factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
 	uuid, err := postgres.UUID(messageID)
 	if err != nil {
@@ -97,15 +125,22 @@ func (m *messagesv2) UnassignTopic(ctx context.Context, messageID string, opts .
 	return postgres.ToMessageV2(msg)
 }
 
-func (m *messagesv2) Delete(ctx context.Context, id string, opts ...Option) error {
+func (m *messagesV2) AssignGroup(ctx context.Context, messageID string, groupID string, opts ...Option) (factcheck.MessageV2, error) {
 	queries := queries(m.queries, options(opts...))
-	uuid, err := postgres.UUID(id)
+	uuid, err := postgres.UUID(messageID)
 	if err != nil {
-		return err
+		return factcheck.MessageV2{}, err
 	}
-	err = queries.DeleteMessageV2(ctx, uuid)
+	groupUUID, err := postgres.UUID(groupID)
 	if err != nil {
-		return handleNotFound(err, map[string]string{"id": id})
+		return factcheck.MessageV2{}, err
 	}
-	return nil
+	msg, err := queries.AssignMessageV2Group(ctx, postgres.AssignMessageV2GroupParams{
+		ID:      uuid,
+		GroupID: groupUUID,
+	})
+	if err != nil {
+		return factcheck.MessageV2{}, handleNotFound(err, map[string]string{"message_id": messageID, "topic_id": groupID})
+	}
+	return postgres.ToMessageV2(msg)
 }

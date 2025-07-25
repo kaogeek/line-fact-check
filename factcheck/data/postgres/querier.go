@@ -38,6 +38,7 @@ type Querier interface {
 	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)
 	ListMessageV2GroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2Group, error)
 	ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error)
+	ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error)
 	ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error)
 	ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListTopicsRow, error)
 	ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]ListTopicsByStatusRow, error)

@@ -15,12 +15,15 @@ import (
 )
 
 // Repository combines all repository interfaces
+// and provides a transaction manager for beginning a transaction
 type Repository struct {
-	Topics       Topics
-	Messages     Messages
-	UserMessages UserMessages
-	MessagesV2   MessagesV2
-	TxnManager   postgres.TxnManager
+	Topics           Topics
+	Messages         Messages
+	UserMessages     UserMessages
+	MessagesV2       MessagesV2
+	MessagesV2Groups MessagesV2Groups
+
+	TxnManager postgres.TxnManager
 }
 
 // ErrNotFound is returned when a requested resource is not found
@@ -32,11 +35,12 @@ type ErrNotFound struct {
 // New creates a new repository with all implementations
 func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 	return Repository{
-		Topics:       NewTopics(queries),
-		Messages:     NewMessages(queries),
-		UserMessages: NewUserMessages(queries),
-		MessagesV2:   nil,
-		TxnManager:   postgres.NewTxnManager(pool),
+		Topics:           NewTopics(queries),
+		Messages:         NewMessages(queries),
+		UserMessages:     NewUserMessages(queries),
+		MessagesV2:       NewMessagesV2(queries),
+		MessagesV2Groups: NewMessagesV2Groups(queries),
+		TxnManager:       postgres.NewTxnManager(pool),
 	}
 }
 
@@ -59,7 +63,9 @@ func (e *ErrNotFound) Is(target error) bool {
 	return ok
 }
 
-func handleNotFound(err error, filter map[string]string) error {
+type filter map[string]any
+
+func handleNotFound(err error, filter any) error {
 	if errors.Is(err, sql.ErrNoRows) {
 		return &ErrNotFound{
 			Err:    err,

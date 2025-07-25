@@ -49,7 +49,7 @@ func (m *messages) GetByID(ctx context.Context, id string, opts ...Option) (fact
 	}
 	result, err := queries.GetMessage(ctx, messageID)
 	if err != nil {
-		return factcheck.Message{}, handleNotFound(err, map[string]string{"id": id})
+		return factcheck.Message{}, handleNotFound(err, filter{"id": id})
 	}
 	return postgres.ToMessage(result), nil
 }
@@ -88,7 +88,7 @@ func (m *messages) AssignTopic(ctx context.Context, messageID string, topicID st
 		TopicID: topicUUID,
 	})
 	if err != nil {
-		return factcheck.Message{}, handleNotFound(err, map[string]string{"message_id": messageID, "topic_id": topicID})
+		return factcheck.Message{}, handleNotFound(err, filter{"message_id": messageID, "topic_id": topicID})
 	}
 	return postgres.ToMessage(msg), nil
 }
@@ -102,7 +102,7 @@ func (m *messages) Delete(ctx context.Context, id string, opts ...Option) error 
 	}
 	err = queries.DeleteMessage(ctx, uuid)
 	if err != nil {
-		return handleNotFound(err, map[string]string{"id": id})
+		return handleNotFound(err, filter{"id": id})
 	}
 	return nil
 }

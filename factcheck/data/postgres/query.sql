@@ -205,6 +205,12 @@ INSERT INTO messages_v2 (
 -- name: GetMessageV2 :one
 SELECT * FROM messages_v2 WHERE id = $1;
 
+-- name: ListMessagesV2ByTopic :many
+SELECT * FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC;
+
+-- name: ListMessagesV2ByGroup :many
+SELECT * FROM messages_v2 WHERE group_id = $1 ORDER BY created_at ASC;
+
 -- name: AssignMessageV2ToTopic :one
 UPDATE messages_v2 SET 
     topic_id = $2,
@@ -220,8 +226,6 @@ WHERE id = $1 RETURNING *;
 -- name: DeleteMessageV2 :exec
 DELETE FROM messages_v2 WHERE id = $1; 
 
--- name: ListMessagesV2ByTopic :many
-SELECT * FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC;
 
 -- name: CreateMessageV2Group :one
 INSERT INTO messages_v2_group (

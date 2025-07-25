@@ -753,6 +753,41 @@ func (q *Queries) ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) 
 	return items, nil
 }
 
+const listMessagesV2ByGroup = `-- name: ListMessagesV2ByGroup :many
+SELECT id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE group_id = $1 ORDER BY created_at ASC
+`
+
+func (q *Queries) ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error) {
+	rows, err := q.db.Query(ctx, listMessagesV2ByGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MessagesV2
+	for rows.Next() {
+		var i MessagesV2
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.TopicID,
+			&i.GroupID,
+			&i.Type,
+			&i.Text,
+			&i.Language,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMessagesV2ByTopic = `-- name: ListMessagesV2ByTopic :many
 SELECT id, user_id, topic_id, group_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC
 `

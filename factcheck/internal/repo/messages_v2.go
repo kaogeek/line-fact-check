@@ -135,7 +135,7 @@ func (m *messagesV2) AssignGroup(ctx context.Context, messageID string, groupID 
 	if err != nil {
 		return factcheck.MessageV2{}, err
 	}
-	msg, err := queries.AssignMessageV2Group(ctx, postgres.AssignMessageV2GroupParams{
+	msg, err := queries.AssignMessageV2ToMessageV2Group(ctx, postgres.AssignMessageV2ToMessageV2GroupParams{
 		ID:      uuid,
 		GroupID: groupUUID,
 	})

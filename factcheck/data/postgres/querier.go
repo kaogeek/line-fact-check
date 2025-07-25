@@ -12,8 +12,8 @@ import (
 
 type Querier interface {
 	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
-	AssignMessageV2Group(ctx context.Context, arg AssignMessageV2GroupParams) (MessagesV2, error)
 	AssignMessageV2GroupToTopic(ctx context.Context, arg AssignMessageV2GroupToTopicParams) (MessagesV2Group, error)
+	AssignMessageV2ToMessageV2Group(ctx context.Context, arg AssignMessageV2ToMessageV2GroupParams) (MessagesV2, error)
 	AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV2ToTopicParams) (MessagesV2, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
 	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)

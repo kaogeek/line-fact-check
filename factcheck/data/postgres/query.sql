@@ -223,9 +223,14 @@ UPDATE messages_v2 SET
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
+-- name: AssignMessageV2ToMessageV2Group :one
+UPDATE messages_v2 SET 
+    group_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
 -- name: DeleteMessageV2 :exec
 DELETE FROM messages_v2 WHERE id = $1; 
-
 
 -- name: CreateMessageV2Group :one
 INSERT INTO messages_v2_group (
@@ -261,8 +266,3 @@ WHERE id = $1 RETURNING *;
 -- name: DeleteMessageV2Group :exec
 DELETE FROM messages_v2_group WHERE id = $1;
 
--- name: AssignMessageV2Group :one
-UPDATE messages_v2 SET 
-    group_id = $2,
-    updated_at = NOW()
-WHERE id = $1 RETURNING *;

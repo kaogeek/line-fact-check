@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
+	AssignMessageV2(ctx context.Context, arg AssignMessageV2Params) (MessagesV2, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
 	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)
 	CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsGroupByStatusLikeIDRow, error)
@@ -19,9 +20,11 @@ type Querier interface {
 	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)
 	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
+	CreateMessageV2(ctx context.Context, arg CreateMessageV2Params) (MessagesV2, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)
 	CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error)
 	DeleteMessage(ctx context.Context, id pgtype.UUID) error
+	DeleteMessageV2(ctx context.Context, id pgtype.UUID) error
 	DeleteTopic(ctx context.Context, id pgtype.UUID) error
 	DeleteUserMessage(ctx context.Context, id pgtype.UUID) error
 	GetMessage(ctx context.Context, id pgtype.UUID) (Message, error)
@@ -33,6 +36,8 @@ type Querier interface {
 	ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error)
 	ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error)
 	ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error)
+	ListUserMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error)
+	UnassignMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
 	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)
 	UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error)

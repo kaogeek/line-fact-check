@@ -40,6 +40,35 @@ func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToT
 	return i, err
 }
 
+const assignMessageV2 = `-- name: AssignMessageV2 :one
+UPDATE messages_v2 SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+`
+
+type AssignMessageV2Params struct {
+	ID      pgtype.UUID `json:"id"`
+	TopicID pgtype.UUID `json:"topic_id"`
+}
+
+func (q *Queries) AssignMessageV2(ctx context.Context, arg AssignMessageV2Params) (MessagesV2, error) {
+	row := q.db.QueryRow(ctx, assignMessageV2, arg.ID, arg.TopicID)
+	var i MessagesV2
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TopicID,
+		&i.Type,
+		&i.Text,
+		&i.Language,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const countTopicsByStatus = `-- name: CountTopicsByStatus :one
 SELECT COUNT(*) FROM topics WHERE status = $1
 `
@@ -284,6 +313,53 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	return i, err
 }
 
+const createMessageV2 = `-- name: CreateMessageV2 :one
+INSERT INTO messages_v2 (
+    id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+`
+
+type CreateMessageV2Params struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    string             `json:"user_id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Type      string             `json:"type"`
+	Text      string             `json:"text"`
+	Language  pgtype.Text        `json:"language"`
+	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateMessageV2(ctx context.Context, arg CreateMessageV2Params) (MessagesV2, error) {
+	row := q.db.QueryRow(ctx, createMessageV2,
+		arg.ID,
+		arg.UserID,
+		arg.TopicID,
+		arg.Type,
+		arg.Text,
+		arg.Language,
+		arg.Metadata,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i MessagesV2
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TopicID,
+		&i.Type,
+		&i.Text,
+		&i.Language,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createTopic = `-- name: CreateTopic :one
 INSERT INTO topics (
     id, name, description, status, result, result_status, created_at, updated_at
@@ -372,6 +448,15 @@ DELETE FROM messages WHERE id = $1
 
 func (q *Queries) DeleteMessage(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteMessage, id)
+	return err
+}
+
+const deleteMessageV2 = `-- name: DeleteMessageV2 :exec
+DELETE FROM messages_v2 WHERE id = $1
+`
+
+func (q *Queries) DeleteMessageV2(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteMessageV2, id)
 	return err
 }
 
@@ -780,6 +865,64 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const listUserMessagesV2ByTopic = `-- name: ListUserMessagesV2ByTopic :many
+SELECT id, user_id, topic_id, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC
+`
+
+func (q *Queries) ListUserMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error) {
+	rows, err := q.db.Query(ctx, listUserMessagesV2ByTopic, topicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MessagesV2
+	for rows.Next() {
+		var i MessagesV2
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.TopicID,
+			&i.Type,
+			&i.Text,
+			&i.Language,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const unassignMessageV2 = `-- name: UnassignMessageV2 :one
+UPDATE messages_v2 SET 
+    topic_id = NULL,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+`
+
+func (q *Queries) UnassignMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error) {
+	row := q.db.QueryRow(ctx, unassignMessageV2, id)
+	var i MessagesV2
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TopicID,
+		&i.Type,
+		&i.Text,
+		&i.Language,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateTopicDescription = `-- name: UpdateTopicDescription :one

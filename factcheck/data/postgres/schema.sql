@@ -33,6 +33,19 @@ CREATE TABLE messages (
     updated_at     timestamptz
 );
 
+-- MessagesV2 table (replaces messages + user_messages relationship)
+CREATE TABLE messages_v2 (
+    id         UUID NOT NULL PRIMARY KEY,
+    user_id    text NOT NULL,
+    topic_id   UUID REFERENCES topics(id) ON DELETE SET NULL,
+    type       text NOT NULL,
+    text       text NOT NULL,
+    language   text,
+    metadata   jsonb,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz
+);
+
 -- Indexes for better performance
 CREATE INDEX idx_topics_status ON topics(status);
 CREATE INDEX idx_topics_created_at ON topics(created_at);
@@ -42,4 +55,9 @@ CREATE INDEX idx_messages_user_message_id ON messages(user_message_id);
 CREATE INDEX idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX idx_messages_status ON messages(status);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
-CREATE INDEX idx_messages_language ON messages(language); 
+CREATE INDEX idx_messages_language ON messages(language);
+CREATE INDEX idx_messages_v2_user_id ON messages_v2(user_id);
+CREATE INDEX idx_messages_v2_topic_id ON messages_v2(topic_id);
+CREATE INDEX idx_messages_v2_type ON messages_v2(type);
+CREATE INDEX idx_messages_v2_created_at ON messages_v2(created_at);
+CREATE INDEX idx_messages_v2_language ON messages_v2(language); 

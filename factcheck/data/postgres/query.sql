@@ -193,4 +193,29 @@ WHERE 1=1
         )
         ELSE true 
     END
-GROUP BY t.status; 
+GROUP BY t.status;
+
+-- name: CreateMessageV2 :one
+INSERT INTO messages_v2 (
+    id, user_id, topic_id, type, text, language, metadata, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING *;
+
+-- name: AssignMessageV2 :one
+UPDATE messages_v2 SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UnassignMessageV2 :one
+UPDATE messages_v2 SET 
+    topic_id = NULL,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: DeleteMessageV2 :exec
+DELETE FROM messages_v2 WHERE id = $1; 
+
+-- name: ListMessagesV2ByTopic :many
+SELECT * FROM messages_v2 WHERE topic_id = $1 ORDER BY created_at ASC;

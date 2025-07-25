@@ -46,10 +46,12 @@ type Topic struct {
 	Status       StatusTopic       `json:"status"`
 	Result       string            `json:"result"`
 	ResultStatus StatusTopicResult `json:"result_status"`
+	RepliedAt    *time.Time        `json:"replied_at"`
 	CreatedAt    time.Time         `json:"created_at"`
 	UpdatedAt    *time.Time        `json:"updated_at"`
 }
 
+// Message is to be deprecated and replaced with MessageV2
 type Message struct {
 	ID            string        `json:"id"`
 	UserMessageID string        `json:"user_message_id"`
@@ -62,6 +64,7 @@ type Message struct {
 	UpdatedAt     *time.Time    `json:"updated_at"`
 }
 
+// UserMessage is to be deprecated and replaced with MessageV2
 type UserMessage struct {
 	ID        string          `json:"id"`
 	Type      TypeUserMessage `json:"type"`
@@ -71,13 +74,15 @@ type UserMessage struct {
 	UpdatedAt *time.Time      `json:"updated_at"`
 }
 
-// PaginatedResult represents a paginated result with metadata
-type PaginatedResult[T any] struct {
-	Data    []T   `json:"data"`
-	Total   int64 `json:"total"`
-	Limit   int   `json:"limit"`
-	Offset  int   `json:"offset"`
-	HasMore bool  `json:"has_more"`
+type MessageV2 struct {
+	ID        string          `json:"id"`
+	TopicID   string          `json:"topic_id"`
+	UserID    string          `json:"user_id"`
+	Type      TypeUserMessage `json:"type"`
+	Text      string          `json:"text"`
+	Metadata  json.RawMessage `json:"metadata"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt *time.Time      `json:"updated_at"`
 }
 
 func (s StatusTopic) IsValid() bool {

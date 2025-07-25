@@ -3,9 +3,17 @@
 package factcheck
 
 import (
+	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
+
+var checksum = sha1.New()
 
 type (
 	TopicResult       string
@@ -75,15 +83,16 @@ type UserMessage struct {
 }
 
 type MessageV2 struct {
-	ID        string          `json:"id"`
-	TopicID   string          `json:"topic_id"`
-	UserID    string          `json:"user_id"`
-	GroupID   string          `json:"group_id"`
-	Type      TypeUserMessage `json:"type"`
-	Text      string          `json:"text"`
-	Metadata  json.RawMessage `json:"metadata"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt *time.Time      `json:"updated_at"`
+	ID          string          `json:"id"`
+	TopicID     string          `json:"topic_id"`
+	UserID      string          `json:"user_id"`
+	GroupID     string          `json:"group_id"`
+	TypeUser    TypeUserMessage `json:"type_user"`
+	TypeMessage TypeMessage     `json:"type"`
+	Text        string          `json:"text"`
+	Metadata    json.RawMessage `json:"metadata"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   *time.Time      `json:"updated_at"`
 }
 
 type MessageV2Group struct {
@@ -120,3 +129,32 @@ func (s StatusTopicResult) IsValid() bool {
 func (t TypeMessage) IsValid() bool {
 	return t == TypeMessageText
 }
+
+func (m MessageV2) SHA1() (string, error) {
+	if m.GroupID != "" {
+		return "", fmt.Errorf("message was already assigned to group %s", m.GroupID)
+	}
+	if m.Text == "" {
+		return "", errors.New("message has empty text")
+	}
+	return SHA1Base64(m.Text)
+}
+
+func (g MessageV2Group) SHA1() (string, error) {
+	return SHA1Base64(g.Text)
+}
+
+func SHA1Base64(s string) (string, error) {
+	s = strings.TrimSpace(s)
+	hash := sha1sum([]byte(s))
+	buf := bytes.NewBuffer(nil)
+	_, err := base64.
+		NewEncoder(base64.StdEncoding, buf).
+		Write(hash)
+	if err != nil {
+		return "", fmt.Errorf("base64 error: %w", err)
+	}
+	return buf.String(), err
+}
+
+func sha1sum(b []byte) []byte { return checksum.Sum(b) }

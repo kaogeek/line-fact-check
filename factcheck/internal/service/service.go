@@ -99,5 +99,15 @@ func (s *service) AdminSubmit(
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error creating message: %w", err)
 	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		slog.Error("error committing admin submission",
+			"err", err,
+			"mid", m.ID,
+			"gid", group.ID,
+			"sha1", textSHA1,
+		)
+		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error committing message: %w", err)
+	}
 	return created, group, nil
 }

@@ -75,7 +75,7 @@ These are our main "data types"
     Messages could enter our system via a user client (chat),
     or via the admin web UI.
 
-- Message groups (currently table `messages_v2_groups`)
+- Message groups (currently table `message_groups`)
 
     Message groups group messages together based on "similarity".
     Currently, the similarity engine is just a SHA-1 hash match,

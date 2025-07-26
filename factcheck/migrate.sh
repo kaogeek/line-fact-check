@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS user_messages CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS topics CASCADE;
 DROP TABLE IF EXISTS messages_v2 CASCADE;
-DROP TABLE IF EXISTS messages_v2_groups CASCADE;
+DROP TABLE IF EXISTS message_groups CASCADE;
 EOF
 
 echo "Creating fresh schema from $SCHEMA_FILE..."

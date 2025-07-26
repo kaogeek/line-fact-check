@@ -11,9 +11,9 @@ import (
 )
 
 type Querier interface {
+	AssignMessageGroupToTopic(ctx context.Context, arg AssignMessageGroupToTopicParams) (MessageGroup, error)
 	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
-	AssignMessageV2GroupToTopic(ctx context.Context, arg AssignMessageV2GroupToTopicParams) (MessagesV2Group, error)
-	AssignMessageV2ToMessageV2Group(ctx context.Context, arg AssignMessageV2ToMessageV2GroupParams) (MessagesV2, error)
+	AssignMessageV2ToMessageGroup(ctx context.Context, arg AssignMessageV2ToMessageGroupParams) (MessagesV2, error)
 	AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV2ToTopicParams) (MessagesV2, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
 	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)
@@ -22,22 +22,22 @@ type Querier interface {
 	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)
 	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
+	CreateMessageGroup(ctx context.Context, arg CreateMessageGroupParams) (MessageGroup, error)
 	CreateMessageV2(ctx context.Context, arg CreateMessageV2Params) (MessagesV2, error)
-	CreateMessageV2Group(ctx context.Context, arg CreateMessageV2GroupParams) (MessagesV2Group, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)
 	CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error)
 	DeleteMessage(ctx context.Context, id pgtype.UUID) error
+	DeleteMessageGroup(ctx context.Context, id pgtype.UUID) error
 	DeleteMessageV2(ctx context.Context, id pgtype.UUID) error
-	DeleteMessageV2Group(ctx context.Context, id pgtype.UUID) error
 	DeleteTopic(ctx context.Context, id pgtype.UUID) error
 	DeleteUserMessage(ctx context.Context, id pgtype.UUID) error
 	GetMessage(ctx context.Context, id pgtype.UUID) (Message, error)
+	GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
+	GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error)
 	GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
-	GetMessageV2Group(ctx context.Context, id pgtype.UUID) (MessagesV2Group, error)
-	GetMessageV2GroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessagesV2Group, error)
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
 	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)
-	ListMessageV2GroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2Group, error)
+	ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error)
 	ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error)
 	ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error)
 	ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error)
@@ -47,9 +47,9 @@ type Querier interface {
 	ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error)
 	ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error)
 	TopicExists(ctx context.Context, id pgtype.UUID) (bool, error)
+	UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
 	UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
-	UnassignMessageV2GroupFromTopic(ctx context.Context, id pgtype.UUID) (MessagesV2Group, error)
-	UpdateMessageV2GroupName(ctx context.Context, arg UpdateMessageV2GroupNameParams) (MessagesV2Group, error)
+	UpdateMessageGroupName(ctx context.Context, arg UpdateMessageGroupNameParams) (MessageGroup, error)
 	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
 	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)
 	UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error)

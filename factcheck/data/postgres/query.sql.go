@@ -11,6 +11,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const assignMessageGroupToTopic = `-- name: AssignMessageGroupToTopic :one
+UPDATE message_groups SET 
+    topic_id = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+`
+
+type AssignMessageGroupToTopicParams struct {
+	ID      pgtype.UUID `json:"id"`
+	TopicID pgtype.UUID `json:"topic_id"`
+}
+
+func (q *Queries) AssignMessageGroupToTopic(ctx context.Context, arg AssignMessageGroupToTopicParams) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, assignMessageGroupToTopic, arg.ID, arg.TopicID)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const assignMessageToTopic = `-- name: AssignMessageToTopic :one
 UPDATE messages SET 
     topic_id = $2,
@@ -40,47 +67,20 @@ func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToT
 	return i, err
 }
 
-const assignMessageV2GroupToTopic = `-- name: AssignMessageV2GroupToTopic :one
-UPDATE messages_v2_group SET 
-    topic_id = $2,
-    updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
-`
-
-type AssignMessageV2GroupToTopicParams struct {
-	ID      pgtype.UUID `json:"id"`
-	TopicID pgtype.UUID `json:"topic_id"`
-}
-
-func (q *Queries) AssignMessageV2GroupToTopic(ctx context.Context, arg AssignMessageV2GroupToTopicParams) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, assignMessageV2GroupToTopic, arg.ID, arg.TopicID)
-	var i MessagesV2Group
-	err := row.Scan(
-		&i.ID,
-		&i.TopicID,
-		&i.Name,
-		&i.Text,
-		&i.TextSha1,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const assignMessageV2ToMessageV2Group = `-- name: AssignMessageV2ToMessageV2Group :one
+const assignMessageV2ToMessageGroup = `-- name: AssignMessageV2ToMessageGroup :one
 UPDATE messages_v2 SET 
     group_id = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
-type AssignMessageV2ToMessageV2GroupParams struct {
+type AssignMessageV2ToMessageGroupParams struct {
 	ID      pgtype.UUID `json:"id"`
 	GroupID pgtype.UUID `json:"group_id"`
 }
 
-func (q *Queries) AssignMessageV2ToMessageV2Group(ctx context.Context, arg AssignMessageV2ToMessageV2GroupParams) (MessagesV2, error) {
-	row := q.db.QueryRow(ctx, assignMessageV2ToMessageV2Group, arg.ID, arg.GroupID)
+func (q *Queries) AssignMessageV2ToMessageGroup(ctx context.Context, arg AssignMessageV2ToMessageGroupParams) (MessagesV2, error) {
+	row := q.db.QueryRow(ctx, assignMessageV2ToMessageGroup, arg.ID, arg.GroupID)
 	var i MessagesV2
 	err := row.Scan(
 		&i.ID,
@@ -373,6 +373,47 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	return i, err
 }
 
+const createMessageGroup = `-- name: CreateMessageGroup :one
+INSERT INTO message_groups (
+    id, topic_id, name, text, text_sha1, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+`
+
+type CreateMessageGroupParams struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Name      pgtype.Text        `json:"name"`
+	Text      pgtype.Text        `json:"text"`
+	TextSha1  pgtype.Text        `json:"text_sha1"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroupParams) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, createMessageGroup,
+		arg.ID,
+		arg.TopicID,
+		arg.Name,
+		arg.Text,
+		arg.TextSha1,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createMessageV2 = `-- name: CreateMessageV2 :one
 INSERT INTO messages_v2 (
     id, user_id, topic_id, type_user, type, text, language, metadata, created_at, updated_at
@@ -418,47 +459,6 @@ func (q *Queries) CreateMessageV2(ctx context.Context, arg CreateMessageV2Params
 		&i.Text,
 		&i.Language,
 		&i.Metadata,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const createMessageV2Group = `-- name: CreateMessageV2Group :one
-INSERT INTO messages_v2_group (
-    id, topic_id, name, text, text_sha1, created_at, updated_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
-`
-
-type CreateMessageV2GroupParams struct {
-	ID        pgtype.UUID        `json:"id"`
-	TopicID   pgtype.UUID        `json:"topic_id"`
-	Name      pgtype.Text        `json:"name"`
-	Text      pgtype.Text        `json:"text"`
-	TextSha1  pgtype.Text        `json:"text_sha1"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) CreateMessageV2Group(ctx context.Context, arg CreateMessageV2GroupParams) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, createMessageV2Group,
-		arg.ID,
-		arg.TopicID,
-		arg.Name,
-		arg.Text,
-		arg.TextSha1,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
-	var i MessagesV2Group
-	err := row.Scan(
-		&i.ID,
-		&i.TopicID,
-		&i.Name,
-		&i.Text,
-		&i.TextSha1,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -556,21 +556,21 @@ func (q *Queries) DeleteMessage(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const deleteMessageGroup = `-- name: DeleteMessageGroup :exec
+DELETE FROM message_groups WHERE id = $1
+`
+
+func (q *Queries) DeleteMessageGroup(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteMessageGroup, id)
+	return err
+}
+
 const deleteMessageV2 = `-- name: DeleteMessageV2 :exec
 DELETE FROM messages_v2 WHERE id = $1
 `
 
 func (q *Queries) DeleteMessageV2(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteMessageV2, id)
-	return err
-}
-
-const deleteMessageV2Group = `-- name: DeleteMessageV2Group :exec
-DELETE FROM messages_v2_group WHERE id = $1
-`
-
-func (q *Queries) DeleteMessageV2Group(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteMessageV2Group, id)
 	return err
 }
 
@@ -613,6 +613,44 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 	return i, err
 }
 
+const getMessageGroup = `-- name: GetMessageGroup :one
+SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE id = $1
+`
+
+func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, getMessageGroup, id)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getMessageGroupBySHA1 = `-- name: GetMessageGroupBySHA1 :one
+SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
+`
+
+func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, getMessageGroupBySHA1, textSha1)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getMessageV2 = `-- name: GetMessageV2 :one
 SELECT id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at FROM messages_v2 WHERE id = $1
 `
@@ -630,44 +668,6 @@ func (q *Queries) GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2,
 		&i.Text,
 		&i.Language,
 		&i.Metadata,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getMessageV2Group = `-- name: GetMessageV2Group :one
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM messages_v2_group WHERE id = $1
-`
-
-func (q *Queries) GetMessageV2Group(ctx context.Context, id pgtype.UUID) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, getMessageV2Group, id)
-	var i MessagesV2Group
-	err := row.Scan(
-		&i.ID,
-		&i.TopicID,
-		&i.Name,
-		&i.Text,
-		&i.TextSha1,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getMessageV2GroupBySHA1 = `-- name: GetMessageV2GroupBySHA1 :one
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM messages_v2_group WHERE text_sha1 = $1
-`
-
-func (q *Queries) GetMessageV2GroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, getMessageV2GroupBySHA1, textSha1)
-	var i MessagesV2Group
-	err := row.Scan(
-		&i.ID,
-		&i.TopicID,
-		&i.Name,
-		&i.Text,
-		&i.TextSha1,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -712,19 +712,19 @@ func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessa
 	return i, err
 }
 
-const listMessageV2GroupsByTopic = `-- name: ListMessageV2GroupsByTopic :many
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM messages_v2_group WHERE topic_id = $1 ORDER BY created_at ASC
+const listMessageGroupsByTopic = `-- name: ListMessageGroupsByTopic :many
+SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
-func (q *Queries) ListMessageV2GroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2Group, error) {
-	rows, err := q.db.Query(ctx, listMessageV2GroupsByTopic, topicID)
+func (q *Queries) ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error) {
+	rows, err := q.db.Query(ctx, listMessageGroupsByTopic, topicID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []MessagesV2Group
+	var items []MessageGroup
 	for rows.Next() {
-		var i MessagesV2Group
+		var i MessageGroup
 		if err := rows.Scan(
 			&i.ID,
 			&i.TopicID,
@@ -1157,6 +1157,28 @@ func (q *Queries) TopicExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	return exists, err
 }
 
+const unassignMessageGroupFromTopic = `-- name: UnassignMessageGroupFromTopic :one
+UPDATE message_groups SET 
+    topic_id = NULL,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+`
+
+func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, unassignMessageGroupFromTopic, id)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const unassignMessageV2FromTopic = `-- name: UnassignMessageV2FromTopic :one
 UPDATE messages_v2 SET 
     topic_id = NULL,
@@ -1183,43 +1205,21 @@ func (q *Queries) UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID
 	return i, err
 }
 
-const unassignMessageV2GroupFromTopic = `-- name: UnassignMessageV2GroupFromTopic :one
-UPDATE messages_v2_group SET 
-    topic_id = NULL,
-    updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
-`
-
-func (q *Queries) UnassignMessageV2GroupFromTopic(ctx context.Context, id pgtype.UUID) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, unassignMessageV2GroupFromTopic, id)
-	var i MessagesV2Group
-	err := row.Scan(
-		&i.ID,
-		&i.TopicID,
-		&i.Name,
-		&i.Text,
-		&i.TextSha1,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateMessageV2GroupName = `-- name: UpdateMessageV2GroupName :one
-UPDATE messages_v2_group SET 
+const updateMessageGroupName = `-- name: UpdateMessageGroupName :one
+UPDATE message_groups SET 
     name = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
 `
 
-type UpdateMessageV2GroupNameParams struct {
+type UpdateMessageGroupNameParams struct {
 	ID   pgtype.UUID `json:"id"`
 	Name pgtype.Text `json:"name"`
 }
 
-func (q *Queries) UpdateMessageV2GroupName(ctx context.Context, arg UpdateMessageV2GroupNameParams) (MessagesV2Group, error) {
-	row := q.db.QueryRow(ctx, updateMessageV2GroupName, arg.ID, arg.Name)
-	var i MessagesV2Group
+func (q *Queries) UpdateMessageGroupName(ctx context.Context, arg UpdateMessageGroupNameParams) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, updateMessageGroupName, arg.ID, arg.Name)
+	var i MessageGroup
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,

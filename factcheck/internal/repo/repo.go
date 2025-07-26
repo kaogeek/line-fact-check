@@ -17,10 +17,10 @@ import (
 // Repository combines all repository interfaces
 // and provides a transaction manager for beginning a transaction
 type Repository struct {
-	TxnManager       postgres.TxnManager
-	Topics           Topics
-	MessagesV2       MessagesV2
-	MessagesV2Groups MessagesV2Groups
+	TxnManager    postgres.TxnManager
+	Topics        Topics
+	MessagesV2    MessagesV2
+	MessageGroups MessageGroups
 
 	// TO BE DEPRECATED
 
@@ -37,12 +37,12 @@ type ErrNotFound struct {
 // New creates a new repository with all implementations
 func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 	return Repository{
-		Topics:           NewTopics(queries),
-		Messages:         NewMessages(queries),
-		UserMessages:     NewUserMessages(queries),
-		MessagesV2:       NewMessagesV2(queries),
-		MessagesV2Groups: NewMessagesV2Groups(queries),
-		TxnManager:       postgres.NewTxnManager(pool),
+		Topics:        NewTopics(queries),
+		Messages:      NewMessages(queries),
+		UserMessages:  NewUserMessages(queries),
+		MessagesV2:    NewMessagesV2(queries),
+		MessageGroups: NewMessageGroups(queries),
+		TxnManager:    postgres.NewTxnManager(pool),
 	}
 }
 

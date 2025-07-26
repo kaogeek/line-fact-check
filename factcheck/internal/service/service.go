@@ -64,7 +64,7 @@ func (s *service) AdminSubmit(
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("non existent topic '%s'", topicID)
 		}
 	}
-	group, err := s.repo.MessagesV2Groups.GetBySHA1(ctx, textSHA1, withTx)
+	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
 	if err != nil {
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
@@ -81,7 +81,7 @@ func (s *service) AdminSubmit(
 			"name", group.Name,
 			"text_sha1", group.SHA1,
 		)
-		group, err = s.repo.MessagesV2Groups.Create(ctx, group, withTx)
+		group, err = s.repo.MessageGroups.Create(ctx, group, withTx)
 		if err != nil {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
 		}

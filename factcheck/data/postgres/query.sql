@@ -226,7 +226,7 @@ UPDATE messages_v2 SET
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
--- name: AssignMessageV2ToMessageV2Group :one
+-- name: AssignMessageV2ToMessageGroup :one
 UPDATE messages_v2 SET 
     group_id = $2,
     updated_at = NOW()
@@ -235,40 +235,40 @@ WHERE id = $1 RETURNING *;
 -- name: DeleteMessageV2 :exec
 DELETE FROM messages_v2 WHERE id = $1; 
 
--- name: CreateMessageV2Group :one
-INSERT INTO messages_v2_group (
+-- name: CreateMessageGroup :one
+INSERT INTO message_groups (
     id, topic_id, name, text, text_sha1, created_at, updated_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7
 ) RETURNING *;
 
--- name: GetMessageV2Group :one
-SELECT * FROM messages_v2_group WHERE id = $1;
+-- name: GetMessageGroup :one
+SELECT * FROM message_groups WHERE id = $1;
 
--- name: GetMessageV2GroupBySHA1 :one
-SELECT * FROM messages_v2_group WHERE text_sha1 = $1;
+-- name: GetMessageGroupBySHA1 :one
+SELECT * FROM message_groups WHERE text_sha1 = $1;
 
--- name: ListMessageV2GroupsByTopic :many
-SELECT * FROM messages_v2_group WHERE topic_id = $1 ORDER BY created_at ASC;
+-- name: ListMessageGroupsByTopic :many
+SELECT * FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC;
 
--- name: UpdateMessageV2GroupName :one
-UPDATE messages_v2_group SET 
+-- name: UpdateMessageGroupName :one
+UPDATE message_groups SET 
     name = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
--- name: AssignMessageV2GroupToTopic :one
-UPDATE messages_v2_group SET 
+-- name: AssignMessageGroupToTopic :one
+UPDATE message_groups SET 
     topic_id = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
--- name: UnassignMessageV2GroupFromTopic :one
-UPDATE messages_v2_group SET 
+-- name: UnassignMessageGroupFromTopic :one
+UPDATE message_groups SET 
     topic_id = NULL,
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
--- name: DeleteMessageV2Group :exec
-DELETE FROM messages_v2_group WHERE id = $1;
+-- name: DeleteMessageGroup :exec
+DELETE FROM message_groups WHERE id = $1;
 

@@ -42,6 +42,7 @@ CREATE TABLE message_groups (
     name       text,
     text       text,
     text_sha1  text,
+    language   text,
     created_at timestamptz,
     updated_at timestamptz NOT NULL,
     UNIQUE (topic_id, text_sha1)

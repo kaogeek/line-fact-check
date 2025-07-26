@@ -49,6 +49,7 @@ type Querier interface {
 	ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListTopicsRow, error)
 	ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]ListTopicsByStatusRow, error)
 	ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error)
+	ListTopicsDynamicV2(ctx context.Context, arg ListTopicsDynamicV2Params) ([]Topic, error)
 	ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error)
 	ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error)
 	TopicExists(ctx context.Context, id pgtype.UUID) (bool, error)

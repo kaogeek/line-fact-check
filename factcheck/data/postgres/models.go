@@ -34,6 +34,7 @@ type MessageGroup struct {
 	Name      pgtype.Text        `json:"name"`
 	Text      pgtype.Text        `json:"text"`
 	TextSha1  pgtype.Text        `json:"text_sha1"`
+	Language  pgtype.Text        `json:"language"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }

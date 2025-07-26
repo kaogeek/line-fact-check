@@ -69,8 +69,6 @@ func (t *topics) Exists(ctx context.Context, id string, opts ...Option) (bool, e
 }
 
 func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
-	// Special case: if both limit and offset are 0, return all results without pagination
-	// Otherwise, apply default pagination behavior
 	limit, offset = sanitize(limit, offset)
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
@@ -84,7 +82,24 @@ func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...Opt
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapNoError(rows, postgres.ToTopic), nil
+	return postgres.ToTopics(rows), nil
+}
+
+func (t *topics) ListDynamicV2(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
+	limit, offset = sanitize(limit, offset)
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
+	rows, err := queries.ListTopicsDynamicV2(ctx, postgres.ListTopicsDynamicV2Params{
+		Column1: options.LikeID,
+		Column2: utils.MapNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
+		Column3: options.LikeMessageText,
+		Column4: int32(limit),  //nolint:gosec
+		Column5: int32(offset), //nolint:gosec
+	})
+	if err != nil {
+		return nil, err
+	}
+	return postgres.ToTopics(rows), nil
 }
 
 func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {

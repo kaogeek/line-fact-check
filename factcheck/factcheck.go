@@ -81,6 +81,7 @@ type MessageGroup struct {
 	Name      string     `json:"name"`
 	Text      string     `json:"text"`
 	TextSHA1  string     `json:"text_sha1"`
+	Language  Language   `json:"language"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }

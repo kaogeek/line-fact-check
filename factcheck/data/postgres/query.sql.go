@@ -12,10 +12,10 @@ import (
 )
 
 const assignMessageGroupToTopic = `-- name: AssignMessageGroupToTopic :one
-UPDATE message_groups SET 
+UPDATE message_groups SET
     topic_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
 `
 
 type AssignMessageGroupToTopicParams struct {
@@ -32,6 +32,7 @@ func (q *Queries) AssignMessageGroupToTopic(ctx context.Context, arg AssignMessa
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -39,7 +40,7 @@ func (q *Queries) AssignMessageGroupToTopic(ctx context.Context, arg AssignMessa
 }
 
 const assignMessageToTopic = `-- name: AssignMessageToTopic :one
-UPDATE messages SET 
+UPDATE messages SET
     topic_id = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
@@ -68,7 +69,7 @@ func (q *Queries) AssignMessageToTopic(ctx context.Context, arg AssignMessageToT
 }
 
 const assignMessageV2ToMessageGroup = `-- name: AssignMessageV2ToMessageGroup :one
-UPDATE messages_v2 SET 
+UPDATE messages_v2 SET
     group_id = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
@@ -99,7 +100,7 @@ func (q *Queries) AssignMessageV2ToMessageGroup(ctx context.Context, arg AssignM
 }
 
 const assignMessageV2ToTopic = `-- name: AssignMessageV2ToTopic :one
-UPDATE messages_v2 SET 
+UPDATE messages_v2 SET
     topic_id = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
@@ -141,23 +142,23 @@ func (q *Queries) CountTopicsByStatus(ctx context.Context, status string) (int64
 }
 
 const countTopicsGroupByStatusDynamic = `-- name: CountTopicsGroupByStatusDynamic :many
-SELECT t.status, COUNT(DISTINCT t.id) as count 
-FROM topics t 
-LEFT JOIN messages m ON t.id = m.topic_id 
+SELECT t.status, COUNT(DISTINCT t.id) as count
+FROM topics t
+LEFT JOIN messages m ON t.id = m.topic_id
 WHERE 1=1
-    AND CASE 
-        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
-        ELSE true 
+    AND CASE
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text
+        ELSE true
     END
-    AND CASE 
+    AND CASE
         WHEN $2::text != '' THEN (
-            CASE 
+            CASE
                 WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
                 WHEN m.language = 'en' THEN m.text ILIKE $2::text
                 ELSE m.text ILIKE $2::text  -- fallback for unknown language
             END
         )
-        ELSE true 
+        ELSE true
     END
 GROUP BY t.status
 `
@@ -193,9 +194,9 @@ func (q *Queries) CountTopicsGroupByStatusDynamic(ctx context.Context, arg Count
 }
 
 const countTopicsGroupByStatusLikeID = `-- name: CountTopicsGroupByStatusLikeID :many
-SELECT status, COUNT(*) as count 
-FROM topics t 
-WHERE t.id::text LIKE $1::text 
+SELECT status, COUNT(*) as count
+FROM topics t
+WHERE t.id::text LIKE $1::text
 GROUP BY status
 `
 
@@ -225,10 +226,10 @@ func (q *Queries) CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 s
 }
 
 const countTopicsGroupByStatusLikeIDLikeMessageText = `-- name: CountTopicsGroupByStatusLikeIDLikeMessageText :many
-SELECT t.status, COUNT(DISTINCT t.id) as count 
-FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE t.id::text LIKE $1::text AND m.text ILIKE $2 
+SELECT t.status, COUNT(DISTINCT t.id) as count
+FROM topics t
+INNER JOIN messages m ON t.id = m.topic_id
+WHERE t.id::text LIKE $1::text AND m.text ILIKE $2
 GROUP BY t.status
 `
 
@@ -263,10 +264,10 @@ func (q *Queries) CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Cont
 }
 
 const countTopicsGroupByStatusLikeMessageText = `-- name: CountTopicsGroupByStatusLikeMessageText :many
-SELECT t.status, COUNT(DISTINCT t.id) as count 
-FROM topics t 
-INNER JOIN messages m ON t.id = m.topic_id 
-WHERE m.text ILIKE $1 
+SELECT t.status, COUNT(DISTINCT t.id) as count
+FROM topics t
+INNER JOIN messages m ON t.id = m.topic_id
+WHERE m.text ILIKE $1
 GROUP BY t.status
 `
 
@@ -296,8 +297,8 @@ func (q *Queries) CountTopicsGroupByStatusLikeMessageText(ctx context.Context, t
 }
 
 const countTopicsGroupedByStatus = `-- name: CountTopicsGroupedByStatus :many
-SELECT status, COUNT(*) as count 
-FROM topics 
+SELECT status, COUNT(*) as count
+FROM topics
 GROUP BY status
 `
 
@@ -413,7 +414,7 @@ INSERT INTO message_groups (
     id, topic_id, name, text, text_sha1, created_at, updated_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+) RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
 `
 
 type CreateMessageGroupParams struct {
@@ -443,6 +444,7 @@ func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroup
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -692,7 +694,7 @@ func (q *Queries) GetMessage(ctx context.Context, id pgtype.UUID) (Message, erro
 }
 
 const getMessageGroup = `-- name: GetMessageGroup :one
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE id = $1
+SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE id = $1
 `
 
 func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
@@ -704,6 +706,7 @@ func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageG
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -711,7 +714,7 @@ func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageG
 }
 
 const getMessageGroupBySHA1 = `-- name: GetMessageGroupBySHA1 :one
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
+SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
 `
 
 func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error) {
@@ -723,6 +726,7 @@ func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Tex
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -821,7 +825,7 @@ func (q *Queries) ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID)
 }
 
 const listMessageGroupsByTopic = `-- name: ListMessageGroupsByTopic :many
-SELECT id, topic_id, name, text, text_sha1, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
+SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error) {
@@ -839,6 +843,7 @@ func (q *Queries) ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.U
 			&i.Name,
 			&i.Text,
 			&i.TextSha1,
+			&i.Language,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -960,14 +965,14 @@ func (q *Queries) ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID
 
 const listTopics = `-- name: ListTopics :many
 WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at, 
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
            COUNT(*) OVER () as total_count
     FROM topics
 )
 SELECT id, name, description, status, result, result_status, created_at, updated_at
 FROM numbered_topics
-WHERE CASE 
+WHERE CASE
     WHEN $1 = 0 THEN true  -- No pagination
     WHEN $1 > 0 THEN rn BETWEEN $2 + 1 AND $2 + $1  -- Normal pagination
     WHEN $1 < 0 THEN rn BETWEEN total_count + $1 + 1 AND total_count + $2  -- Negative pagination
@@ -1022,7 +1027,7 @@ func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListT
 
 const listTopicsByStatus = `-- name: ListTopicsByStatus :many
 WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at, 
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
            COUNT(*) OVER () as total_count
     FROM topics
@@ -1030,7 +1035,7 @@ WITH numbered_topics AS (
 )
 SELECT id, name, description, status, result, result_status, created_at, updated_at
 FROM numbered_topics
-WHERE CASE 
+WHERE CASE
     WHEN $2 = 0 THEN true  -- No pagination
     WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
     WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
@@ -1089,23 +1094,23 @@ SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status
 FROM topics t
 LEFT JOIN messages m ON t.id = m.topic_id
 WHERE 1=1
-    AND CASE 
-        WHEN $1::text != '' THEN t.id::text LIKE $1::text 
-        ELSE true 
+    AND CASE
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text
+        ELSE true
     END
-    AND CASE 
+    AND CASE
         WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
-        ELSE true 
+        ELSE true
     END
-    AND CASE 
+    AND CASE
         WHEN $3::text != '' THEN (
-            CASE 
+            CASE
                 WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
                 WHEN m.language = 'en' THEN m.text ILIKE $3::text
                 ELSE m.text ILIKE $3::text  -- fallback for unknown language
             END
         )
-        ELSE true 
+        ELSE true
     END
 ORDER BY t.created_at DESC
 LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
@@ -1155,9 +1160,80 @@ func (q *Queries) ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicPa
 	return items, nil
 }
 
+const listTopicsDynamicV2 = `-- name: ListTopicsDynamicV2 :many
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+FROM topics t
+LEFT JOIN message_groups m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
+        ELSE true
+    END
+    AND CASE
+        WHEN $3::text != '' THEN (
+            CASE
+                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                ELSE m.text ILIKE $3::text  -- fallback for unknown language
+            END
+        )
+        ELSE true
+    END
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END
+`
+
+type ListTopicsDynamicV2Params struct {
+	Column1 string   `json:"column_1"`
+	Column2 []string `json:"column_2"`
+	Column3 string   `json:"column_3"`
+	Column4 int32    `json:"column_4"`
+	Column5 int32    `json:"column_5"`
+}
+
+func (q *Queries) ListTopicsDynamicV2(ctx context.Context, arg ListTopicsDynamicV2Params) ([]Topic, error) {
+	rows, err := q.db.Query(ctx, listTopicsDynamicV2,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Topic
+	for rows.Next() {
+		var i Topic
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Status,
+			&i.Result,
+			&i.ResultStatus,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTopicsInIDs = `-- name: ListTopicsInIDs :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t 
-WHERE t.id = ANY($1::uuid[]) 
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t
+WHERE t.id = ANY($1::uuid[])
 ORDER BY t.created_at DESC
 `
 
@@ -1192,15 +1268,15 @@ func (q *Queries) ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) (
 
 const listTopicsLikeID = `-- name: ListTopicsLikeID :many
 WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at, 
+    SELECT id, name, description, status, result, result_status, created_at, updated_at,
            ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
            COUNT(*) OVER () as total_count
-    FROM topics t 
+    FROM topics t
     WHERE t.id::text LIKE $1::text
 )
 SELECT id, name, description, status, result, result_status, created_at, updated_at
 FROM numbered_topics
-WHERE CASE 
+WHERE CASE
     WHEN $2 = 0 THEN true  -- No pagination
     WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
     WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
@@ -1266,10 +1342,10 @@ func (q *Queries) TopicExists(ctx context.Context, id pgtype.UUID) (bool, error)
 }
 
 const unassignMessageGroupFromTopic = `-- name: UnassignMessageGroupFromTopic :one
-UPDATE message_groups SET 
+UPDATE message_groups SET
     topic_id = NULL,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
 `
 
 func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
@@ -1281,6 +1357,7 @@ func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.U
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -1288,7 +1365,7 @@ func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.U
 }
 
 const unassignMessageV2FromTopic = `-- name: UnassignMessageV2FromTopic :one
-UPDATE messages_v2 SET 
+UPDATE messages_v2 SET
     topic_id = NULL,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
@@ -1314,10 +1391,10 @@ func (q *Queries) UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID
 }
 
 const updateMessageGroupName = `-- name: UpdateMessageGroupName :one
-UPDATE message_groups SET 
+UPDATE message_groups SET
     name = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
 `
 
 type UpdateMessageGroupNameParams struct {
@@ -1334,6 +1411,7 @@ func (q *Queries) UpdateMessageGroupName(ctx context.Context, arg UpdateMessageG
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
+		&i.Language,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -1341,7 +1419,7 @@ func (q *Queries) UpdateMessageGroupName(ctx context.Context, arg UpdateMessageG
 }
 
 const updateTopicDescription = `-- name: UpdateTopicDescription :one
-UPDATE topics SET 
+UPDATE topics SET
     description = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
@@ -1369,7 +1447,7 @@ func (q *Queries) UpdateTopicDescription(ctx context.Context, arg UpdateTopicDes
 }
 
 const updateTopicName = `-- name: UpdateTopicName :one
-UPDATE topics SET 
+UPDATE topics SET
     name = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
@@ -1397,7 +1475,7 @@ func (q *Queries) UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams
 }
 
 const updateTopicStatus = `-- name: UpdateTopicStatus :one
-UPDATE topics SET 
+UPDATE topics SET
     status = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at

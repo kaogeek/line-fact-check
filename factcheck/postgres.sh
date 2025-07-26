@@ -11,7 +11,7 @@ if [ -z "$1" ]; then
 fi
 
 CONTAINER_NAME="factcheck-postgres"
-IMAGE_NAME="postgres:15"
+IMAGE_NAME="postgres:16"
 HOST_PORT=5432
 CONTAINER_PORT=5432
 DB_NAME="factcheck"

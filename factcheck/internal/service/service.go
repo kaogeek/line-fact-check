@@ -8,10 +8,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 type Service interface {
@@ -70,7 +69,7 @@ func (s *service) AdminSubmit(
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
 		}
 		group = factcheck.MessageGroup{
-			ID:        uuid.NewString(),
+			ID:        utils.NewID().String(),
 			TopicID:   topicID,
 			Text:      text,
 			TextSHA1:  textSHA1,
@@ -87,7 +86,7 @@ func (s *service) AdminSubmit(
 		}
 	}
 	m := factcheck.MessageV2{
-		ID:          uuid.NewString(),
+		ID:          utils.NewID().String(),
 		TopicID:     topicID,
 		UserID:      userID,
 		GroupID:     group.ID,

@@ -27,25 +27,23 @@ func TestRepository_AssignMessageToTopic(t *testing.T) {
 
 	// Create two topics
 	topic1 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440001",
-		Name:         "Topic 1 - Original",
-		Description:  "Original topic",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - Original",
+		Description: "Original topic",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic2 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440002",
-		Name:         "Topic 2 - Target",
-		Description:  "Target topic for assignment",
-		Status:       factcheck.StatusTopicResolved,
-		Result:       "Verified",
-		ResultStatus: factcheck.StatusTopicResultAnswered,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Target",
+		Description: "Target topic for assignment",
+		Status:      factcheck.StatusTopicResolved,
+		Result:      "Verified",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	// Create topics in database

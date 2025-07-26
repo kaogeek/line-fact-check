@@ -29,19 +29,14 @@ func TopicCreator(topic factcheck.Topic) (CreateTopicParams, error) {
 	if err != nil {
 		return CreateTopicParams{}, err
 	}
-	resultStatus, err := Text(string(topic.ResultStatus))
-	if err != nil {
-		return CreateTopicParams{}, err
-	}
 	return CreateTopicParams{
-		ID:           id,
-		Name:         topic.Name,
-		Description:  topic.Description,
-		Status:       string(topic.Status),
-		Result:       result,
-		ResultStatus: resultStatus,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
+		ID:          id,
+		Name:        topic.Name,
+		Description: topic.Description,
+		Status:      string(topic.Status),
+		Result:      result,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}, nil
 }
 
@@ -56,9 +51,6 @@ func ToTopic(data Topic) factcheck.Topic {
 	}
 	if data.Result.Valid {
 		topic.Result = data.Result.String
-	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
 	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
@@ -86,9 +78,6 @@ func ToTopicFromRow(data ListTopicsRow) factcheck.Topic {
 	if data.Result.Valid {
 		topic.Result = data.Result.String
 	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
-	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
 	}
@@ -111,9 +100,6 @@ func ToTopicFromStatusRow(data ListTopicsByStatusRow) factcheck.Topic {
 	if data.Result.Valid {
 		topic.Result = data.Result.String
 	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
-	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
 	}
@@ -135,9 +121,6 @@ func ToTopicFromIDRow(data ListTopicsLikeIDRow) factcheck.Topic {
 	}
 	if data.Result.Valid {
 		topic.Result = data.Result.String
-	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
 	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
@@ -250,7 +233,7 @@ func ToUserMessage(data UserMessage) (factcheck.UserMessage, error) {
 	}
 	return factcheck.UserMessage{
 		ID:        id,
-		Type:      factcheck.TypeUserMessage(data.Type),
+		Type:      factcheck.TypeUser(data.Type),
 		RepliedAt: TimeNullable(data.RepliedAt),
 		Metadata:  metadata,
 		CreatedAt: createdAt,
@@ -311,7 +294,7 @@ func ToMessageV2(data MessagesV2) (factcheck.MessageV2, error) {
 	message := factcheck.MessageV2{
 		ID:          id,
 		UserID:      data.UserID,
-		TypeUser:    factcheck.TypeUserMessage(data.TypeUser),
+		TypeUser:    factcheck.TypeUser(data.TypeUser),
 		TypeMessage: factcheck.TypeMessage(data.Type),
 		Text:        data.Text,
 		Metadata:    metadata,
@@ -489,16 +472,11 @@ func AnswerCreator(a factcheck.Answer) (CreateAnswerParams, error) {
 	if err != nil {
 		return CreateAnswerParams{}, err
 	}
-	updatedAt, err := TimestamptzNullable(a.UpdatedAt)
-	if err != nil {
-		return CreateAnswerParams{}, err
-	}
 	return CreateAnswerParams{
 		ID:        id,
 		TopicID:   topicID,
 		Text:      a.Text,
 		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
 	}, nil
 }
 
@@ -520,7 +498,6 @@ func ToAnswer(data Answer) (factcheck.Answer, error) {
 		TopicID:   topicID,
 		Text:      data.Text,
 		CreatedAt: createdAt,
-		UpdatedAt: TimeNullable(data.UpdatedAt),
 	}, nil
 }
 

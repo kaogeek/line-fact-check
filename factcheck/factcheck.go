@@ -19,22 +19,19 @@ import (
 var checksum = sha1.New()
 
 type (
-	TopicResult       string
-	StatusTopic       string
-	StatusTopicResult string
-	StatusMessage     string
-	TypeMessage       string
-	TypeUserMessage   string
-	Language          string
+	TopicResult string
+	StatusTopic string
+	StatusUser  string
+	TypeMessage string
+	TypeUser    string
+	Language    string
+
+	StatusMessage string
 )
 
 const (
 	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // topic automatically created, no answer yet
 	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // topic resolved by human admins
-
-	StatusTopicResultNone        StatusTopicResult = "TOPIC_RESULT_NONE"       // no prior answer
-	StatusTopicResultAnswered    StatusTopicResult = "TOPIC_RESULT_ANSWERED"   // answered at least once
-	StatusTopicResultChanllenged StatusTopicResult = "TOPIC_RESULT_CHALLENGED" // the last answer was challenged by the public
 
 	StatusMessageSubmitted      StatusMessage = "MSG_SUBMITTED"
 	StatusMessageTopicSubmitted StatusMessage = "MSG_TOPIC_SUBMITTED"
@@ -42,24 +39,23 @@ const (
 
 	TypeMessageText TypeMessage = "TYPE_TEXT"
 
-	TypeUserMessageLINEChat      TypeUserMessage = "CHAT"
-	TypeUserMessageLINEGroupChat TypeUserMessage = "GROUPCHAT"
-	TypeUserMessageAdmin         TypeUserMessage = "ADMIN"
+	TypeUserMessageLINEChat      TypeUser = "CHAT"
+	TypeUserMessageLINEGroupChat TypeUser = "GROUPCHAT"
+	TypeUserMessageAdmin         TypeUser = "ADMIN"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"
 )
 
 type Topic struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Description  string            `json:"description"`
-	Status       StatusTopic       `json:"status"`
-	Result       string            `json:"result"`
-	ResultStatus StatusTopicResult `json:"result_status"`
-	RepliedAt    *time.Time        `json:"replied_at"`
-	CreatedAt    time.Time         `json:"created_at"`
-	UpdatedAt    *time.Time        `json:"updated_at"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Status      StatusTopic `json:"status"`
+	Result      string      `json:"result"`
+	RepliedAt   *time.Time  `json:"replied_at"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   *time.Time  `json:"updated_at"`
 }
 
 type MessageV2 struct {
@@ -67,7 +63,7 @@ type MessageV2 struct {
 	TopicID     string          `json:"topic_id"`
 	UserID      string          `json:"user_id"`
 	GroupID     string          `json:"group_id"`
-	TypeUser    TypeUserMessage `json:"type_user"`
+	TypeUser    TypeUser        `json:"type_user"`
 	TypeMessage TypeMessage     `json:"type"`
 	Text        string          `json:"text"`
 	Metadata    json.RawMessage `json:"metadata"`
@@ -87,11 +83,10 @@ type MessageGroup struct {
 }
 
 type Answer struct {
-	ID        string     `json:"id"`
-	TopicID   string     `json:"topic_id"`
-	Text      string     `json:"text"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	ID        string    `json:"id"`
+	TopicID   string    `json:"topic_id"`
+	Text      string    `json:"text"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (s StatusTopic) IsValid() bool {
@@ -99,17 +94,6 @@ func (s StatusTopic) IsValid() bool {
 	case
 		StatusTopicPending,
 		StatusTopicResolved:
-		return true
-	}
-	return false
-}
-
-func (s StatusTopicResult) IsValid() bool {
-	switch s {
-	case
-		StatusTopicResultNone,
-		StatusTopicResultAnswered,
-		StatusTopicResultChanllenged:
 		return true
 	}
 	return false

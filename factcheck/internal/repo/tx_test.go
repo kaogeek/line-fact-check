@@ -6,6 +6,7 @@ package repo_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -34,14 +35,13 @@ func TestTransactionIsolationLevels(t *testing.T) {
 			defer utils.TimeUnfreeze()
 
 			sharedTopic := factcheck.Topic{
-				ID:           "550e8400-e29b-41d4-a716-446655440001",
-				Name:         "Shared Topic - ReadCommitted",
-				Description:  "This topic will be updated by competing transactions",
-				Status:       factcheck.StatusTopicPending,
-				Result:       "",
-				ResultStatus: factcheck.StatusTopicResultNone,
-				CreatedAt:    now,
-				UpdatedAt:    nil,
+				ID:          "550e8400-e29b-41d4-a716-446655440001",
+				Name:        "Shared Topic - ReadCommitted",
+				Description: "This topic will be updated by competing transactions",
+				Status:      factcheck.StatusTopicPending,
+				Result:      "",
+				CreatedAt:   now,
+				UpdatedAt:   nil,
 			}
 
 			createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
@@ -65,14 +65,13 @@ func TestTransactionIsolationLevels(t *testing.T) {
 			defer utils.TimeUnfreeze()
 
 			sharedTopic := factcheck.Topic{
-				ID:           "550e8400-e29b-41d4-a716-446655440001",
-				Name:         "Shared Topic - ReadCommitted",
-				Description:  "This topic will be updated by competing transactions",
-				Status:       factcheck.StatusTopicPending,
-				Result:       "",
-				ResultStatus: factcheck.StatusTopicResultNone,
-				CreatedAt:    now,
-				UpdatedAt:    nil,
+				ID:          "550e8400-e29b-41d4-a716-446655440001",
+				Name:        "Shared Topic - ReadCommitted",
+				Description: "This topic will be updated by competing transactions",
+				Status:      factcheck.StatusTopicPending,
+				Result:      "",
+				CreatedAt:   now,
+				UpdatedAt:   nil,
 			}
 
 			createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
@@ -97,14 +96,13 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		defer utils.TimeUnfreeze()
 
 		sharedTopic := factcheck.Topic{
-			ID:           "550e8400-e29b-41d4-a716-446655440002",
-			Name:         "Shared Topic - RepeatableRead",
-			Description:  "This topic will be updated by competing transactions",
-			Status:       factcheck.StatusTopicPending,
-			Result:       "",
-			ResultStatus: factcheck.StatusTopicResultNone,
-			CreatedAt:    now,
-			UpdatedAt:    nil,
+			ID:          "550e8400-e29b-41d4-a716-446655440002",
+			Name:        "Shared Topic - RepeatableRead",
+			Description: "This topic will be updated by competing transactions",
+			Status:      factcheck.StatusTopicPending,
+			Result:      "",
+			CreatedAt:   now,
+			UpdatedAt:   nil,
 		}
 
 		createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
@@ -129,14 +127,13 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		defer utils.TimeUnfreeze()
 
 		sharedTopic := factcheck.Topic{
-			ID:           "550e8400-e29b-41d4-a716-446655440003",
-			Name:         "Shared Topic - Serializable",
-			Description:  "This topic will be updated by competing transactions",
-			Status:       factcheck.StatusTopicPending,
-			Result:       "",
-			ResultStatus: factcheck.StatusTopicResultNone,
-			CreatedAt:    now,
-			UpdatedAt:    nil,
+			ID:          "550e8400-e29b-41d4-a716-446655440003",
+			Name:        "Shared Topic - Serializable",
+			Description: "This topic will be updated by competing transactions",
+			Status:      factcheck.StatusTopicPending,
+			Result:      "",
+			CreatedAt:   now,
+			UpdatedAt:   nil,
 		}
 
 		createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
@@ -162,14 +159,13 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		defer utils.TimeUnfreeze()
 
 		sharedTopic := factcheck.Topic{
-			ID:           "550e8400-e29b-41d4-a716-446655440004",
-			Name:         "Shared Topic - Concurrent",
-			Description:  "This topic will be updated by competing transactions",
-			Status:       factcheck.StatusTopicPending,
-			Result:       "",
-			ResultStatus: factcheck.StatusTopicResultNone,
-			CreatedAt:    now,
-			UpdatedAt:    nil,
+			ID:          "550e8400-e29b-41d4-a716-446655440004",
+			Name:        "Shared Topic - Concurrent",
+			Description: "This topic will be updated by competing transactions",
+			Status:      factcheck.StatusTopicPending,
+			Result:      "",
+			CreatedAt:   now,
+			UpdatedAt:   nil,
 		}
 
 		createdTopic, err := app.Repository.Topics.Create(ctx, sharedTopic)
@@ -527,14 +523,13 @@ func testSerializableIsolation(t *testing.T, r *repo.Repository, _ string) {
 
 		// Create a new topic with unique ID
 		newTopic := factcheck.Topic{
-			ID:           fmt.Sprintf("550e8400-e29b-41d4-a716-44665544%04d", time.Now().UnixNano()%10000),
-			Name:         "Phantom Topic",
-			Description:  "This topic should not be visible to TX1",
-			Status:       factcheck.StatusTopicPending,
-			Result:       "",
-			ResultStatus: factcheck.StatusTopicResultNone,
-			CreatedAt:    utils.TimeNow(),
-			UpdatedAt:    nil,
+			ID:          fmt.Sprintf("550e8400-e29b-41d4-a716-44665544%04d", time.Now().UnixNano()%10000),
+			Name:        "Phantom Topic",
+			Description: "This topic should not be visible to TX1",
+			Status:      factcheck.StatusTopicPending,
+			Result:      "",
+			CreatedAt:   utils.TimeNow(),
+			UpdatedAt:   nil,
 		}
 		_, err = r.Topics.Create(ctx, newTopic, repo.WithTx(tx2))
 		if err != nil {
@@ -735,16 +730,9 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 	}
 
 	expectedDescriptions := []string{"Updated by TX1", "Updated by TX2"}
-	found := false
-	for _, expected := range expectedDescriptions {
-		if finalTopic.Description == expected {
-			found = true
-			break
-		}
-	}
-
+	found := slices.Contains(expectedDescriptions, finalTopic.Description)
 	if !found {
-		t.Errorf("Final topic description '%s' not in expected values: %v", finalTopic.Description, expectedDescriptions)
+		t.Fatalf("description %s not found", finalTopic.Description)
 	}
 }
 
@@ -765,14 +753,13 @@ func TestTransactionRollback(t *testing.T) {
 
 	// Create a topic
 	originalTopic := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440005",
-		Name:         "Rollback Test Topic",
-		Description:  "Original description",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440005",
+		Name:        "Rollback Test Topic",
+		Description: "Original description",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	createdTopic, err := app.Repository.Topics.Create(ctx, originalTopic)
@@ -836,14 +823,13 @@ func TestTransactionCommit(t *testing.T) {
 
 	// Create a topic
 	originalTopic := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440006",
-		Name:         "Commit Test Topic",
-		Description:  "Original description",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440006",
+		Name:        "Commit Test Topic",
+		Description: "Original description",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	createdTopic, err := app.Repository.Topics.Create(ctx, originalTopic)

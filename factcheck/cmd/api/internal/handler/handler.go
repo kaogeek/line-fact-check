@@ -40,6 +40,7 @@ type handler struct {
 	topics     repo.Topics
 	messagesv2 repo.MessagesV2
 	groups     repo.MessageGroups
+	answers    repo.Answers
 
 	// TO BE DEPRECATED
 

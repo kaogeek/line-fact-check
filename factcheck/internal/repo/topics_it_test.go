@@ -257,36 +257,33 @@ func TestRepository_ListDynamicV2(t *testing.T) {
 
 	// Create topics with different statuses
 	topic1 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440001",
-		Name:         "Topic 1 - COVID Pending",
-		Description:  "COVID-19 related news (pending)",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - COVID Pending",
+		Description: "COVID-19 related news (pending)",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic2 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440002",
-		Name:         "Topic 2 - Politics Resolved",
-		Description:  "Political news and updates (resolved)",
-		Status:       factcheck.StatusTopicResolved,
-		Result:       "Verified as true",
-		ResultStatus: factcheck.StatusTopicResultAnswered,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Politics Resolved",
+		Description: "Political news and updates (resolved)",
+		Status:      factcheck.StatusTopicResolved,
+		Result:      "Verified as true",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic3 := factcheck.Topic{
-		ID:           "660e8400-e29b-41d4-a716-446655440003",
-		Name:         "Topic 3 - Technology Pending",
-		Description:  "Technology news and updates (pending)",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "660e8400-e29b-41d4-a716-446655440003",
+		Name:        "Topic 3 - Technology Pending",
+		Description: "Technology news and updates (pending)",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	// Create topics in database
@@ -657,36 +654,33 @@ func TestRepository_TopicFiltering(t *testing.T) {
 
 	// Create topics
 	topic1 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440001",
-		Name:         "Topic 1 - COVID",
-		Description:  "COVID-19 related news",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - COVID",
+		Description: "COVID-19 related news",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic2 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440002",
-		Name:         "Topic 2 - Politics",
-		Description:  "Political news and updates",
-		Status:       factcheck.StatusTopicResolved,
-		Result:       "Verified as true",
-		ResultStatus: factcheck.StatusTopicResultAnswered,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Politics",
+		Description: "Political news and updates",
+		Status:      factcheck.StatusTopicResolved,
+		Result:      "Verified as true",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic3 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440003",
-		Name:         "Topic 3 - Technology",
-		Description:  "Technology news and updates",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440003",
+		Name:        "Topic 3 - Technology",
+		Description: "Technology news and updates",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	// Create topics in database
@@ -876,36 +870,33 @@ func TestRepository_ListDynamic(t *testing.T) {
 
 	// Create topics with different statuses
 	topic1 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440001",
-		Name:         "Topic 1 - COVID Pending",
-		Description:  "COVID-19 related news (pending)",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - COVID Pending",
+		Description: "COVID-19 related news (pending)",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic2 := factcheck.Topic{
-		ID:           "550e8400-e29b-41d4-a716-446655440002",
-		Name:         "Topic 2 - Politics Resolved",
-		Description:  "Political news and updates (resolved)",
-		Status:       factcheck.StatusTopicResolved,
-		Result:       "Verified as true",
-		ResultStatus: factcheck.StatusTopicResultAnswered,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Politics Resolved",
+		Description: "Political news and updates (resolved)",
+		Status:      factcheck.StatusTopicResolved,
+		Result:      "Verified as true",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	topic3 := factcheck.Topic{
-		ID:           "660e8400-e29b-41d4-a716-446655440003",
-		Name:         "Topic 3 - Technology Pending",
-		Description:  "Technology news and updates (pending)",
-		Status:       factcheck.StatusTopicPending,
-		Result:       "",
-		ResultStatus: factcheck.StatusTopicResultNone,
-		CreatedAt:    now,
-		UpdatedAt:    nil,
+		ID:          "660e8400-e29b-41d4-a716-446655440003",
+		Name:        "Topic 3 - Technology Pending",
+		Description: "Technology news and updates (pending)",
+		Status:      factcheck.StatusTopicPending,
+		Result:      "",
+		CreatedAt:   now,
+		UpdatedAt:   nil,
 	}
 
 	// Create topics in database

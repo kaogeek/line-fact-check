@@ -12,8 +12,8 @@ import (
 )
 
 type userInfo struct {
-	UserType factcheck.TypeUserMessage `json:"user_type"`
-	UserID   string                    `json:"user_id"`
+	UserType factcheck.TypeUser `json:"user_type"`
+	UserID   string             `json:"user_id"`
 }
 
 // TODO: use middleware to parse the metadata and save it to req context

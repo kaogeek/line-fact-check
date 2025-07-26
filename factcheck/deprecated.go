@@ -21,7 +21,7 @@ type Message struct {
 // UserMessage is to be deprecated and replaced with MessageV2
 type UserMessage struct {
 	ID        string          `json:"id"`
-	Type      TypeUserMessage `json:"type"`
+	Type      TypeUser        `json:"type"`
 	RepliedAt *time.Time      `json:"replied_at"`
 	Metadata  json.RawMessage `json:"metadata"`
 	CreatedAt time.Time       `json:"created_at"`

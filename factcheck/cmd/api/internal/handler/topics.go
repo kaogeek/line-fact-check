@@ -92,14 +92,13 @@ func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 		}),
 		createModify(func(_ context.Context, topic factcheck.Topic) factcheck.Topic {
 			return factcheck.Topic{
-				ID:           utils.NewID().String(),
-				Name:         topic.Name,
-				Description:  topic.Description,
-				Status:       factcheck.StatusTopicPending,
-				Result:       topic.Result,
-				ResultStatus: factcheck.StatusTopicResultNone,
-				CreatedAt:    utils.TimeNow(),
-				UpdatedAt:    nil,
+				ID:          utils.NewID().String(),
+				Name:        topic.Name,
+				Description: topic.Description,
+				Status:      factcheck.StatusTopicPending,
+				Result:      topic.Result,
+				CreatedAt:   utils.TimeNow(),
+				UpdatedAt:   nil,
 			}
 		}),
 	)
@@ -162,6 +161,22 @@ func (h *handler) ListTopicMessages(w http.ResponseWriter, r *http.Request) {
 func (h *handler) ListTopicMessageGroups(w http.ResponseWriter, r *http.Request) {
 	getBy(w, r, paramID(r), func(ctx context.Context, s string) ([]factcheck.MessageGroup, error) {
 		return h.groups.ListByTopic(ctx, s)
+	})
+}
+
+func (h *handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
+	data, err := decode[struct {
+		Text string `json:"text"`
+	}](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	h.answers.Create(r.Context(), factcheck.Answer{
+		ID:        utils.NewID().String(),
+		TopicID:   paramID(r),
+		Text:      data.Text,
+		CreatedAt: utils.TimeNow(),
 	})
 }
 

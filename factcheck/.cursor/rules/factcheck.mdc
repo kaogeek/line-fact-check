@@ -18,3 +18,59 @@ The following code generation tools are used:
 - sqlc for database interactions, see [sqlc.yaml](/factcheck/sqlc.yaml) and [/data/](/factcheck/data)
 
 - wire for dependency injection, lives inside [internal/di](/factcheck/cmd/api/di)
+
+# Testing
+
+To run unit tests, just run tests as usual.
+
+But keep in mind that because this monorepo has multiple Go modules,
+(i.e. is a Go workspace) running tests at the root of the project might fail.
+
+When we've opened the repo, but working inside [/factcheck](/factcheck/),
+and want to run tests on `internal/repo` that rests inside the module,
+we must run test with `go test ./factcheck/internal/repo`.
+
+Integration tests for some concept `bar` are conventionally put inside `bar_it_test.go`,
+with Go build tag `integration_test`. To run integraion tests, run `go test` with `-tags=integration_test`.
+
+## Integration test dependencies without local Nix
+
+Integration tests usually initiate their own [DI test container](/factcheck/di), meaning they will get
+fresh instances of everything and are isolated from tests using other DI container.
+
+Because the DI container needs a lot of stuff to initialize,
+we must bring up these dependencies before we can run integration tests.
+
+The dependency environment is pinned as devShells in our [Nix flake](/flake.nix).
+On GitHub Actions runners, we could just `nix develop` into the default Nix devShell
+and everything will be up and ready.
+
+However, our dev's local machines might not have Nix installed.
+This is why we provide [Docker Compose](/docker-compose.yaml) to help bring up dependencies
+from Nix flake anywhere, anytime.
+
+### Building images in [Flake](/flake.nix)
+
+We can adapt these cheat sheets in [README](/README.md) to use Docker to build Nix outputs.
+To cache these builds, we use a Docker volume `line-fact-check-nix-store`:
+
+```sh
+zsh % docker run --rm -v $(pwd):/workspace -v line-fact-check-nix-store:/nix/store nixos/nix:latest sh -c '
+    cp -r /workspace /source
+    cd source
+
+    export FLAKE_VERSION="$(nix eval --extra-experimental-features nix-command --extra-experimental-features flakes  .#version.text --raw)"
+    export OUTPUT_NAME=result-postgres-factcheck-$FLAKE_VERSION
+
+    # Build docker-factcheck with unique result name using the actual flake version
+    nix build .#docker-postgres-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
+
+    # Copy the result to workspace
+    cp result /workspace/$OUTPUT_NAME
+    echo "copied to /workspace/$OUTPUT_NAME"
+'
+```
+
+In the above command, we use `docker run nixos/nix` to build our flake's PostgreSQL output
+inside a mounted container (mounted to PWD). After the command is done, we'll have
+a new file with name `$OUTPUT_NAME`, which will be something like `result-postgres-factcheck-20250726-1753552232`

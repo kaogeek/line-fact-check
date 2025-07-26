@@ -4,7 +4,7 @@ package factcheck
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+// nolint:gosec
+// The checksum is only used to match text,
+// not for cryptographic purpose
 var checksum = sha1.New()
 
 type (

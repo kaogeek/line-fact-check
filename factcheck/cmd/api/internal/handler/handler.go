@@ -14,6 +14,8 @@ import (
 )
 
 type Handler interface {
+	// API /topics
+
 	CreateTopic(http.ResponseWriter, *http.Request)
 	ListAllTopics(http.ResponseWriter, *http.Request)
 	ListTopicsHome(http.ResponseWriter, *http.Request)
@@ -23,11 +25,13 @@ type Handler interface {
 	UpdateTopicStatus(http.ResponseWriter, *http.Request)
 	UpdateTopicDescription(http.ResponseWriter, *http.Request)
 	UpdateTopicName(http.ResponseWriter, *http.Request)
+	ListTopicMessages(http.ResponseWriter, *http.Request)
+	ListTopicMessageGroups(http.ResponseWriter, *http.Request)
+
+	// API /messages
 
 	CreateMessage(http.ResponseWriter, *http.Request)
-	ListMessagesByTopicID(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
-
 	NewUserMessage(http.ResponseWriter, *http.Request)
 }
 

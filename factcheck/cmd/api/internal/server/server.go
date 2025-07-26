@@ -22,16 +22,18 @@ type Server interface {
 
 func New(conf config.Config, h handler.Handler) *http.Server {
 	topics, messages, userMessages := chi.NewMux(), chi.NewMux(), chi.NewMux()
+	topics.Post("/", h.CreateTopic)
 	topics.Get("/all", h.ListAllTopics)
 	topics.Get("/", h.ListTopicsHome)
 	topics.Get("/count", h.CountTopicsHome)
 	topics.Get("/{id}", h.GetTopicByID)
-	topics.Post("/", h.CreateTopic)
+	topics.Get("/{id}/messages", h.ListTopicMessages)
+	topics.Get("/{id}/message-group", h.ListTopicMessageGroups)
 	topics.Delete("/{id}", h.DeleteTopicByID)
 	topics.Put("/{id}/status", h.UpdateTopicStatus)
 	topics.Put("/{id}/description", h.UpdateTopicDescription)
 	topics.Put("/{id}/name", h.UpdateTopicName)
-	messages.Get("/by-topic/{id}", h.ListMessagesByTopicID)
+
 	messages.Post("/", h.CreateMessage)
 	messages.Delete("/", h.DeleteMessageByID)
 	userMessages.Post("/", h.NewUserMessage)

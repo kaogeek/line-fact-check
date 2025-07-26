@@ -153,6 +153,18 @@ func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, topic, http.StatusOK)
 }
 
+func (h *handler) ListTopicMessages(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, paramID(r), func(ctx context.Context, id string) ([]factcheck.MessageV2, error) {
+		return h.messagesv2.ListByTopic(ctx, id)
+	})
+}
+
+func (h *handler) ListTopicMessageGroups(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, paramID(r), func(ctx context.Context, s string) ([]factcheck.MessageGroup, error) {
+		return h.groups.ListByTopic(ctx, s)
+	})
+}
+
 func toTopicOptions(r *http.Request) []repo.OptionTopic {
 	query := r.URL.Query().Get
 	id, text, statuses := query("like_id"), query("like_message_text"), query("in_statuses")

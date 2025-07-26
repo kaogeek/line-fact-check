@@ -12,6 +12,7 @@ type MessageGroups interface {
 	Create(context.Context, factcheck.MessageGroup, ...Option) (factcheck.MessageGroup, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error)
+	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error)
 	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageGroup, error)
 	UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	Delete(ctx context.Context, id string, opts ...Option) error

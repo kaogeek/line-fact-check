@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
@@ -22,9 +23,9 @@ func (h *handler) DeleteMessageByID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *handler) ListMessagesByTopicID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), func(ctx context.Context, id string) ([]factcheck.Message, error) {
-		return h.messages.ListByTopic(ctx, id)
+func (h *handler) ListMessagesInGroup(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, chi.URLParam(r, "group_id"), func(ctx context.Context, s string) ([]factcheck.MessageV2, error) {
+		return h.messagesv2.ListByGroup(ctx, s)
 	})
 }
 

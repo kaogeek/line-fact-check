@@ -33,16 +33,16 @@ func (s *service) AdminSubmit(
 	topicID string,
 ) (
 	factcheck.MessageV2,
-	factcheck.MessageV2Group,
+	factcheck.MessageGroup,
 	error,
 ) {
 	textSHA1, err := factcheck.SHA1Base64(text)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, err
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
 	}
 	tx, err := s.repo.BeginTx(ctx, repo.Serializable)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, err
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
 	}
 	defer func() {
 		err := tx.Rollback(ctx)
@@ -58,18 +58,18 @@ func (s *service) AdminSubmit(
 	if topicID != "" {
 		exists, err := s.repo.Topics.Exists(ctx, topicID, withTx)
 		if err != nil {
-			return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error getting topic '%s' for a new message", topicID)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error getting topic '%s' for a new message", topicID)
 		}
 		if !exists {
-			return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("non existent topic '%s'", topicID)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("non existent topic '%s'", topicID)
 		}
 	}
 	group, err := s.repo.MessagesV2Groups.GetBySHA1(ctx, textSHA1, withTx)
 	if err != nil {
 		if !repo.IsNotFound(err) {
-			return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
 		}
-		group = factcheck.MessageV2Group{
+		group = factcheck.MessageGroup{
 			ID:        uuid.NewString(),
 			TopicID:   topicID,
 			Text:      text,
@@ -83,7 +83,7 @@ func (s *service) AdminSubmit(
 		)
 		group, err = s.repo.MessagesV2Groups.Create(ctx, group, withTx)
 		if err != nil {
-			return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error pre-creating group %s", textSHA1)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
 		}
 	}
 	m := factcheck.MessageV2{
@@ -98,7 +98,7 @@ func (s *service) AdminSubmit(
 	}
 	created, err := s.repo.MessagesV2.Create(ctx, m, withTx)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error creating message: %w", err)
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error creating message: %w", err)
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func (s *service) AdminSubmit(
 			"gid", group.ID,
 			"sha1", textSHA1,
 		)
-		return factcheck.MessageV2{}, factcheck.MessageV2Group{}, fmt.Errorf("error committing message: %w", err)
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error committing message: %w", err)
 	}
 	return created, group, nil
 }

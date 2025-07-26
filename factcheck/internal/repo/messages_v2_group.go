@@ -9,11 +9,11 @@ import (
 )
 
 type MessagesV2Groups interface {
-	Create(context.Context, factcheck.MessageV2Group, ...Option) (factcheck.MessageV2Group, error)
-	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error)
-	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageV2Group, error)
-	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageV2Group, error)
-	UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error)
+	Create(context.Context, factcheck.MessageGroup, ...Option) (factcheck.MessageGroup, error)
+	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
+	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error)
+	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageGroup, error)
+	UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 }
 
@@ -25,7 +25,7 @@ type messagesV2Groups struct {
 	queries *postgres.Queries
 }
 
-func (m *messagesV2Groups) Create(ctx context.Context, group factcheck.MessageV2Group, opts ...Option) (factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) Create(ctx context.Context, group factcheck.MessageGroup, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	if group.Text == "" {
 		slog.WarnContext(ctx, "empty group.text", "group_id", group.ID)
@@ -35,29 +35,29 @@ func (m *messagesV2Groups) Create(ctx context.Context, group factcheck.MessageV2
 	}
 	params, err := postgres.MessageV2GroupCreator(group)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	created, err := queries.CreateMessageV2Group(ctx, params)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	return postgres.ToMessageV2Group(created)
 }
 
-func (m *messagesV2Groups) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	uuid, err := postgres.UUID(id)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	result, err := queries.GetMessageV2Group(ctx, uuid)
 	if err != nil {
-		return factcheck.MessageV2Group{}, handleNotFound(err, map[string]string{"id": id})
+		return factcheck.MessageGroup{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return postgres.ToMessageV2Group(result)
 }
 
-func (m *messagesV2Groups) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	topicUUID, err := postgres.UUID(topicID)
 	if err != nil {
@@ -70,22 +70,22 @@ func (m *messagesV2Groups) ListByTopic(ctx context.Context, topicID string, opts
 	return postgres.ToMessageV2Groups(result)
 }
 
-func (m *messagesV2Groups) AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	uuid, err := postgres.UUID(id)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	topicUUID, err := postgres.UUID(topicID)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	result, err := queries.AssignMessageV2GroupToTopic(ctx, postgres.AssignMessageV2GroupToTopicParams{
 		ID:      uuid,
 		TopicID: topicUUID,
 	})
 	if err != nil {
-		return factcheck.MessageV2Group{}, handleNotFound(err, filter{
+		return factcheck.MessageGroup{}, handleNotFound(err, filter{
 			"id":       id,
 			"topic_id": topicID,
 		})
@@ -93,28 +93,28 @@ func (m *messagesV2Groups) AssignTopic(ctx context.Context, id string, topicID s
 	return postgres.ToMessageV2Group(result)
 }
 
-func (m *messagesV2Groups) UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	uuid, err := postgres.UUID(id)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	result, err := queries.UnassignMessageV2GroupFromTopic(ctx, uuid)
 	if err != nil {
-		return factcheck.MessageV2Group{}, handleNotFound(err, filter{"id": id})
+		return factcheck.MessageGroup{}, handleNotFound(err, filter{"id": id})
 	}
 	return postgres.ToMessageV2Group(result)
 }
 
-func (m *messagesV2Groups) GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageV2Group, error) {
+func (m *messagesV2Groups) GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
 	sha1Text, err := postgres.Text(sha1)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	result, err := queries.GetMessageV2GroupBySHA1(ctx, sha1Text)
 	if err != nil {
-		return factcheck.MessageV2Group{}, handleNotFound(err, filter{"sha1": sha1})
+		return factcheck.MessageGroup{}, handleNotFound(err, filter{"sha1": sha1})
 	}
 	return postgres.ToMessageV2Group(result)
 }

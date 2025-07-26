@@ -332,7 +332,7 @@ func ToMessagesV2(data []MessagesV2) ([]factcheck.MessageV2, error) {
 	return utils.Map(data, ToMessageV2)
 }
 
-func MessageV2GroupCreator(g factcheck.MessageV2Group) (CreateMessageV2GroupParams, error) {
+func MessageV2GroupCreator(g factcheck.MessageGroup) (CreateMessageV2GroupParams, error) {
 	id, err := UUID(g.ID)
 	if err != nil {
 		return CreateMessageV2GroupParams{}, err
@@ -360,20 +360,20 @@ func MessageV2GroupCreator(g factcheck.MessageV2Group) (CreateMessageV2GroupPara
 	}, nil
 }
 
-func ToMessageV2Group(data MessagesV2Group) (factcheck.MessageV2Group, error) {
+func ToMessageV2Group(data MessagesV2Group) (factcheck.MessageGroup, error) {
 	id, err := FromUUID(data.ID)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	topicID, err := FromUUID(data.TopicID)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
 	createdAt, err := Time(data.CreatedAt)
 	if err != nil {
-		return factcheck.MessageV2Group{}, err
+		return factcheck.MessageGroup{}, err
 	}
-	group := factcheck.MessageV2Group{
+	group := factcheck.MessageGroup{
 		ID:        id,
 		TopicID:   topicID,
 		CreatedAt: createdAt,
@@ -391,7 +391,7 @@ func ToMessageV2Group(data MessagesV2Group) (factcheck.MessageV2Group, error) {
 	return group, nil
 }
 
-func ToMessageV2Groups(data []MessagesV2Group) ([]factcheck.MessageV2Group, error) {
+func ToMessageV2Groups(data []MessagesV2Group) ([]factcheck.MessageGroup, error) {
 	return utils.Map(data, ToMessageV2Group)
 }
 

@@ -52,7 +52,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	opts := toTopicOptions(r)
-	topics, err := h.topics.ListDynamic(r.Context(), limit, offset, opts...)
+	topics, err := h.topics.ListDynamicV2(r.Context(), limit, offset, opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

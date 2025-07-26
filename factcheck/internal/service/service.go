@@ -14,22 +14,18 @@ import (
 )
 
 type Service interface {
-	AdminSubmit(context.Context, factcheck.MessageV2) (factcheck.MessageV2, error)
+	Submit(context.Context, string, string, string) (factcheck.MessageV2, factcheck.MessageGroup, error)
 }
 
-func New(repo repo.Repository) Service {
-	panic("not implemented")
-}
+func New(repo repo.Repository) Service { return &service{repo: repo} }
 
-type service struct {
-	repo repo.Repository
-}
+type service struct{ repo repo.Repository }
 
-func (s *service) AdminSubmit(
+func (s *service) Submit(
 	ctx context.Context,
 	userID string,
 	text string,
-	topicID string,
+	topicID string, // If empty, the new message will be topic-less
 ) (
 	factcheck.MessageV2,
 	factcheck.MessageGroup,
@@ -68,15 +64,17 @@ func (s *service) AdminSubmit(
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
 		}
+
+		// If not found, we'll create a new group for it.
+		// But the group will not have topicID - to be assigned topic by admin
 		group = factcheck.MessageGroup{
 			ID:        utils.NewID().String(),
-			TopicID:   topicID,
 			Text:      text,
 			TextSHA1:  textSHA1,
 			CreatedAt: now,
 		}
-		slog.Info("creating new group",
-			"uuid", group.ID,
+		slog.Info("creating new group without topic",
+			"gid", group.ID,
 			"name", group.Name,
 			"text_sha1", group.SHA1,
 		)
@@ -85,9 +83,10 @@ func (s *service) AdminSubmit(
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
 		}
 	}
+
 	m := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
-		TopicID:     topicID,
+		TopicID:     group.TopicID,
 		UserID:      userID,
 		GroupID:     group.ID,
 		TypeUser:    factcheck.TypeUserMessageAdmin,

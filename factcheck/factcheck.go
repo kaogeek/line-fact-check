@@ -82,8 +82,16 @@ type MessageGroup struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+type User struct {
+	ID        string // pkey
+	PersonID  string // some identifier like email, LINE ID, or admin name
+	Type      TypeUser
+	CreatedAt time.Time
+}
+
 type Answer struct {
 	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
 	TopicID   string    `json:"topic_id"`
 	Text      string    `json:"text"`
 	CreatedAt time.Time `json:"created_at"`

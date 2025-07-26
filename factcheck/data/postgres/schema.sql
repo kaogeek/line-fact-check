@@ -43,7 +43,8 @@ CREATE TABLE message_groups (
     text       text,
     text_sha1  text,
     created_at timestamptz,
-    updated_at timestamptz NOT NULL
+    updated_at timestamptz NOT NULL,
+    UNIQUE (topic_id, text_sha1)
 );
 
 -- MessagesV2 table (replaces messages + user_messages relationship)

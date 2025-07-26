@@ -37,7 +37,7 @@ type Querier interface {
 	GetAnswerByTopicID(ctx context.Context, topicID pgtype.UUID) (Answer, error)
 	GetMessage(ctx context.Context, id pgtype.UUID) (Message, error)
 	GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
-	GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error)
+	GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (MessageGroup, error)
 	GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
 	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)

@@ -108,11 +108,7 @@ func (m *messageGroups) UnassignTopic(ctx context.Context, id string, opts ...Op
 
 func (m *messageGroups) GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error) {
 	queries := queries(m.queries, options(opts...))
-	sha1Text, err := postgres.Text(sha1)
-	if err != nil {
-		return factcheck.MessageGroup{}, err
-	}
-	result, err := queries.GetMessageGroupBySHA1(ctx, sha1Text)
+	result, err := queries.GetMessageGroupBySHA1(ctx, sha1)
 	if err != nil {
 		return factcheck.MessageGroup{}, handleNotFound(err, filter{"sha1": sha1})
 	}

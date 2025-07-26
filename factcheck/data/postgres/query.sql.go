@@ -411,18 +411,19 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 
 const createMessageGroup = `-- name: CreateMessageGroup :one
 INSERT INTO message_groups (
-    id, topic_id, name, text, text_sha1, created_at, updated_at
+    id, topic_id, name, text, text_sha1, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
 `
 
 type CreateMessageGroupParams struct {
 	ID        pgtype.UUID        `json:"id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
-	Name      pgtype.Text        `json:"name"`
-	Text      pgtype.Text        `json:"text"`
-	TextSha1  pgtype.Text        `json:"text_sha1"`
+	Name      string             `json:"name"`
+	Text      string             `json:"text"`
+	TextSha1  string             `json:"text_sha1"`
+	Language  pgtype.Text        `json:"language"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
@@ -434,6 +435,7 @@ func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroup
 		arg.Name,
 		arg.Text,
 		arg.TextSha1,
+		arg.Language,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -717,7 +719,7 @@ const getMessageGroupBySHA1 = `-- name: GetMessageGroupBySHA1 :one
 SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
 `
 
-func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error) {
+func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (MessageGroup, error) {
 	row := q.db.QueryRow(ctx, getMessageGroupBySHA1, textSha1)
 	var i MessageGroup
 	err := row.Scan(
@@ -1399,7 +1401,7 @@ WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_a
 
 type UpdateMessageGroupNameParams struct {
 	ID   pgtype.UUID `json:"id"`
-	Name pgtype.Text `json:"name"`
+	Name string      `json:"name"`
 }
 
 func (q *Queries) UpdateMessageGroupName(ctx context.Context, arg UpdateMessageGroupNameParams) (MessageGroup, error) {

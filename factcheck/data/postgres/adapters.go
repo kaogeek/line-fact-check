@@ -349,12 +349,18 @@ func MessageGroupCreator(g factcheck.MessageGroup) (CreateMessageGroupParams, er
 	if err != nil {
 		return CreateMessageGroupParams{}, err
 	}
+	language, err := Text(g.Language)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+
 	return CreateMessageGroupParams{
 		ID:        id,
 		TopicID:   topicID,
-		Name:      TextNullable(g.Name),
-		Text:      TextNullable(g.Text),
-		TextSha1:  TextNullable(g.TextSHA1),
+		Name:      g.Name,
+		Text:      g.Text,
+		TextSha1:  g.TextSHA1,
+		Language:  language,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}, nil
@@ -375,18 +381,12 @@ func ToMessageGroup(data MessageGroup) (factcheck.MessageGroup, error) {
 	}
 	group := factcheck.MessageGroup{
 		ID:        id,
+		Name:      data.Name,
+		Text:      data.Text,
+		TextSHA1:  data.TextSha1,
 		TopicID:   topicID,
 		CreatedAt: createdAt,
 		UpdatedAt: TimeNullable(data.UpdatedAt),
-	}
-	if data.Name.Valid {
-		group.Name = data.Name.String
-	}
-	if data.Text.Valid {
-		group.Text = data.Text.String
-	}
-	if data.TextSha1.Valid {
-		group.TextSHA1 = data.TextSha1.String
 	}
 	return group, nil
 }

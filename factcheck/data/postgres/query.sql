@@ -264,9 +264,9 @@ DELETE FROM messages_v2 WHERE id = $1;
 
 -- name: CreateMessageGroup :one
 INSERT INTO message_groups (
-    id, topic_id, name, text, text_sha1, created_at, updated_at
+    id, topic_id, name, text, text_sha1, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 -- name: GetMessageGroup :one

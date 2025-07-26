@@ -31,9 +31,9 @@ type Message struct {
 type MessageGroup struct {
 	ID        pgtype.UUID        `json:"id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
-	Name      pgtype.Text        `json:"name"`
-	Text      pgtype.Text        `json:"text"`
-	TextSha1  pgtype.Text        `json:"text_sha1"`
+	Name      string             `json:"name"`
+	Text      string             `json:"text"`
+	TextSha1  string             `json:"text_sha1"`
 	Language  pgtype.Text        `json:"language"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`

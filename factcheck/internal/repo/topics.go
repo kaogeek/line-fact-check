@@ -17,6 +17,7 @@ type Topics interface {
 	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
+	ListDynamicV2(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)

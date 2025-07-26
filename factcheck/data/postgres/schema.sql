@@ -38,13 +38,13 @@ CREATE TABLE messages (
 -- MessageGroup table (groups messages with identical text)
 CREATE TABLE message_groups (
     id         UUID NOT NULL PRIMARY KEY,
-    topic_id   UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
-    name       text,
-    text       text,
-    text_sha1  text,
+    topic_id   UUID REFERENCES topics(id) ON DELETE CASCADE,
+    name       text NOT NULL,
+    text       text NOT NULL,
+    text_sha1  text NOT NULL,
     language   text,
-    created_at timestamptz,
-    updated_at timestamptz NOT NULL,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz,
     UNIQUE (topic_id, text_sha1)
 );
 

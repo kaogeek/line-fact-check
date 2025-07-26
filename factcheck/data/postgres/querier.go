@@ -21,22 +21,27 @@ type Querier interface {
 	CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsGroupByStatusLikeIDLikeMessageTextParams) ([]CountTopicsGroupByStatusLikeIDLikeMessageTextRow, error)
 	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)
 	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
+	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	CreateMessageGroup(ctx context.Context, arg CreateMessageGroupParams) (MessageGroup, error)
 	CreateMessageV2(ctx context.Context, arg CreateMessageV2Params) (MessagesV2, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)
 	CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error)
+	DeleteAnswer(ctx context.Context, id pgtype.UUID) error
 	DeleteMessage(ctx context.Context, id pgtype.UUID) error
 	DeleteMessageGroup(ctx context.Context, id pgtype.UUID) error
 	DeleteMessageV2(ctx context.Context, id pgtype.UUID) error
 	DeleteTopic(ctx context.Context, id pgtype.UUID) error
 	DeleteUserMessage(ctx context.Context, id pgtype.UUID) error
+	GetAnswerByID(ctx context.Context, id pgtype.UUID) (Answer, error)
+	GetAnswerByTopicID(ctx context.Context, topicID pgtype.UUID) (Answer, error)
 	GetMessage(ctx context.Context, id pgtype.UUID) (Message, error)
 	GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
 	GetMessageGroupBySHA1(ctx context.Context, textSha1 pgtype.Text) (MessageGroup, error)
 	GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
 	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)
+	ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID) ([]Answer, error)
 	ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error)
 	ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error)
 	ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error)

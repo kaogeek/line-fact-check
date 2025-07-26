@@ -272,3 +272,22 @@ WHERE id = $1 RETURNING *;
 -- name: DeleteMessageGroup :exec
 DELETE FROM message_groups WHERE id = $1;
 
+-- name: CreateAnswer :one
+INSERT INTO answers (
+    id, topic_id, text, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING *;
+
+-- name: GetAnswerByID :one
+SELECT * FROM answers WHERE id = $1;
+
+-- name: GetAnswerByTopicID :one
+SELECT * FROM answers WHERE topic_id = $1 ORDER BY created_at DESC LIMIT 1;
+
+-- name: ListAnswersByTopicID :many
+SELECT * FROM answers WHERE topic_id = $1 ORDER BY created_at DESC;
+
+-- name: DeleteAnswer :exec
+DELETE FROM answers WHERE id = $1;
+

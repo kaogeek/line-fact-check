@@ -8,6 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Answer struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Text      string             `json:"text"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Message struct {
 	ID            pgtype.UUID        `json:"id"`
 	UserMessageID pgtype.UUID        `json:"user_message_id"`

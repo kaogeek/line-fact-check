@@ -475,3 +475,55 @@ func TimeNullable(t pgtype.Timestamptz) *time.Time {
 	}
 	return &t.Time
 }
+
+func AnswerCreator(a factcheck.Answer) (CreateAnswerParams, error) {
+	id, err := UUID(a.ID)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	topicID, err := UUID(a.TopicID)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	createdAt, err := Timestamptz(a.CreatedAt)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	updatedAt, err := TimestamptzNullable(a.UpdatedAt)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	return CreateAnswerParams{
+		ID:        id,
+		TopicID:   topicID,
+		Text:      a.Text,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
+
+func ToAnswer(data Answer) (factcheck.Answer, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	topicID, err := FromUUID(data.TopicID)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	return factcheck.Answer{
+		ID:        id,
+		TopicID:   topicID,
+		Text:      data.Text,
+		CreatedAt: createdAt,
+		UpdatedAt: TimeNullable(data.UpdatedAt),
+	}, nil
+}
+
+func ToAnswers(data []Answer) ([]factcheck.Answer, error) {
+	return utils.Map(data, ToAnswer)
+}

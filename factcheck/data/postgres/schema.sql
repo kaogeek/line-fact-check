@@ -62,6 +62,15 @@ CREATE TABLE messages_v2 (
     updated_at timestamptz
 );
 
+-- Answers table (append-only log of topic answers)
+CREATE TABLE answers (
+    id         UUID NOT NULL PRIMARY KEY,
+    topic_id   UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+    text       text NOT NULL,
+    created_at timestamptz NOT NULL,
+    updated_at timestamptz
+);
+
 CREATE INDEX idx_topics_status ON topics(status);
 CREATE INDEX idx_topics_created_at ON topics(created_at);
 CREATE INDEX idx_user_messages_type ON user_messages(type);
@@ -81,5 +90,7 @@ CREATE INDEX idx_messages_v2_language ON messages_v2(language);
 CREATE INDEX idx_message_groups_topic_id ON message_groups(topic_id);
 CREATE INDEX idx_message_groups_text_sha1 ON message_groups(text_sha1);
 CREATE INDEX idx_message_groups_created_at ON message_groups(created_at);
+CREATE INDEX idx_answers_topic_id ON answers(topic_id);
+CREATE INDEX idx_answers_created_at ON answers(created_at);
 
 COMMIT; 

@@ -326,6 +326,41 @@ func (q *Queries) CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopics
 	return items, nil
 }
 
+const createAnswer = `-- name: CreateAnswer :one
+INSERT INTO answers (
+    id, topic_id, text, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING id, topic_id, text, created_at, updated_at
+`
+
+type CreateAnswerParams struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Text      string             `json:"text"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error) {
+	row := q.db.QueryRow(ctx, createAnswer,
+		arg.ID,
+		arg.TopicID,
+		arg.Text,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i Answer
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Text,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (
     id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
@@ -547,6 +582,15 @@ func (q *Queries) CreateUserMessage(ctx context.Context, arg CreateUserMessagePa
 	return i, err
 }
 
+const deleteAnswer = `-- name: DeleteAnswer :exec
+DELETE FROM answers WHERE id = $1
+`
+
+func (q *Queries) DeleteAnswer(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAnswer, id)
+	return err
+}
+
 const deleteMessage = `-- name: DeleteMessage :exec
 DELETE FROM messages WHERE id = $1
 `
@@ -590,6 +634,40 @@ DELETE FROM user_messages WHERE id = $1
 func (q *Queries) DeleteUserMessage(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUserMessage, id)
 	return err
+}
+
+const getAnswerByID = `-- name: GetAnswerByID :one
+SELECT id, topic_id, text, created_at, updated_at FROM answers WHERE id = $1
+`
+
+func (q *Queries) GetAnswerByID(ctx context.Context, id pgtype.UUID) (Answer, error) {
+	row := q.db.QueryRow(ctx, getAnswerByID, id)
+	var i Answer
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Text,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getAnswerByTopicID = `-- name: GetAnswerByTopicID :one
+SELECT id, topic_id, text, created_at, updated_at FROM answers WHERE topic_id = $1 ORDER BY created_at DESC LIMIT 1
+`
+
+func (q *Queries) GetAnswerByTopicID(ctx context.Context, topicID pgtype.UUID) (Answer, error) {
+	row := q.db.QueryRow(ctx, getAnswerByTopicID, topicID)
+	var i Answer
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Text,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getMessage = `-- name: GetMessage :one
@@ -710,6 +788,36 @@ func (q *Queries) GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listAnswersByTopicID = `-- name: ListAnswersByTopicID :many
+SELECT id, topic_id, text, created_at, updated_at FROM answers WHERE topic_id = $1 ORDER BY created_at DESC
+`
+
+func (q *Queries) ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID) ([]Answer, error) {
+	rows, err := q.db.Query(ctx, listAnswersByTopicID, topicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Answer
+	for rows.Next() {
+		var i Answer
+		if err := rows.Scan(
+			&i.ID,
+			&i.TopicID,
+			&i.Text,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listMessageGroupsByTopic = `-- name: ListMessageGroupsByTopic :many

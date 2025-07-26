@@ -17,13 +17,14 @@ import (
 // Repository combines all repository interfaces
 // and provides a transaction manager for beginning a transaction
 type Repository struct {
-	TxnManager    postgres.TxnManager
 	Topics        Topics
 	MessagesV2    MessagesV2
 	MessageGroups MessageGroups
+	Answers       Answers
+
+	TxnManager postgres.TxnManager
 
 	// TO BE DEPRECATED
-
 	Messages     Messages
 	UserMessages UserMessages
 }
@@ -42,6 +43,7 @@ func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 		UserMessages:  NewUserMessages(queries),
 		MessagesV2:    NewMessagesV2(queries),
 		MessageGroups: NewMessageGroups(queries),
+		Answers:       NewAnswers(queries),
 		TxnManager:    postgres.NewTxnManager(pool),
 	}
 }

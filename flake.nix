@@ -116,17 +116,18 @@ rec {
         docker-postgres-factcheck = pkgs.dockerTools.buildImage {
           name = "factcheck/postgres";
           tag = "16";
-          fromImage = pkgs.dockerTools.pullImage {
+          fromImage = if pkgs.lib.strings.hasPrefix "aarch64" pkgs.system then pkgs.dockerTools.pullImage {
+            imageName = "postgres";
+            imageDigest = "sha256:f756bec6e37ffdae0f94b499d49a48cd35dd4eea1edb06711b7fbd9c5708d6d5";
+            finalImageName = "postgres";
+            finalImageTag = "16";
+            sha256 = "sha256-d9a0i0VhnCEqQrRdkFCSkZC2OTOtjVoxRZWocK0zCUg=";
+          } else pkgs.dockerTools.pullImage {
             imageName = "postgres";
             imageDigest = "sha256:85df95e724f37d83e3cdc771bc7928519a0febcaeda7f3b497986a0d04959c0d";
             finalImageName = "postgres";
             finalImageTag = "16";
-            sha256 = if pkgs.system == "aarch64-darwin" then
-              "sha256-Gj6yGJdD0/eyMkXDrbEPPuPd89018+zyQ6EG7faC83g="
-            else if pkgs.system == "aarch64-linux" then
-              "sha256-Gj6yGJdD0/eyMkXDrbEPPuPd89018+zyQ6EG7faC83g="
-            else
-              "sha256-Gj6yGJdD0/eyMkXDrbEPPuPd89018+zyQ6EG7faC83g=";
+            sha256 = "sha256-Gj6yGJdD0/eyMkXDrbEPPuPd89018+zyQ6EG7faC83g=";
           };
           copyToRoot = pkgs.runCommand "postgres-init-schema-factcheck" {} ''
             mkdir -p $out/docker-entrypoint-initdb.d

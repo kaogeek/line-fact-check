@@ -115,7 +115,21 @@ func (t TypeMessage) IsValid() bool {
 	return t == TypeMessageText
 }
 
-func (m MessageV2) IsValid() error {
+func (t Topic) Validate() error {
+	switch t.Status {
+	case StatusTopicResolved:
+		if t.Result == "" {
+			return fmt.Errorf("unexpected empty topic result of resolved topic '%s'", t.ID)
+		}
+	case StatusTopicPending:
+		if t.Result != "" {
+			return fmt.Errorf("unexpected non-empty result of pending topic '%s': '%s'", t.ID, t.Result)
+		}
+	}
+	return nil
+}
+
+func (m MessageV2) Validate() error {
 	if m.Text == "" {
 		return errors.New("empty text")
 	}

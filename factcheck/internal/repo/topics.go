@@ -15,6 +15,7 @@ type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
 	Resolve(ctx context.Context, id string, answerText string, opts ...Option) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
+	GetStatus(ctx context.Context, id string, opts ...Option) (factcheck.StatusTopic, error)
 	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
@@ -71,9 +72,22 @@ func (t *topics) Exists(ctx context.Context, id string, opts ...Option) (bool, e
 	return exists, nil
 }
 
-func (t *topics) Resolve(ctx context.Context, topicID string, answerText string, opts ...Option) (factcheck.Topic, error) {
+func (t *topics) GetStatus(ctx context.Context, id string, opts ...Option) (factcheck.StatusTopic, error) {
 	queries := queries(t.queries, options(opts...))
-	uuid, err := postgres.UUID(topicID)
+	uuid, err := postgres.UUID(id)
+	if err != nil {
+		return "", err
+	}
+	row, err := queries.GetTopicStatus(ctx, uuid)
+	if err != nil {
+		return "", handleNotFound(err, filter{"id": id})
+	}
+	return factcheck.StatusTopic(row), nil
+}
+
+func (t *topics) Resolve(ctx context.Context, id string, answerText string, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
 	if err != nil {
 		return factcheck.Topic{}, err
 	}
@@ -91,7 +105,7 @@ func (t *topics) Resolve(ctx context.Context, topicID string, answerText string,
 		ResultStatus: status,
 	})
 	if err != nil {
-		return factcheck.Topic{}, err
+		return factcheck.Topic{}, handleNotFound(err, filter{"id": id})
 	}
 	return postgres.ToTopic(resolved), nil
 }

@@ -41,6 +41,7 @@ type Querier interface {
 	GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (MessageGroup, error)
 	GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
+	GetTopicStatus(ctx context.Context, id pgtype.UUID) (string, error)
 	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)
 	ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID) ([]Answer, error)
 	ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error)

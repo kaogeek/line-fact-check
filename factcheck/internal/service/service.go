@@ -15,22 +15,34 @@ import (
 )
 
 type Service interface {
-	// Submit handles new message submission
-	// by creating the message and assigning it to a group.
-	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, error)
+	// Submit handles new message submission by creating the message and assigning it to a group.
+	// Submit returns message created, message group assigned to the new message, and topic (if any)
+	//
+	// Caller could call this Submit, and on success gets all the messages from users for replies.
+	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, *factcheck.Topic, error)
 
 	// ResolveTopic resolves topic and returns list of messages associated with the topic.
-	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Topic, []factcheck.MessageV2, error)
+	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Answer, factcheck.Topic, []factcheck.MessageV2, error)
 }
 
 func New(repo repo.Repository) Service { return &service{repo: repo} }
 
 type service struct{ repo repo.Repository }
 
-func (s *service) ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Topic, []factcheck.MessageV2, error) {
+func (s *service) ResolveTopic(
+	ctx context.Context,
+	user factcheck.UserInfo,
+	topicID string,
+	answerText string,
+) (
+	factcheck.Answer,
+	factcheck.Topic,
+	[]factcheck.MessageV2,
+	error,
+) {
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
-		return factcheck.Topic{}, nil, err
+		return factcheck.Answer{}, factcheck.Topic{}, nil, err
 	}
 	defer func() {
 		err := tx.Rollback(ctx)
@@ -44,19 +56,30 @@ func (s *service) ResolveTopic(ctx context.Context, user factcheck.UserInfo, top
 	}()
 
 	withTx := repo.WithTx(tx)
-	resolved, err := s.repo.Topics.Resolve(ctx, topicID, answer, withTx)
+	answer := factcheck.Answer{
+		ID:        utils.NewID().String(),
+		UserID:    user.UserID,
+		TopicID:   topicID,
+		Text:      answerText,
+		CreatedAt: utils.TimeNow(),
+	}
+	answer, err = s.repo.Answers.Create(ctx, answer, withTx)
 	if err != nil {
-		return factcheck.Topic{}, nil, err
+		return factcheck.Answer{}, factcheck.Topic{}, nil, err
+	}
+	resolved, err := s.repo.Topics.Resolve(ctx, topicID, answerText, withTx)
+	if err != nil {
+		return factcheck.Answer{}, factcheck.Topic{}, nil, err
 	}
 	messages, err := s.repo.MessagesV2.ListByTopic(ctx, topicID, withTx)
 	if err != nil {
-		return factcheck.Topic{}, nil, err
+		return factcheck.Answer{}, factcheck.Topic{}, nil, err
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
-		return factcheck.Topic{}, nil, err
+		return factcheck.Answer{}, factcheck.Topic{}, nil, err
 	}
-	return resolved, messages, nil
+	return answer, resolved, messages, nil
 }
 
 func (s *service) Submit(
@@ -67,15 +90,16 @@ func (s *service) Submit(
 ) (
 	factcheck.MessageV2,
 	factcheck.MessageGroup,
+	*factcheck.Topic,
 	error,
 ) {
 	textSHA1, err := factcheck.SHA1Base64(text)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
 	}
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
 	}
 	defer func() {
 		err := tx.Rollback(ctx)
@@ -88,19 +112,23 @@ func (s *service) Submit(
 	now := time.Now()
 	withTx := repo.WithTx(tx)
 
+	var topic *factcheck.Topic
 	if topicID != "" {
-		exists, err := s.repo.Topics.Exists(ctx, topicID, withTx)
+		topicDB, err := s.repo.Topics.GetByID(ctx, topicID, withTx)
 		if err != nil {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error getting topic '%s' for a new message", topicID)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error getting topic '%s' for a new message: %w", topicID, err)
 		}
-		if !exists {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("non existent topic '%s'", topicID)
+		err = topicDB.Validate()
+		if err != nil {
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error validating topic '%s' for a new message: %w", topicID, err)
 		}
+		topic = &topicDB
 	}
+
 	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
 	if err != nil {
 		if !repo.IsNotFound(err) {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
 		}
 
 		// If not found, we'll create a new group for it.
@@ -118,7 +146,7 @@ func (s *service) Submit(
 		)
 		group, err = s.repo.MessageGroups.Create(ctx, group, withTx)
 		if err != nil {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s", textSHA1)
 		}
 	}
 
@@ -128,7 +156,7 @@ func (s *service) Submit(
 	}
 	metaJSON, err := json.Marshal(meta)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s", textSHA1)
 	}
 	message := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
@@ -144,7 +172,7 @@ func (s *service) Submit(
 
 	created, err := s.repo.MessagesV2.Create(ctx, message, withTx)
 	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error creating message: %w", err)
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error creating message: %w", err)
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
@@ -154,7 +182,7 @@ func (s *service) Submit(
 			"gid", group.ID,
 			"sha1", textSHA1,
 		)
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error committing message: %w", err)
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error committing message: %w", err)
 	}
-	return created, group, nil
+	return created, group, topic, nil
 }

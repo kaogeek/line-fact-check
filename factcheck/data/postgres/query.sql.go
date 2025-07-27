@@ -830,6 +830,17 @@ func (q *Queries) GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error) {
 	return i, err
 }
 
+const getTopicStatus = `-- name: GetTopicStatus :one
+SELECT status FROM topics WHERE id = $1
+`
+
+func (q *Queries) GetTopicStatus(ctx context.Context, id pgtype.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, getTopicStatus, id)
+	var status string
+	err := row.Scan(&status)
+	return status, err
+}
+
 const getUserMessage = `-- name: GetUserMessage :one
 SELECT id, type, replied_at, metadata, created_at, updated_at FROM user_messages WHERE id = $1
 `

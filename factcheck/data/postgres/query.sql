@@ -8,6 +8,9 @@ INSERT INTO topics (
 -- name: GetTopic :one
 SELECT * FROM topics WHERE id = $1;
 
+-- name: GetTopicStatus :one
+SELECT status FROM topics WHERE id = $1;
+
 -- name: TopicExists :one
 SELECT EXISTS (SELECT 1 from topics where id = $1);
 

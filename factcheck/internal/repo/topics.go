@@ -13,6 +13,7 @@ import (
 // Topics defines the interface for topic data operations
 type Topics interface {
 	Create(ctx context.Context, topic factcheck.Topic, opts ...Option) (factcheck.Topic, error)
+	Resolve(ctx context.Context, id string, answerText string, opts ...Option) (factcheck.Topic, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error)
 	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
@@ -68,6 +69,31 @@ func (t *topics) Exists(ctx context.Context, id string, opts ...Option) (bool, e
 		return false, handleNotFound(err, filter{"id": id})
 	}
 	return exists, nil
+}
+
+func (t *topics) Resolve(ctx context.Context, topicID string, answerText string, opts ...Option) (factcheck.Topic, error) {
+	queries := queries(t.queries, options(opts...))
+	uuid, err := postgres.UUID(topicID)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	result, err := postgres.Text(answerText)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	status, err := postgres.Text(factcheck.StatusTopicResolved)
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	resolved, err := queries.ResolveTopic(ctx, postgres.ResolveTopicParams{
+		ID:           uuid,
+		Result:       result,
+		ResultStatus: status,
+	})
+	if err != nil {
+		return factcheck.Topic{}, err
+	}
+	return postgres.ToTopic(resolved), nil
 }
 
 func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {

@@ -33,15 +33,15 @@ const (
 	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // topic automatically created, no answer yet
 	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // topic resolved by human admins
 
+	TypeMessageText TypeMessage = "MSG_TEXT"
+
+	TypeUserMessageLINEChat      TypeUser = "USER_CHAT"
+	TypeUserMessageLINEGroupChat TypeUser = "USER_GROUPCHAT"
+	TypeUserMessageAdmin         TypeUser = "USER_ADMIN"
+
 	StatusMessageSubmitted      StatusMessage = "MSG_SUBMITTED"
 	StatusMessageTopicSubmitted StatusMessage = "MSG_TOPIC_SUBMITTED"
 	StatusMessageTopicAssigned  StatusMessage = "MSG_TOPIC_ASSIGNED"
-
-	TypeMessageText TypeMessage = "TYPE_TEXT"
-
-	TypeUserMessageLINEChat      TypeUser = "CHAT"
-	TypeUserMessageLINEGroupChat TypeUser = "GROUPCHAT"
-	TypeUserMessageAdmin         TypeUser = "ADMIN"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"

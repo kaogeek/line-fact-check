@@ -1384,6 +1384,36 @@ func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDPara
 	return items, nil
 }
 
+const resolveTopic = `-- name: ResolveTopic :one
+UPDATE topics SET
+    result = $2,
+    result_status = $3,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, name, description, status, result, result_status, created_at, updated_at
+`
+
+type ResolveTopicParams struct {
+	ID           pgtype.UUID `json:"id"`
+	Result       pgtype.Text `json:"result"`
+	ResultStatus pgtype.Text `json:"result_status"`
+}
+
+func (q *Queries) ResolveTopic(ctx context.Context, arg ResolveTopicParams) (Topic, error) {
+	row := q.db.QueryRow(ctx, resolveTopic, arg.ID, arg.Result, arg.ResultStatus)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.Result,
+		&i.ResultStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const topicExists = `-- name: TopicExists :one
 SELECT EXISTS (SELECT 1 from topics where id = $1)
 `

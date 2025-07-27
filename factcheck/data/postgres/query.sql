@@ -84,6 +84,13 @@ UPDATE topics SET
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 
+-- name: ResolveTopic :one
+UPDATE topics SET
+    result = $2,
+    result_status = $3,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
 -- name: CountTopicsByStatus :one
 SELECT COUNT(*) FROM topics WHERE status = $1;
 

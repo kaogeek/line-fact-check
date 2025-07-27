@@ -16,13 +16,48 @@ import (
 
 type Service interface {
 	// Submit handles new message submission
-	// by creating the message and assigning it to a group
+	// by creating the message and assigning it to a group.
 	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, error)
+
+	// ResolveTopic resolves topic and returns list of messages associated with the topic.
+	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Topic, []factcheck.MessageV2, error)
 }
 
 func New(repo repo.Repository) Service { return &service{repo: repo} }
 
 type service struct{ repo repo.Repository }
+
+func (s *service) ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Topic, []factcheck.MessageV2, error) {
+	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
+	if err != nil {
+		return factcheck.Topic{}, nil, err
+	}
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err == nil {
+			return
+		}
+		slog.ErrorContext(ctx, "error rolling back after failure to resolve topic",
+			"topic_id", topicID,
+			"user", user,
+		)
+	}()
+
+	withTx := repo.WithTx(tx)
+	resolved, err := s.repo.Topics.Resolve(ctx, topicID, answer, withTx)
+	if err != nil {
+		return factcheck.Topic{}, nil, err
+	}
+	messages, err := s.repo.MessagesV2.ListByTopic(ctx, topicID, withTx)
+	if err != nil {
+		return factcheck.Topic{}, nil, err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return factcheck.Topic{}, nil, err
+	}
+	return resolved, messages, nil
+}
 
 func (s *service) Submit(
 	ctx context.Context,
@@ -38,7 +73,7 @@ func (s *service) Submit(
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
 	}
-	tx, err := s.repo.BeginTx(ctx, repo.Serializable)
+	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, err
 	}

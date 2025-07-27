@@ -392,6 +392,7 @@ func UUIDNullable(id string) pgtype.UUID {
 	//nolint
 	uuid, err := UUID(id)
 	if err != nil && id != "" {
+		//nolint:noctx
 		slog.Error("unexpected bad uuid '%s' in our system: %w", id, err.Error())
 	}
 	return uuid
@@ -418,7 +419,7 @@ func TextNullable[S ~string](s S) pgtype.Text {
 	err := text.Scan(string(s))
 	if err != nil {
 		text = pgtype.Text{}
-		slog.Error("bad language text", "language", s, "err", err)
+		slog.Error("bad language text", "language", s, "err", err) //nolint:noctx
 	}
 	return text
 }

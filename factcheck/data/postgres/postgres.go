@@ -43,14 +43,15 @@ func NewTxnManager(conn *pgxpool.Pool) TxnManager {
 }
 
 func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
-	slog.Info("connecting to postgres",
+	poolCtx := context.Background()
+	slog.InfoContext(poolCtx, "connecting to postgres",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
 		"dbname", c.Postgres.DB,
 	)
 	pool, err := pgxpool.New(
-		context.Background(),
+		poolCtx,
 		fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 			c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Password, c.Postgres.DB,
@@ -59,25 +60,22 @@ func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-
-	slog.Info("postgres connected",
+	slog.InfoContext(poolCtx, "postgres connected",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
 		"dbname", c.Postgres.DB,
 	)
-
 	cleanup := func() {
-		defer slog.Info("postgres conn closed or cleaned up")
+		defer slog.InfoContext(poolCtx, "postgres conn closed or cleaned up")
 		if pool == nil {
 			slog.Warn("postgres conn is nil")
 			return
 		}
 		pool.Close()
 		if err != nil {
-			slog.Error("error closing postgres conn", "error", err)
+			slog.ErrorContext(poolCtx, "error closing postgres conn", "error", err)
 		}
 	}
-
 	return pool, cleanup, nil
 }

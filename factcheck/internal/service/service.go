@@ -139,7 +139,7 @@ func (s *service) Submit(
 			TextSHA1:  textSHA1,
 			CreatedAt: now,
 		}
-		slog.Info("creating new group without topic",
+		slog.InfoContext(ctx, "creating new group without topic",
 			"gid", group.ID,
 			"name", group.Name,
 			"text_sha1", group.SHA1,
@@ -176,7 +176,7 @@ func (s *service) Submit(
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
-		slog.Error("error committing admin submission",
+		slog.ErrorContext(ctx, "error committing admin submission",
 			"err", err,
 			"mid", message.ID,
 			"gid", group.ID,

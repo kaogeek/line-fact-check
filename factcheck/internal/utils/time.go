@@ -8,7 +8,7 @@ import (
 var now func() time.Time
 
 func init() {
-	slog.Info("testhelper.init.now")
+	slog.Info("testhelper.init.now") //nolint:noctx
 	now = time.Now
 }
 
@@ -22,10 +22,10 @@ func TimeFreeze(t time.Time) {
 	now = func() time.Time {
 		return t
 	}
-	slog.Debug("testhelper.time.freeze")
+	slog.Debug("testhelper.time.freeze") //nolint:noctx
 }
 
 func TimeUnfreeze() {
 	now = time.Now
-	slog.Debug("testhelper.time.unfreeze")
+	slog.Debug("testhelper.time.unfreeze") //nolint:noctx
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -110,18 +111,18 @@ func decode[T any](r *http.Request) (T, error) {
 	return t, nil
 }
 
-func sendText(w http.ResponseWriter, text string, status int) {
+func sendText(ctx context.Context, w http.ResponseWriter, text string, status int) {
 	w.WriteHeader(status)
 	contentTypeText(w.Header())
 	_, err := w.Write([]byte(text))
 	if err != nil {
-		slog.Error("error writing to response", "error", err)
+		slog.ErrorContext(ctx, "error writing to response", "error", err)
 	}
 }
 
 // sendJSON calls replyJsonError, and on non-nil error, writes 500 response
-func sendJSON(w http.ResponseWriter, status int, data any) {
-	err := replyJSON(w, data, status)
+func sendJSON(ctx context.Context, w http.ResponseWriter, status int, data any) {
+	err := replyJSON(ctx, w, data, status)
 	if err != nil {
 		errInternalError(w, err.Error())
 	}
@@ -129,7 +130,7 @@ func sendJSON(w http.ResponseWriter, status int, data any) {
 
 // replyJSON marshals data into JSON string before writing response.
 // If marshaling failed, the response is left untouched and the error is returned.
-func replyJSON(w http.ResponseWriter, data any, status int) error {
+func replyJSON(ctx context.Context, w http.ResponseWriter, data any, status int) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("marshal json error: %w", err)
@@ -139,7 +140,7 @@ func replyJSON(w http.ResponseWriter, data any, status int) error {
 	contentTypeJSON(w.Header())
 	_, err = w.Write(j)
 	if err != nil {
-		slog.Error("error writing to response", "error", err)
+		slog.ErrorContext(ctx, "error writing to response", "error", err)
 		return fmt.Errorf("write to response error: %w", err)
 	}
 	return nil

@@ -60,7 +60,7 @@ func (h *handler) SubmitMessage(w http.ResponseWriter, r *http.Request) {
 		errInternalError(w, err.Error())
 		return
 	}
-	sendJSON(w, http.StatusCreated, map[string]any{
+	sendJSON(r.Context(), w, http.StatusCreated, map[string]any{
 		"topic":   topic,
 		"group":   group,
 		"message": msg,

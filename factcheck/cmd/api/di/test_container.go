@@ -51,17 +51,17 @@ func clearData(conn postgres.DBTX, stage string) {
 	ctx := context.Background()
 	_, err := conn.Exec(ctx, "DELETE FROM topics")
 	if err != nil {
-		slog.Error("Failed to delete topics", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete topics", "error", err)
 		panic(err)
 	}
 	_, err = conn.Exec(ctx, "DELETE FROM messages")
 	if err != nil {
-		slog.Error("Failed to delete messages", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete messages", "error", err)
 		panic(err)
 	}
 	_, err = conn.Exec(ctx, "DELETE FROM user_messages")
 	if err != nil {
-		slog.Error("Failed to delete user_messages", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete user_messages", "error", err)
 		panic(err)
 	}
 

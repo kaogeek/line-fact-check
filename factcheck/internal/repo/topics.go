@@ -22,6 +22,7 @@ type Topics interface {
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
 	CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
+	CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
 	UpdateDescription(ctx context.Context, id string, description string, opts ...Option) (factcheck.Topic, error)
@@ -110,6 +111,31 @@ func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) 
 		slog.Warn("Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
 	}
 	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
+		Column1: options.LikeID,
+		Column2: options.LikeMessageText,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[factcheck.StatusTopic]int64)
+	for i := range rows {
+		r := &rows[i]
+		s := factcheck.StatusTopic(r.Status)
+		if !s.IsValid() {
+			return nil, fmt.Errorf("unexpected invalid status '%s' with %d count", s, r.Count)
+		}
+		result[s] = r.Count
+	}
+	return result, nil
+}
+
+func (t *topics) CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {
+	options := options(opts...)
+	queries := queries(t.queries, options.Options)
+	if len(options.Statuses) != 0 {
+		slog.Warn("Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
+	}
+	rows, err := queries.CountTopicsGroupByStatusDynamicV2(ctx, postgres.CountTopicsGroupByStatusDynamicV2Params{
 		Column1: options.LikeID,
 		Column2: options.LikeMessageText,
 	})

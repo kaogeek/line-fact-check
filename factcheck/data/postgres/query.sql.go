@@ -193,6 +193,58 @@ func (q *Queries) CountTopicsGroupByStatusDynamic(ctx context.Context, arg Count
 	return items, nil
 }
 
+const countTopicsGroupByStatusDynamicV2 = `-- name: CountTopicsGroupByStatusDynamicV2 :many
+SELECT t.status, COUNT(DISTINCT t.id) as count
+FROM topics t
+LEFT JOIN message_groups m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text
+        ELSE true
+    END
+    AND CASE
+        WHEN $2::text != '' THEN (
+            CASE
+                WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $2::text
+                ELSE m.text ILIKE $2::text  -- fallback for unknown language
+            END
+        )
+        ELSE true
+    END
+GROUP BY t.status
+`
+
+type CountTopicsGroupByStatusDynamicV2Params struct {
+	Column1 string `json:"column_1"`
+	Column2 string `json:"column_2"`
+}
+
+type CountTopicsGroupByStatusDynamicV2Row struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountTopicsGroupByStatusDynamicV2(ctx context.Context, arg CountTopicsGroupByStatusDynamicV2Params) ([]CountTopicsGroupByStatusDynamicV2Row, error) {
+	rows, err := q.db.Query(ctx, countTopicsGroupByStatusDynamicV2, arg.Column1, arg.Column2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountTopicsGroupByStatusDynamicV2Row
+	for rows.Next() {
+		var i CountTopicsGroupByStatusDynamicV2Row
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countTopicsGroupByStatusLikeID = `-- name: CountTopicsGroupByStatusLikeID :many
 SELECT status, COUNT(*) as count
 FROM topics t

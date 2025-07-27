@@ -242,6 +242,200 @@ func TestRepository_CountByStatusDynamic(t *testing.T) {
 	})
 }
 
+func TestRepository_CountByStatusDynamicV2(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+	ctx := t.Context()
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create test topics
+	topic1 := factcheck.Topic{
+		ID:          "550e8400-e29b-41d4-a716-446655440001",
+		Name:        "Topic 1 - COVID Pending",
+		Description: "COVID-19 related topic",
+		Status:      factcheck.StatusTopicPending,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+	topic2 := factcheck.Topic{
+		ID:          "550e8400-e29b-41d4-a716-446655440002",
+		Name:        "Topic 2 - Politics Resolved",
+		Description: "Politics related topic",
+		Status:      factcheck.StatusTopicResolved,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+	topic3 := factcheck.Topic{
+		ID:          "660e8400-e29b-41d4-a716-446655440003",
+		Name:        "Topic 3 - Technology Pending",
+		Description: "Technology related topic",
+		Status:      factcheck.StatusTopicPending,
+		CreatedAt:   now,
+		UpdatedAt:   nil,
+	}
+
+	createdTopic1, err := app.Repository.Topics.Create(ctx, topic1)
+	if err != nil {
+		t.Fatalf("Failed to create topic1: %v", err)
+	}
+	createdTopic2, err := app.Repository.Topics.Create(ctx, topic2)
+	if err != nil {
+		t.Fatalf("Failed to create topic2: %v", err)
+	}
+	createdTopic3, err := app.Repository.Topics.Create(ctx, topic3)
+	if err != nil {
+		t.Fatalf("Failed to create topic3: %v", err)
+	}
+
+	// Create message groups with different languages
+	messageGroup1 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Name:      "COVID Vaccine Group",
+		Text:      "COVID-19 vaccine is effective against new variants",
+		TextSHA1:  "sha1_hash_1",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	messageGroup2 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Name:      "Election News Group",
+		Text:      "ข่าวปลอมเกี่ยวกับการเลือกตั้ง",
+		TextSHA1:  "sha1_hash_2",
+		Language:  factcheck.LanguageThai,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	messageGroup3 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Name:      "AI Technology Group",
+		Text:      "New AI technology breakthrough",
+		TextSHA1:  "sha1_hash_3",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: now,
+		UpdatedAt: nil,
+	}
+
+	// Create message groups in database
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup1)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup1: %v", err)
+	}
+
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup2)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup2: %v", err)
+	}
+
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup3)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup3: %v", err)
+	}
+
+	// Helper function to create dynamic options
+	createDynamicOpts := func(likeID string, likeMessageText string) []repo.OptionTopic {
+		return []repo.OptionTopic{
+			repo.TopicLikeID(likeID),
+			repo.TopicLikeMessageText(likeMessageText),
+		}
+	}
+
+	t.Run("CountByStatusDynamicV2 - no options (all topics)", func(t *testing.T) {
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with no options failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 2 {
+			t.Errorf("Expected 2 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamicV2 - message group text filter only (English)", func(t *testing.T) {
+		opts := createDynamicOpts("", "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with English text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic with 'COVID' in message group, got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics with 'COVID' in message group, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamicV2 - message group text filter only (Thai)", func(t *testing.T) {
+		opts := createDynamicOpts("", "ข่าวปลอม")
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with Thai text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic with 'ข่าวปลอม' in message group, got %d", counts[factcheck.StatusTopicResolved])
+		}
+		if counts[factcheck.StatusTopicPending] != 0 {
+			t.Errorf("Expected 0 pending topics with 'ข่าวปลอม' in message group, got %d", counts[factcheck.StatusTopicPending])
+		}
+	})
+
+	t.Run("CountByStatusDynamicV2 - ID filter only", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", "")
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with ID filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic with ID starting with '550e8400', got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 1 {
+			t.Errorf("Expected 1 resolved topic with ID starting with '550e8400', got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamicV2 - combined filters (ID + message group text)", func(t *testing.T) {
+		opts := createDynamicOpts("550e8400", "COVID")
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with ID + message group text filter failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicPending] != 1 {
+			t.Errorf("Expected 1 pending topic (550e8400 + COVID), got %d", counts[factcheck.StatusTopicPending])
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics, got %d", counts[factcheck.StatusTopicResolved])
+		}
+	})
+
+	t.Run("CountByStatusDynamicV2 - empty results", func(t *testing.T) {
+		opts := createDynamicOpts("", "nonexistent")
+		counts, err := app.Repository.Topics.CountByStatusDynamicV2(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountByStatusDynamicV2 with no matching results failed: %v", err)
+		}
+		if counts[factcheck.StatusTopicResolved] != 0 {
+			t.Errorf("Expected 0 resolved topics with 'nonexistent' in message group, got %d", counts[factcheck.StatusTopicResolved])
+		}
+		if counts[factcheck.StatusTopicPending] != 0 {
+			t.Errorf("Expected 0 pending topics, got %d", counts[factcheck.StatusTopicPending])
+		}
+	})
+}
+
 func TestRepository_ListDynamicV2(t *testing.T) {
 	app, cleanup, err := di.InitializeContainerTest()
 	if err != nil {

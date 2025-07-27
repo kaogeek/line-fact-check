@@ -17,6 +17,7 @@ type Querier interface {
 	AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV2ToTopicParams) (MessagesV2, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
 	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)
+	CountTopicsGroupByStatusDynamicV2(ctx context.Context, arg CountTopicsGroupByStatusDynamicV2Params) ([]CountTopicsGroupByStatusDynamicV2Row, error)
 	CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsGroupByStatusLikeIDRow, error)
 	CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsGroupByStatusLikeIDLikeMessageTextParams) ([]CountTopicsGroupByStatusLikeIDLikeMessageTextRow, error)
 	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)

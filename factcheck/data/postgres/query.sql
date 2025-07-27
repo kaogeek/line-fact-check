@@ -225,6 +225,27 @@ WHERE 1=1
     END
 GROUP BY t.status;
 
+-- name: CountTopicsGroupByStatusDynamicV2 :many
+SELECT t.status, COUNT(DISTINCT t.id) as count
+FROM topics t
+LEFT JOIN message_groups m ON t.id = m.topic_id
+WHERE 1=1
+    AND CASE
+        WHEN $1::text != '' THEN t.id::text LIKE $1::text
+        ELSE true
+    END
+    AND CASE
+        WHEN $2::text != '' THEN (
+            CASE
+                WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
+                WHEN m.language = 'en' THEN m.text ILIKE $2::text
+                ELSE m.text ILIKE $2::text  -- fallback for unknown language
+            END
+        )
+        ELSE true
+    END
+GROUP BY t.status;
+
 -- name: CreateMessageV2 :one
 INSERT INTO messages_v2 (
     id, user_id, topic_id, type_user, type, text, language, metadata, created_at, updated_at

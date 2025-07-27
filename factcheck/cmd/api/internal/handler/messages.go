@@ -2,55 +2,67 @@ package handler
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
+// TODO: use middleware to parse the metadata and save it to req context
+// when doing auth
+func (h *handler) getUserInfo(_ *http.Request) (factcheck.UserInfo, error) {
+	return factcheck.UserInfo{
+		UserType: factcheck.TypeUserMessageAdmin,
+		UserID:   "user-mock-getuserinfo",
+	}, nil
+}
+
 func (h *handler) GetMessageByID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), func(ctx context.Context, id string) (factcheck.Message, error) {
-		return h.messages.GetByID(ctx, id)
+	getBy(w, r, paramID(r), func(ctx context.Context, id string) (factcheck.MessageV2, error) {
+		return h.messagesv2.GetByID(ctx, id)
 	})
 }
 
 func (h *handler) DeleteMessageByID(w http.ResponseWriter, r *http.Request) {
-	deleteByID[factcheck.Message](w, r, func(ctx context.Context, s string) error {
-		return h.messages.Delete(ctx, s)
+	deleteByID[factcheck.MessageV2](w, r, func(ctx context.Context, s string) error {
+		return h.messagesv2.Delete(ctx, s)
 	})
 }
 
-func (h *handler) ListMessagesByTopicID(w http.ResponseWriter, r *http.Request) {
-	getBy(w, r, paramID(r), func(ctx context.Context, id string) ([]factcheck.Message, error) {
-		return h.messages.ListByTopic(ctx, id)
+func (h *handler) ListMessagesInGroup(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, chi.URLParam(r, "group_id"), func(ctx context.Context, s string) ([]factcheck.MessageV2, error) {
+		return h.messagesv2.ListByGroup(ctx, s)
 	})
 }
 
-func (h *handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
-	create(
-		w, r, func(ctx context.Context, m factcheck.Message) (factcheck.Message, error) {
-			return h.messages.Create(ctx, m)
-		},
-		createCheck(func(_ context.Context, m factcheck.Message) error {
-			if m.Text == "" {
-				return errors.New("empty text")
-			}
-			if !m.Type.IsValid() {
-				return fmt.Errorf("invalid type '%s'", m.Type)
-			}
-			return nil
-		}),
-		createModify(func(_ context.Context, m factcheck.Message) factcheck.Message {
-			return factcheck.Message{
-				ID:        utils.NewID().String(),
-				TopicID:   m.TopicID,
-				Text:      m.Text,
-				Type:      m.Type,
-				CreatedAt: utils.TimeNow(),
-				UpdatedAt: nil,
-			}
-		}),
+func (h *handler) SubmitMessage(w http.ResponseWriter, r *http.Request) {
+	body, err := decode[struct {
+		Text    string `json:"text"`
+		TopicID string `json:"topic_id"`
+	}](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	userInfo, err := h.getUserInfo(r)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	topic, msg, group, err := h.service.Submit(
+		r.Context(),
+		userInfo,
+		body.Text,
+		body.TopicID,
 	)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(r.Context(), w, http.StatusCreated, map[string]any{
+		"topic":   topic,
+		"group":   group,
+		"message": msg,
+	})
 }

@@ -21,20 +21,21 @@ type Server interface {
 }
 
 func New(conf config.Config, h handler.Handler) *http.Server {
-	topics, messages, userMessages := chi.NewMux(), chi.NewMux(), chi.NewMux()
+	topics, messages := chi.NewMux(), chi.NewMux()
+	topics.Post("/", h.CreateTopic)
 	topics.Get("/all", h.ListAllTopics)
 	topics.Get("/", h.ListTopicsHome)
 	topics.Get("/count", h.CountTopicsHome)
 	topics.Get("/{id}", h.GetTopicByID)
-	topics.Post("/", h.CreateTopic)
-	topics.Delete("/{id}", h.DeleteTopicByID)
+	topics.Get("/{id}/messages", h.ListTopicMessages)
+	topics.Get("/{id}/message-group", h.ListTopicMessageGroups)
 	topics.Put("/{id}/status", h.UpdateTopicStatus)
 	topics.Put("/{id}/description", h.UpdateTopicDescription)
 	topics.Put("/{id}/name", h.UpdateTopicName)
-	messages.Get("/by-topic/{id}", h.ListMessagesByTopicID)
-	messages.Post("/", h.CreateMessage)
+	topics.Delete("/{id}", h.DeleteTopicByID)
+
+	messages.Post("/", h.SubmitMessage)
 	messages.Delete("/", h.DeleteMessageByID)
-	userMessages.Post("/", h.NewUserMessage)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -45,7 +46,6 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	r.Handle("/health", pillars.HandlerOk(conf.AppName))
 	r.Mount("/topics", topics)
 	r.Mount("/messages", messages)
-	r.Mount("/user-messages", userMessages)
 
 	return &http.Server{
 		Addr:         utils.DefaultIfZero(conf.HTTP.ListenAddr, ":8080"),

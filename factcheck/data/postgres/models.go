@@ -8,6 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Answer struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Text      string             `json:"text"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Message struct {
 	ID            pgtype.UUID        `json:"id"`
 	UserMessageID pgtype.UUID        `json:"user_message_id"`
@@ -18,6 +26,31 @@ type Message struct {
 	Language      pgtype.Text        `json:"language"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MessageGroup struct {
+	ID        pgtype.UUID        `json:"id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	Name      string             `json:"name"`
+	Text      string             `json:"text"`
+	TextSha1  string             `json:"text_sha1"`
+	Language  pgtype.Text        `json:"language"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MessagesV2 struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    string             `json:"user_id"`
+	TopicID   pgtype.UUID        `json:"topic_id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
+	TypeUser  string             `json:"type_user"`
+	Type      string             `json:"type"`
+	Text      string             `json:"text"`
+	Language  pgtype.Text        `json:"language"`
+	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Topic struct {

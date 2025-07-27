@@ -11,8 +11,6 @@ func TestValidate(t *testing.T) {
 		factcheck.StatusTopicPending,
 		factcheck.StatusTopicResolved,
 		factcheck.TypeMessageText,
-		factcheck.StatusTopicResultNone,
-		factcheck.StatusTopicResultAnswered,
 	}
 	for i := range shouldOk {
 		s := shouldOk[i]

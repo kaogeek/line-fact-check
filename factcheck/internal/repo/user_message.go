@@ -21,9 +21,7 @@ type userMessages struct {
 
 // NewUserMessages creates a new user message repository
 func NewUserMessages(queries *postgres.Queries) UserMessages {
-	return &userMessages{
-		queries: queries,
-	}
+	return &userMessages{queries: queries}
 }
 
 // Create creates a new user message using the userMessage adapter

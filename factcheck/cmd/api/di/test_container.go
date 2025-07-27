@@ -9,6 +9,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 // ContainerTest is a container for testing.
@@ -22,6 +23,7 @@ func NewTest(
 	conn postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
+	service service.Service,
 	handler handler.Handler,
 	server server.Server,
 ) (
@@ -37,30 +39,31 @@ func NewTest(
 		conn,
 		querier,
 		repo,
+		service,
 		handler,
 		server,
 	)), cleanup
 }
 
 func clearData(conn postgres.DBTX, stage string) {
-	slog.Warn("Clearing all data from database", "stage", stage)
-
 	ctx := context.Background()
+	slog.WarnContext(ctx, "Clearing all data from database", "stage", stage)
+
 	_, err := conn.Exec(ctx, "DELETE FROM topics")
 	if err != nil {
-		slog.Error("Failed to delete topics", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete topics", "error", err)
 		panic(err)
 	}
 	_, err = conn.Exec(ctx, "DELETE FROM messages")
 	if err != nil {
-		slog.Error("Failed to delete messages", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete messages", "error", err)
 		panic(err)
 	}
 	_, err = conn.Exec(ctx, "DELETE FROM user_messages")
 	if err != nil {
-		slog.Error("Failed to delete user_messages", "error", err)
+		slog.ErrorContext(ctx, "Failed to delete user_messages", "error", err)
 		panic(err)
 	}
 
-	slog.Warn("Cleared all data from database", "stage", stage)
+	slog.WarnContext(ctx, "Cleared all data from database", "stage", stage)
 }

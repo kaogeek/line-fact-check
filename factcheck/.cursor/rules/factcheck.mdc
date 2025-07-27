@@ -14,28 +14,63 @@ HTTP server routing is composed with go-chi to keep dependencies to minimum.
 > Because we use Go workspace, sometimes `go generate` might complain if we omit `-mod-mod` flag.
 
 The following code generation tools are used:
+
 - sqlc for database interactions, see [sqlc.yaml](/factcheck/sqlc.yaml) and [/data/](/factcheck/data)
+
 - wire for dependency injection, lives inside [internal/di](/factcheck/cmd/api/di)
 
-# Models
-- UserMessage
-    UserMessage is received by our system via some gateway service, e.g. LINE or Telegram chatbot server.
-    The idea is that users send a chat message to our bot, which then forwards the user message to factcheck-api.
-    When our API receives the user message, it saves this to user_messages and messages table.
+# Testing
 
-- Message
-    Message is a "statement", or some "truth" that needs to be fact-checked.
-    Messages enter our system via UserMessage.
+To run unit tests, just run tests as usual.
 
-- Topic
-    Topic groups multiple similar/matching messages together.
-    One topic has many messages, and one message has exactly one topic.
-    Admins will create a new topic for new user messages if the new messages do not belong to any other existing topics. If the new messages fall under the some existing topic, admin can assign the message to existing topic.
-    
-    In the future, we'd like to use some LLMs or other tools to automatically compute similarity score
-    of the new messages
+But keep in mind that because this monorepo has multiple Go modules,
+(i.e. is a Go workspace) running tests at the root of the project might fail.
 
-# Flow
-- (not-implemented) Users will send a message into our system via chat app like Telegram to our chatbot service (not implemented), and that service will make some calls to us to create user_messages and messages.
-- Admins review new messages, and if needed, create a new topic for the new message. Otherwise the admin will just assign the message to some existing topic.
-- Admins verify fake-news result, and update the topic to include fact results.
+When we've opened the repo, but working inside [/factcheck](/factcheck/),
+and want to run tests on `internal/repo` that rests inside the module,
+we must run test with `go test ./factcheck/internal/repo`.
+
+Integration tests for some concept `bar` are conventionally put inside `bar_it_test.go`,
+with Go build tag `integration_test`. To run integraion tests, run `go test` with `-tags=integration_test`.
+
+## Integration test dependencies without local Nix
+
+Integration tests usually initiate their own [DI test container](/factcheck/di), meaning they will get
+fresh instances of everything and are isolated from tests using other DI container.
+
+Because the DI container needs a lot of stuff to initialize,
+we must bring up these dependencies before we can run integration tests.
+
+The dependency environment is pinned as devShells in our [Nix flake](/flake.nix).
+On GitHub Actions runners, we could just `nix develop` into the default Nix devShell
+and everything will be up and ready.
+
+However, our dev's local machines might not have Nix installed.
+This is why we provide [Docker Compose](/docker-compose.yaml) to help bring up dependencies
+from Nix flake anywhere, anytime.
+
+### Building images in [Flake](/flake.nix)
+
+We can adapt these cheat sheets in [README](/README.md) to use Docker to build Nix outputs.
+To cache these builds, we use a Docker volume `line-fact-check-nix-store`:
+
+```sh
+zsh % docker run --rm -v $(pwd):/workspace -v line-fact-check-nix-store:/nix/store nixos/nix:latest sh -c '
+    cp -r /workspace /source
+    cd source
+
+    export FLAKE_VERSION="$(nix eval --extra-experimental-features nix-command --extra-experimental-features flakes  .#version.text --raw)"
+    export OUTPUT_NAME=result-postgres-factcheck-$FLAKE_VERSION
+
+    # Build docker-factcheck with unique result name using the actual flake version
+    nix build .#docker-postgres-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes
+
+    # Copy the result to workspace
+    cp result /workspace/$OUTPUT_NAME
+    echo "copied to /workspace/$OUTPUT_NAME"
+'
+```
+
+In the above command, we use `docker run nixos/nix` to build our flake's PostgreSQL output
+inside a mounted container (mounted to PWD). After the command is done, we'll have
+a new file with name `$OUTPUT_NAME`, which will be something like `result-postgres-factcheck-20250726-1753552232`

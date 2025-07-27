@@ -29,19 +29,14 @@ func TopicCreator(topic factcheck.Topic) (CreateTopicParams, error) {
 	if err != nil {
 		return CreateTopicParams{}, err
 	}
-	resultStatus, err := Text(string(topic.ResultStatus))
-	if err != nil {
-		return CreateTopicParams{}, err
-	}
 	return CreateTopicParams{
-		ID:           id,
-		Name:         topic.Name,
-		Description:  topic.Description,
-		Status:       string(topic.Status),
-		Result:       result,
-		ResultStatus: resultStatus,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
+		ID:          id,
+		Name:        topic.Name,
+		Description: topic.Description,
+		Status:      string(topic.Status),
+		Result:      result,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}, nil
 }
 
@@ -56,9 +51,6 @@ func ToTopic(data Topic) factcheck.Topic {
 	}
 	if data.Result.Valid {
 		topic.Result = data.Result.String
-	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
 	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
@@ -86,9 +78,6 @@ func ToTopicFromRow(data ListTopicsRow) factcheck.Topic {
 	if data.Result.Valid {
 		topic.Result = data.Result.String
 	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
-	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
 	}
@@ -111,9 +100,6 @@ func ToTopicFromStatusRow(data ListTopicsByStatusRow) factcheck.Topic {
 	if data.Result.Valid {
 		topic.Result = data.Result.String
 	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
-	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
 	}
@@ -135,9 +121,6 @@ func ToTopicFromIDRow(data ListTopicsLikeIDRow) factcheck.Topic {
 	}
 	if data.Result.Valid {
 		topic.Result = data.Result.String
-	}
-	if data.ResultStatus.Valid {
-		topic.ResultStatus = factcheck.StatusTopicResult(data.ResultStatus.String)
 	}
 	if data.CreatedAt.Valid {
 		topic.CreatedAt = data.CreatedAt.Time
@@ -250,7 +233,7 @@ func ToUserMessage(data UserMessage) (factcheck.UserMessage, error) {
 	}
 	return factcheck.UserMessage{
 		ID:        id,
-		Type:      factcheck.TypeUserMessage(data.Type),
+		Type:      factcheck.TypeUser(data.Type),
 		RepliedAt: TimeNullable(data.RepliedAt),
 		Metadata:  metadata,
 		CreatedAt: createdAt,
@@ -260,6 +243,139 @@ func ToUserMessage(data UserMessage) (factcheck.UserMessage, error) {
 
 func ToUserMessages(data []UserMessage) ([]factcheck.UserMessage, error) {
 	return utils.Map(data, ToUserMessage)
+}
+
+func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
+	id, err := UUID(m.ID)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	// Could be nil
+	topicID, _ := UUID(m.TopicID)
+	createdAt, err := Timestamptz(m.CreatedAt)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	updatedAt, err := TimestamptzNullable(m.UpdatedAt)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	metadata, err := json.Marshal(m.Metadata)
+	if err != nil {
+		return CreateMessageV2Params{}, err
+	}
+	return CreateMessageV2Params{
+		ID:        id,
+		UserID:    m.UserID,
+		TopicID:   topicID,
+		TypeUser:  string(m.TypeUser),
+		Type:      string(m.TypeMessage),
+		Text:      m.Text,
+		Language:  pgtype.Text{}, // MessageV2 doesn't have Language field
+		Metadata:  metadata,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
+
+func ToMessageV2(data MessagesV2) (factcheck.MessageV2, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.MessageV2{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.MessageV2{}, err
+	}
+	var metadata json.RawMessage
+	if len(data.Metadata) > 0 {
+		metadata = json.RawMessage(data.Metadata)
+	}
+	message := factcheck.MessageV2{
+		ID:          id,
+		UserID:      data.UserID,
+		TypeUser:    factcheck.TypeUser(data.TypeUser),
+		TypeMessage: factcheck.TypeMessage(data.Type),
+		Text:        data.Text,
+		Metadata:    metadata,
+		CreatedAt:   createdAt,
+		UpdatedAt:   TimeNullable(data.UpdatedAt),
+	}
+	if data.TopicID.Valid {
+		message.TopicID = data.TopicID.String()
+	}
+	if data.GroupID.Valid {
+		message.GroupID = data.GroupID.String()
+	}
+	// MessageV2 doesn't have Language field
+	return message, nil
+}
+
+func ToMessagesV2(data []MessagesV2) ([]factcheck.MessageV2, error) {
+	return utils.Map(data, ToMessageV2)
+}
+
+func MessageGroupCreator(g factcheck.MessageGroup) (CreateMessageGroupParams, error) {
+	id, err := UUID(g.ID)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+	topicID, err := UUID(g.TopicID)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+	createdAt, err := Timestamptz(g.CreatedAt)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+	updatedAt, err := TimestamptzNullable(g.UpdatedAt)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+	language, err := Text(g.Language)
+	if err != nil {
+		return CreateMessageGroupParams{}, err
+	}
+
+	return CreateMessageGroupParams{
+		ID:        id,
+		TopicID:   topicID,
+		Name:      g.Name,
+		Text:      g.Text,
+		TextSha1:  g.TextSHA1,
+		Language:  language,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
+
+func ToMessageGroup(data MessageGroup) (factcheck.MessageGroup, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.MessageGroup{}, err
+	}
+	topicID, err := FromUUID(data.TopicID)
+	if err != nil {
+		return factcheck.MessageGroup{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.MessageGroup{}, err
+	}
+	group := factcheck.MessageGroup{
+		ID:        id,
+		Name:      data.Name,
+		Text:      data.Text,
+		TextSHA1:  data.TextSha1,
+		TopicID:   topicID,
+		CreatedAt: createdAt,
+		UpdatedAt: TimeNullable(data.UpdatedAt),
+	}
+	return group, nil
+}
+
+func ToMessageGroups(data []MessageGroup) ([]factcheck.MessageGroup, error) {
+	return utils.Map(data, ToMessageGroup)
 }
 
 func UUID(id string) (pgtype.UUID, error) {
@@ -276,6 +392,7 @@ func UUIDNullable(id string) pgtype.UUID {
 	//nolint
 	uuid, err := UUID(id)
 	if err != nil && id != "" {
+		//nolint:noctx
 		slog.Error("unexpected bad uuid '%s' in our system: %w", id, err.Error())
 	}
 	return uuid
@@ -302,7 +419,7 @@ func TextNullable[S ~string](s S) pgtype.Text {
 	err := text.Scan(string(s))
 	if err != nil {
 		text = pgtype.Text{}
-		slog.Error("bad language text", "language", s, "err", err)
+		slog.Error("bad language text", "language", s, "err", err) //nolint:noctx
 	}
 	return text
 }
@@ -341,4 +458,50 @@ func TimeNullable(t pgtype.Timestamptz) *time.Time {
 		return nil
 	}
 	return &t.Time
+}
+
+func AnswerCreator(a factcheck.Answer) (CreateAnswerParams, error) {
+	id, err := UUID(a.ID)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	topicID, err := UUID(a.TopicID)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	createdAt, err := Timestamptz(a.CreatedAt)
+	if err != nil {
+		return CreateAnswerParams{}, err
+	}
+	return CreateAnswerParams{
+		ID:        id,
+		TopicID:   topicID,
+		Text:      a.Text,
+		CreatedAt: createdAt,
+	}, nil
+}
+
+func ToAnswer(data Answer) (factcheck.Answer, error) {
+	id, err := FromUUID(data.ID)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	topicID, err := FromUUID(data.TopicID)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	createdAt, err := Time(data.CreatedAt)
+	if err != nil {
+		return factcheck.Answer{}, err
+	}
+	return factcheck.Answer{
+		ID:        id,
+		TopicID:   topicID,
+		Text:      data.Text,
+		CreatedAt: createdAt,
+	}, nil
+}
+
+func ToAnswers(data []Answer) ([]factcheck.Answer, error) {
+	return utils.Map(data, ToAnswer)
 }

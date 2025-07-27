@@ -12,6 +12,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 // Injectors from inject.go:
@@ -48,9 +49,10 @@ func InitializeContainer() (Container, func(), error) {
 	}
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
+	serviceService := service.New(repository)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	container := New(configConfig, pool, queries, repository, handlerHandler, httpServer)
+	container := New(configConfig, pool, queries, repository, serviceService, handlerHandler, httpServer)
 	return container, func() {
 		cleanup()
 	}, nil
@@ -67,9 +69,10 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 	}
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
+	serviceService := service.New(repository)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, handlerHandler, httpServer)
+	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceService, handlerHandler, httpServer)
 	return containerTest, func() {
 		cleanup2()
 		cleanup()

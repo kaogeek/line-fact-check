@@ -53,39 +53,98 @@ We try to use Nix everywhere when we could, for example, in [.github/workflows/r
 As a fact-checker platform, we have 2 types of "users"
 
 - Users
-Users can access our app via chat apps like LINE or other entrypoints, and the web portal.
-They can submit their messages any time on any entrypoints, and this will be reflected in
-the user_message metadata that records the whole submission.
+
+    Users can access our app via chat apps like LINE or other entrypoints, and the web portal.
+    They can submit their messages any time on any entrypoints, and this will be reflected in
+    the user_message metadata that records the whole submission.
 
 - Admins
-Admins access our app via web portal and are the "human verifiers" of our system.
-Admin creates "topics", reviews and approves "topic-message assignment", as well as resolve topics with result.
+
+    Admins access our app via web portal and are the "human verifiers" of our system.
+    Admin creates "topics", reviews and approves "topic-message assignment", as well as resolve topics with result.
+
+## Business entities
+
+These are our main "data types"
+
+- Messages (currently table `messages_v2`, previously `messages`)
+
+    Messages are posted by users, and represent a "statement" to be fact-checked.
+    Messages fall under topics, which group multiple messages together.
+
+    Messages could enter our system via a user client (chat),
+    or via the admin web UI.
+
+- Message groups (currently table `message_groups`)
+
+    Message groups group messages together based on "similarity".
+    Currently, the similarity engine is just a SHA-1 hash match,
+    i.e. messages with identical texts belong to the same group.
+
+    On message submission, the system checks if we already have
+    a group with "similar" statement. If there's one, we assign
+    the new message to the existing group. If there's none, the
+    system will create a new message group for the message automatically.
+
+    Assignment of message to a message group could be automatic
+    (i.e. when the system does this), or manually by admins
+
+- Topics
+
+    Topics are high-level groupings of messages/message groups.
+    Currently, all assignment of a message to a topic is manual,
+    and must be done by human admins.
+
+    A topic could be "answered" by admins. Once answered, the topic
+    answer is assumed to have resolved all messages of the topic.
+
+- Answers
+
+    Answer is as direct as it is - it's an answer. It resolves a topic
+    with answer text. A topic could be answered many times, and we intend
+    to model answers as append-only logs.
 
 ## Business flow
+
 As a fact-checker platform, our business logic can be classified into 3 steps:
 
 1. "Users" post/submit some news or statement into our system
-    This action has side effects on 2 of our entites:
-    - user_messages:
-        An "event log" recording the user interaction (submission)
 
-    - messages
-        News or statements that user wishes to fact-check.
+    When this happens, 2 things kinda happen:
 
-    The users can choose if they want to include some existing topic ID
-    right when they submit, or leave it up to the admin for topic assignment.
+    - `messages` created
 
-2. "Admins" review user submissions
-    This is when admins come in and validate user message submissions.
-    If the submissions are spams, admins can delete/ignore these new messages.
+    - `messages` is assigned its `message_groups`
 
-    Until the admin "approves" the submission, no other users will see the message.
+        - If we already have a group with "similar" text
 
-3. "Admins" assign topic to new message submissions
-    After approval, admins will assign the message submission to a topic,
-    or create a new topic just for this message.
+            We assign the new message to this group.
+            If the group was already assigned topic,
+            this new message will also automatically
+            inherit its group's topic.
 
-4. "Admins" resolve topic
-    Admins can check and verify fake news, and save their findings as "topic result".
-    This result consists of a result status (resolve, pending, revoked, or something else)
-    and result findings - human language statements that support their verification.
+        - If we have no similar groups
+
+            We create a new group with our message as base,
+            and assign the new message to this new group.
+
+            When this happens, the message group's topic
+            stays unassigned
+
+2. "Admins" assign topic to new message submissions
+
+    Human admins will come in and review new submissions
+    from step 1.
+
+    Should the admins decide to verify new submissions,
+    they will create a new topic for the group, or assigned
+    it to an existing topic.
+
+3. "Admins" add answers to topic
+
+    Once human admins got their answer for a particular topic,
+    they add the answers to the topic, toggling the topic status
+    to resolved.
+
+    Another flow is "update answer" flow, where admins want to
+    update the topic's answer.

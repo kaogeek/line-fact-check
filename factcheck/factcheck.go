@@ -3,9 +3,8 @@
 package factcheck
 
 import (
-	"bytes"
 	"crypto/sha1" //nolint:gosec
-	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -149,25 +148,16 @@ func (m MessageV2) SHA1() (string, error) {
 	if m.Text == "" {
 		return "", errors.New("message has empty text")
 	}
-	return SHA1Base64(m.Text)
+	return SHA1(m.Text), nil
 }
 
 func (g MessageGroup) SHA1() (string, error) {
-	return SHA1Base64(g.Text)
+	return SHA1(g.Text), nil
 }
 
-func SHA1Base64(s string) (string, error) {
-	s = strings.TrimSpace(s)
-	hash := sha1sum([]byte(s))
-	buf := bytes.NewBuffer(nil)
-	_, err := base64.
-		NewEncoder(base64.StdEncoding, buf).
-		Write(hash)
-	if err != nil {
-		return "", fmt.Errorf("base64 error: %w", err)
-	}
-	b64 := buf.String()
-	return strings.ToLower(b64), nil
+func SHA1(s string) string {
+	hash := sha1sum([]byte(strings.TrimSpace(s)))
+	return hex.EncodeToString(hash)
 }
 
 func sha1sum(b []byte) []byte { return checksum.Sum(b) }

@@ -93,10 +93,7 @@ func (s *service) Submit(
 	*factcheck.Topic,
 	error,
 ) {
-	textSHA1, err := factcheck.SHA1Base64(text)
-	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
-	}
+	textSHA1 := factcheck.SHA1(text)
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err

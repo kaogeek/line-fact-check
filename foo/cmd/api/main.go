@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
@@ -25,7 +26,7 @@ func main() {
 		WriteTimeout: time.Second * 2,
 	}
 
-	slog.Info("listening",
+	slog.InfoContext(context.Background(), "listening",
 		"addr", addr,
 	)
 	err := srv.ListenAndServe()

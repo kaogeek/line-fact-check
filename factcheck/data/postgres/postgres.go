@@ -69,7 +69,7 @@ func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 	cleanup := func() {
 		defer slog.InfoContext(poolCtx, "postgres conn closed or cleaned up")
 		if pool == nil {
-			slog.Warn("postgres conn is nil")
+			slog.WarnContext(poolCtx, "postgres conn is nil")
 			return
 		}
 		pool.Close()

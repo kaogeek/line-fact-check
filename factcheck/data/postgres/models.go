@@ -16,18 +16,6 @@ type Answer struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
-type Message struct {
-	ID            pgtype.UUID        `json:"id"`
-	UserMessageID pgtype.UUID        `json:"user_message_id"`
-	Type          string             `json:"type"`
-	Status        string             `json:"status"`
-	TopicID       pgtype.UUID        `json:"topic_id"`
-	Text          string             `json:"text"`
-	Language      pgtype.Text        `json:"language"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-}
-
 type MessageGroup struct {
 	ID        pgtype.UUID        `json:"id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
@@ -62,13 +50,4 @@ type Topic struct {
 	ResultStatus pgtype.Text        `json:"result_status"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-type UserMessage struct {
-	ID        pgtype.UUID        `json:"id"`
-	Type      string             `json:"type"`
-	RepliedAt pgtype.Timestamptz `json:"replied_at"`
-	Metadata  []byte             `json:"metadata"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }

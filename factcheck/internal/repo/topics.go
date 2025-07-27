@@ -18,12 +18,10 @@ type Topics interface {
 	GetStatus(ctx context.Context, id string, opts ...Option) (factcheck.StatusTopic, error)
 	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
-	ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListDynamicV2(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
 	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
-	CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusTopic, opts ...Option) (factcheck.Topic, error)
@@ -110,23 +108,6 @@ func (t *topics) Resolve(ctx context.Context, id string, answerText string, opts
 	return postgres.ToTopic(resolved), nil
 }
 
-func (t *topics) ListDynamic(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
-	limit, offset = sanitize(limit, offset)
-	options := options(opts...)
-	queries := queries(t.queries, options.Options)
-	rows, err := queries.ListTopicsDynamic(ctx, postgres.ListTopicsDynamicParams{
-		Column1: options.LikeID,
-		Column2: utils.MapNoError(options.Statuses, utils.String[factcheck.StatusTopic, string]),
-		Column3: options.LikeMessageText,
-		Column4: int32(limit),  //nolint:gosec
-		Column5: int32(offset), //nolint:gosec
-	})
-	if err != nil {
-		return nil, err
-	}
-	return postgres.ToTopics(rows), nil
-}
-
 func (t *topics) ListDynamicV2(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
 	options := options(opts...)
@@ -142,31 +123,6 @@ func (t *topics) ListDynamicV2(ctx context.Context, limit, offset int, opts ...O
 		return nil, err
 	}
 	return postgres.ToTopics(rows), nil
-}
-
-func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {
-	options := options(opts...)
-	queries := queries(t.queries, options.Options)
-	if len(options.Statuses) != 0 {
-		slog.WarnContext(ctx, "Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
-	}
-	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
-		Column1: options.LikeID,
-		Column2: options.LikeMessageText,
-	})
-	if err != nil {
-		return nil, err
-	}
-	result := make(map[factcheck.StatusTopic]int64)
-	for i := range rows {
-		r := &rows[i]
-		s := factcheck.StatusTopic(r.Status)
-		if !s.IsValid() {
-			return nil, fmt.Errorf("unexpected invalid status '%s' with %d count", s, r.Count)
-		}
-		result[s] = r.Count
-	}
-	return result, nil
 }
 
 func (t *topics) CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error) {

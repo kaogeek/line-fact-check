@@ -102,90 +102,8 @@ SELECT status, COUNT(*) as count
 FROM topics
 GROUP BY status;
 
--- name: CountTopicsGroupByStatusLikeID :many
-SELECT status, COUNT(*) as count
-FROM topics t
-WHERE t.id::text LIKE $1::text
-GROUP BY status;
-
--- name: CountTopicsGroupByStatusLikeMessageText :many
-SELECT t.status, COUNT(DISTINCT t.id) as count
-FROM topics t
-INNER JOIN messages m ON t.id = m.topic_id
-WHERE m.text ILIKE $1
-GROUP BY t.status;
-
--- name: CountTopicsGroupByStatusLikeIDLikeMessageText :many
-SELECT t.status, COUNT(DISTINCT t.id) as count
-FROM topics t
-INNER JOIN messages m ON t.id = m.topic_id
-WHERE t.id::text LIKE $1::text AND m.text ILIKE $2
-GROUP BY t.status;
-
 -- name: DeleteTopic :exec
 DELETE FROM topics WHERE id = $1;
-
--- name: CreateMessage :one
-INSERT INTO messages (
-    id, user_message_id, type, status, topic_id, text, language, created_at, updated_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING *;
-
--- name: GetMessage :one
-SELECT * FROM messages WHERE id = $1;
-
--- name: ListMessagesByTopic :many
-SELECT * FROM messages WHERE topic_id = $1 ORDER BY created_at ASC;
-
--- name: AssignMessageToTopic :one
-UPDATE messages SET
-    topic_id = $2,
-    updated_at = NOW()
-WHERE id = $1 RETURNING *;
-
--- name: DeleteMessage :exec
-DELETE FROM messages WHERE id = $1;
-
--- name: CreateUserMessage :one
-INSERT INTO user_messages (
-    id, type, replied_at, metadata, created_at, updated_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING *;
-
--- name: GetUserMessage :one
-SELECT * FROM user_messages WHERE id = $1;
-
--- name: DeleteUserMessage :exec
-DELETE FROM user_messages WHERE id = $1;
-
--- name: ListTopicsDynamic :many
-SELECT DISTINCT t.*
-FROM topics t
-LEFT JOIN messages m ON t.id = m.topic_id
-WHERE 1=1
-    AND CASE
-        WHEN $1::text != '' THEN t.id::text LIKE $1::text
-        ELSE true
-    END
-    AND CASE
-        WHEN array_length($2::text[], 1) > 0 THEN t.status = ANY($2::text[])
-        ELSE true
-    END
-    AND CASE
-        WHEN $3::text != '' THEN (
-            CASE
-                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
-                WHEN m.language = 'en' THEN m.text ILIKE $3::text
-                ELSE m.text ILIKE $3::text  -- fallback for unknown language
-            END
-        )
-        ELSE true
-    END
-ORDER BY t.created_at DESC
-LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
-OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END;
 
 -- name: ListTopicsDynamicV2 :many
 SELECT DISTINCT t.*
@@ -213,27 +131,6 @@ WHERE 1=1
 ORDER BY t.created_at DESC
 LIMIT CASE WHEN $4::integer = 0 THEN NULL ELSE $4::integer END
 OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $5::integer END;
-
--- name: CountTopicsGroupByStatusDynamic :many
-SELECT t.status, COUNT(DISTINCT t.id) as count
-FROM topics t
-LEFT JOIN messages m ON t.id = m.topic_id
-WHERE 1=1
-    AND CASE
-        WHEN $1::text != '' THEN t.id::text LIKE $1::text
-        ELSE true
-    END
-    AND CASE
-        WHEN $2::text != '' THEN (
-            CASE
-                WHEN m.language = 'th' THEN m.text LIKE $2::text COLLATE "C"
-                WHEN m.language = 'en' THEN m.text ILIKE $2::text
-                ELSE m.text ILIKE $2::text  -- fallback for unknown language
-            END
-        )
-        ELSE true
-    END
-GROUP BY t.status;
 
 -- name: CountTopicsGroupByStatusDynamicV2 :many
 SELECT t.status, COUNT(DISTINCT t.id) as count

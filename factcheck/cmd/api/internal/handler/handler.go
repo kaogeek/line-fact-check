@@ -43,11 +43,6 @@ type handler struct {
 	messagesv2 repo.MessagesV2
 	groups     repo.MessageGroups
 	answers    repo.Answers
-
-	// TO BE DEPRECATED
-
-	messages     repo.Messages
-	userMessages repo.UserMessages
 }
 
 func New(repo repo.Repository) Handler {
@@ -56,9 +51,7 @@ func New(repo repo.Repository) Handler {
 		topics:     repo.Topics,
 		messagesv2: repo.MessagesV2,
 		groups:     repo.MessageGroups,
-
-		messages:     repo.Messages,
-		userMessages: repo.UserMessages,
+		answers:    repo.Answers,
 	}
 }
 

@@ -23,10 +23,6 @@ type Repository struct {
 	Answers       Answers
 
 	TxnManager postgres.TxnManager
-
-	// TO BE DEPRECATED
-	Messages     Messages
-	UserMessages UserMessages
 }
 
 // ErrNotFound is returned when a requested resource is not found
@@ -39,8 +35,6 @@ type ErrNotFound struct {
 func New(queries *postgres.Queries, pool *pgxpool.Pool) Repository {
 	return Repository{
 		Topics:        NewTopics(queries),
-		Messages:      NewMessages(queries),
-		UserMessages:  NewUserMessages(queries),
 		MessagesV2:    NewMessagesV2(queries),
 		MessageGroups: NewMessageGroups(queries),
 		Answers:       NewAnswers(queries),

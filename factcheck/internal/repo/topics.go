@@ -148,7 +148,7 @@ func (t *topics) CountByStatusDynamic(ctx context.Context, opts ...OptionTopic) 
 	options := options(opts...)
 	queries := queries(t.queries, options.Options)
 	if len(options.Statuses) != 0 {
-		slog.Warn("Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
+		slog.WarnContext(ctx, "Statuses is not supported in CountByStatusDynamic", "statuses", options.Statuses)
 	}
 	rows, err := queries.CountTopicsGroupByStatusDynamic(ctx, postgres.CountTopicsGroupByStatusDynamicParams{
 		Column1: options.LikeID,

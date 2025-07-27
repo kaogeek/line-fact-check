@@ -393,128 +393,70 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		t.Fatalf("Failed to create topic4: %v", err)
 	}
 
-	// Create user messages first
-	userMessage1 := factcheck.UserMessage{
-		ID:        "770e8400-e29b-41d4-a716-446655440001",
-		Type:      factcheck.TypeUserMessageAdmin,
-		RepliedAt: nil,
-		Metadata:  []byte(`{"user_id": "test-user-1"}`),
+	// Create message groups
+	messageGroup1 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440001",
+		TopicID:   createdTopic1.ID,
+		Name:      "COVID Vaccine Group",
+		Text:      "COVID-19 vaccine is effective against new variants",
+		TextSHA1:  "sha1_hash_1",
+		Language:  factcheck.LanguageEnglish,
 		CreatedAt: now,
 		UpdatedAt: nil,
 	}
 
-	userMessage2 := factcheck.UserMessage{
-		ID:        "770e8400-e29b-41d4-a716-446655440002",
-		Type:      factcheck.TypeUserMessageAdmin,
-		RepliedAt: nil,
-		Metadata:  []byte(`{"user_id": "test-user-2"}`),
+	messageGroup2 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440002",
+		TopicID:   createdTopic2.ID,
+		Name:      "Election Results Group",
+		Text:      "Election results show clear victory",
+		TextSHA1:  "sha1_hash_2",
+		Language:  factcheck.LanguageEnglish,
 		CreatedAt: now,
 		UpdatedAt: nil,
 	}
 
-	userMessage3 := factcheck.UserMessage{
-		ID:        "770e8400-e29b-41d4-a716-446655440003",
-		Type:      factcheck.TypeUserMessageAdmin,
-		RepliedAt: nil,
-		Metadata:  []byte(`{"user_id": "test-user-3"}`),
+	messageGroup3 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440003",
+		TopicID:   createdTopic3.ID,
+		Name:      "AI Technology Group",
+		Text:      "New AI technology breakthrough",
+		TextSHA1:  "sha1_hash_3",
+		Language:  factcheck.LanguageEnglish,
 		CreatedAt: now,
 		UpdatedAt: nil,
 	}
 
-	userMessage4 := factcheck.UserMessage{
-		ID:        "770e8400-e29b-41d4-a716-446655440004",
-		Type:      factcheck.TypeUserMessageAdmin,
-		RepliedAt: nil,
-		Metadata:  []byte(`{"user_id": "test-user-4"}`),
+	messageGroup4 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440004",
+		TopicID:   createdTopic4.ID,
+		Name:      "Sports Results Group",
+		Text:      "World Cup final results announced",
+		TextSHA1:  "sha1_hash_4",
+		Language:  factcheck.LanguageEnglish,
 		CreatedAt: now,
 		UpdatedAt: nil,
 	}
 
-	// Create user messages in database
-	createdUserMessage1, err := app.Repository.UserMessages.Create(t.Context(), userMessage1)
+	// Create message groups in database
+	_, err = app.Repository.MessageGroups.Create(t.Context(), messageGroup1)
 	if err != nil {
-		t.Fatalf("Failed to create userMessage1: %v", err)
+		t.Fatalf("Failed to create messageGroup1: %v", err)
 	}
 
-	createdUserMessage2, err := app.Repository.UserMessages.Create(t.Context(), userMessage2)
+	_, err = app.Repository.MessageGroups.Create(t.Context(), messageGroup2)
 	if err != nil {
-		t.Fatalf("Failed to create userMessage2: %v", err)
+		t.Fatalf("Failed to create messageGroup2: %v", err)
 	}
 
-	createdUserMessage3, err := app.Repository.UserMessages.Create(t.Context(), userMessage3)
+	_, err = app.Repository.MessageGroups.Create(t.Context(), messageGroup3)
 	if err != nil {
-		t.Fatalf("Failed to create userMessage3: %v", err)
+		t.Fatalf("Failed to create messageGroup3: %v", err)
 	}
 
-	createdUserMessage4, err := app.Repository.UserMessages.Create(t.Context(), userMessage4)
+	_, err = app.Repository.MessageGroups.Create(t.Context(), messageGroup4)
 	if err != nil {
-		t.Fatalf("Failed to create userMessage4: %v", err)
-	}
-
-	// Create messages
-	message1 := factcheck.Message{
-		ID:            "660e8400-e29b-41d4-a716-446655440001",
-		UserMessageID: createdUserMessage1.ID,
-		TopicID:       createdTopic1.ID,
-		Text:          "COVID-19 vaccine is effective against new variants",
-		Type:          factcheck.TypeMessageText,
-		Status:        factcheck.StatusMessageTopicSubmitted,
-		CreatedAt:     now,
-		UpdatedAt:     nil,
-	}
-
-	message2 := factcheck.Message{
-		ID:            "660e8400-e29b-41d4-a716-446655440002",
-		UserMessageID: createdUserMessage2.ID,
-		TopicID:       createdTopic2.ID,
-		Text:          "Election results show clear victory",
-		Type:          factcheck.TypeMessageText,
-		Status:        factcheck.StatusMessageTopicSubmitted,
-		CreatedAt:     now,
-		UpdatedAt:     nil,
-	}
-
-	message3 := factcheck.Message{
-		ID:            "660e8400-e29b-41d4-a716-446655440003",
-		UserMessageID: createdUserMessage3.ID,
-		TopicID:       createdTopic3.ID,
-		Text:          "New AI technology breakthrough",
-		Type:          factcheck.TypeMessageText,
-		Status:        factcheck.StatusMessageTopicSubmitted,
-		CreatedAt:     now,
-		UpdatedAt:     nil,
-	}
-
-	message4 := factcheck.Message{
-		ID:            "660e8400-e29b-41d4-a716-446655440004",
-		UserMessageID: createdUserMessage4.ID,
-		TopicID:       createdTopic4.ID,
-		Text:          "World Cup final results announced",
-		Type:          factcheck.TypeMessageText,
-		Status:        factcheck.StatusMessageTopicSubmitted,
-		CreatedAt:     now,
-		UpdatedAt:     nil,
-	}
-
-	// Create messages in database
-	_, err = app.Repository.Messages.Create(t.Context(), message1)
-	if err != nil {
-		t.Fatalf("Failed to create message1: %v", err)
-	}
-
-	_, err = app.Repository.Messages.Create(t.Context(), message2)
-	if err != nil {
-		t.Fatalf("Failed to create message2: %v", err)
-	}
-
-	_, err = app.Repository.Messages.Create(t.Context(), message3)
-	if err != nil {
-		t.Fatalf("Failed to create message3: %v", err)
-	}
-
-	_, err = app.Repository.Messages.Create(t.Context(), message4)
-	if err != nil {
-		t.Fatalf("Failed to create message4: %v", err)
+		t.Fatalf("Failed to create messageGroup4: %v", err)
 	}
 
 	t.Run("CountTopicsHome - no query parameters (all topics)", func(t *testing.T) {
@@ -565,7 +507,7 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		assertEq(t, err, nil)
 
-		// Should have counts for topics with COVID messages
+		// Should have counts for topics with COVID message groups
 		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
 		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
 		assertEq(t, result["total"], int64(1))
@@ -601,7 +543,7 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		assertEq(t, err, nil)
 
-		// Should have counts for topics with COVID messages (case insensitive)
+		// Should have counts for topics with COVID message groups (case insensitive)
 		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic1
 		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
 		assertEq(t, result["total"], int64(1))
@@ -655,7 +597,7 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		assertEq(t, err, nil)
 
-		// Should have counts for topics with technology messages
+		// Should have counts for topics with technology message groups
 		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(1))  // topic3
 		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(0)) // none
 		assertEq(t, result["total"], int64(1))
@@ -691,7 +633,7 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		assertEq(t, err, nil)
 
-		// Should have counts for topics with "results" in messages (topic2 and topic4)
+		// Should have counts for topics with "results" in message groups (topic2 and topic4)
 		assertEq(t, result[string(factcheck.StatusTopicPending)], int64(0))  // none
 		assertEq(t, result[string(factcheck.StatusTopicResolved)], int64(2)) // topic2, topic4
 		assertEq(t, result["total"], int64(2))

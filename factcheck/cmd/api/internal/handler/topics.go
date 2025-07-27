@@ -62,7 +62,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
 	opts := toTopicOptions(r)
-	counts, err := h.topics.CountByStatusDynamic(r.Context(), opts...)
+	counts, err := h.topics.CountByStatusDynamicV2(r.Context(), opts...)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

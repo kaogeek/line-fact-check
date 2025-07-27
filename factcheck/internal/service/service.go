@@ -14,7 +14,9 @@ import (
 )
 
 type Service interface {
-	Submit(context.Context, string, string, string) (factcheck.MessageV2, factcheck.MessageGroup, error)
+	// Submit handles new message submission
+	// by creating the message and assigning it to a group
+	Submit(ctx context.Context, userID string, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, error)
 }
 
 func New(repo repo.Repository) Service { return &service{repo: repo} }

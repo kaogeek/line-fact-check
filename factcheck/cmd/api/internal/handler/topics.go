@@ -30,7 +30,7 @@ func (h *handler) ListTopics(w http.ResponseWriter, r *http.Request) {
 		errInternalError(w, err.Error())
 		return
 	}
-	sendJSON(w, topics, http.StatusOK)
+	sendJSON(w, http.StatusOK, topics)
 }
 
 func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 		errInternalError(w, err.Error())
 		return
 	}
-	sendJSON(w, topics, http.StatusOK)
+	sendJSON(w, http.StatusOK, topics)
 }
 
 func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +72,7 @@ func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
 		result[string(k)] = v
 		result["total"] += v
 	}
-	sendJSON(w, result, http.StatusOK)
+	sendJSON(w, http.StatusOK, result)
 }
 
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +117,7 @@ func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {
 		handleNotFound(w, err, "topic", paramID(r))
 		return
 	}
-	sendJSON(w, topic, http.StatusOK)
+	sendJSON(w, http.StatusOK, topic)
 }
 
 func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func (h *handler) UpdateTopicDescription(w http.ResponseWriter, r *http.Request)
 		handleNotFound(w, err, "topic", paramID(r))
 		return
 	}
-	sendJSON(w, topic, http.StatusOK)
+	sendJSON(w, http.StatusOK, topic)
 }
 
 func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +149,7 @@ func (h *handler) UpdateTopicName(w http.ResponseWriter, r *http.Request) {
 		handleNotFound(w, err, "topic", paramID(r))
 		return
 	}
-	sendJSON(w, topic, http.StatusOK)
+	sendJSON(w, http.StatusOK, topic)
 }
 
 func (h *handler) ListTopicMessages(w http.ResponseWriter, r *http.Request) {

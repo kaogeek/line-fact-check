@@ -107,8 +107,32 @@ func (s StatusTopic) IsValid() bool {
 	return false
 }
 
+func (t TypeUser) IsValid() bool {
+	switch t {
+	case
+		TypeUserMessageAdmin,
+		TypeUserMessageLINEChat,
+		TypeUserMessageLINEGroupChat:
+		return true
+	}
+	return false
+}
+
 func (t TypeMessage) IsValid() bool {
 	return t == TypeMessageText
+}
+
+func (m MessageV2) IsValid() error {
+	if m.Text == "" {
+		return errors.New("empty text")
+	}
+	if !m.TypeUser.IsValid() {
+		return fmt.Errorf("invalid typeUser '%s'", m.TypeUser)
+	}
+	if !m.TypeMessage.IsValid() {
+		return fmt.Errorf("invalid typeMessage '%s'", m.TypeMessage)
+	}
+	return nil
 }
 
 func (m MessageV2) SHA1() (string, error) {

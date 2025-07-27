@@ -122,8 +122,8 @@ func (h *handler) NewUserMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendJSON(w, map[string]any{
+	sendJSON(w, http.StatusCreated, map[string]any{
 		"user_message": createdUserMessage,
 		"message":      createdMessage,
-	}, http.StatusCreated)
+	})
 }

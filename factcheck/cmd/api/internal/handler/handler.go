@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 type Handler interface {
@@ -30,13 +31,14 @@ type Handler interface {
 
 	// API /messages
 
-	CreateMessage(http.ResponseWriter, *http.Request)
+	SubmitMessage(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
 	NewUserMessage(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {
 	repository repo.Repository
+	service    service.Service
 	topics     repo.Topics
 	messagesv2 repo.MessagesV2
 	groups     repo.MessageGroups
@@ -119,7 +121,7 @@ func sendText(w http.ResponseWriter, text string, status int) {
 }
 
 // sendJSON calls replyJsonError, and on non-nil error, writes 500 response
-func sendJSON(w http.ResponseWriter, data any, status int) {
+func sendJSON(w http.ResponseWriter, status int, data any) {
 	err := replyJSON(w, data, status)
 	if err != nil {
 		errInternalError(w, err.Error())

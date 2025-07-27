@@ -34,7 +34,7 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	topics.Put("/{id}/description", h.UpdateTopicDescription)
 	topics.Put("/{id}/name", h.UpdateTopicName)
 
-	messages.Post("/", h.CreateMessage)
+	messages.Post("/", h.SubmitMessage)
 	messages.Delete("/", h.DeleteMessageByID)
 	userMessages.Post("/", h.NewUserMessage)
 

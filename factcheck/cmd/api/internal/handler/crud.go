@@ -59,7 +59,7 @@ func create[T any](
 		errInternalError(w, err.Error())
 		return
 	}
-	sendJSON(w, created, http.StatusCreated)
+	sendJSON(w, http.StatusCreated, created)
 }
 
 func list[T any](
@@ -72,7 +72,7 @@ func list[T any](
 		errInternalError(w, err.Error())
 		return
 	}
-	sendJSON(w, l, http.StatusOK)
+	sendJSON(w, http.StatusOK, l)
 }
 
 // getBy uses getFn to get a T based on filter F.
@@ -87,7 +87,7 @@ func getBy[T any, F any](
 		handleNotFound(w, err, "resource", fmt.Sprintf("%+v", filter))
 		return
 	}
-	sendJSON(w, data, http.StatusOK)
+	sendJSON(w, http.StatusOK, data)
 }
 
 func deleteByID[T any](

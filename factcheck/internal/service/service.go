@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -16,7 +17,7 @@ import (
 type Service interface {
 	// Submit handles new message submission
 	// by creating the message and assigning it to a group
-	Submit(ctx context.Context, userID string, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, error)
+	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, error)
 }
 
 func New(repo repo.Repository) Service { return &service{repo: repo} }
@@ -25,7 +26,7 @@ type service struct{ repo repo.Repository }
 
 func (s *service) Submit(
 	ctx context.Context,
-	userID string,
+	user factcheck.UserInfo,
 	text string,
 	topicID string, // If empty, the new message will be topic-less
 ) (
@@ -86,17 +87,27 @@ func (s *service) Submit(
 		}
 	}
 
-	m := factcheck.MessageV2{
+	meta := factcheck.Metadata[factcheck.UserInfo]{
+		Type: factcheck.TypeMetadataUserInfo,
+		Data: user,
+	}
+	metaJSON, err := json.Marshal(meta)
+	if err != nil {
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error pre-creating group %s", textSHA1)
+	}
+	message := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
 		TopicID:     group.TopicID,
-		UserID:      userID,
+		UserID:      user.UserID,
 		GroupID:     group.ID,
 		TypeUser:    factcheck.TypeUserMessageAdmin,
 		TypeMessage: factcheck.TypeMessageText,
 		Text:        text,
+		Metadata:    metaJSON,
 		CreatedAt:   now,
 	}
-	created, err := s.repo.MessagesV2.Create(ctx, m, withTx)
+
+	created, err := s.repo.MessagesV2.Create(ctx, message, withTx)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, fmt.Errorf("error creating message: %w", err)
 	}
@@ -104,7 +115,7 @@ func (s *service) Submit(
 	if err != nil {
 		slog.Error("error committing admin submission",
 			"err", err,
-			"mid", m.ID,
+			"mid", message.ID,
 			"gid", group.ID,
 			"sha1", textSHA1,
 		)

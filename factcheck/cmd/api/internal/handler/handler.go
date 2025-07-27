@@ -33,7 +33,6 @@ type Handler interface {
 
 	SubmitMessage(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
-	NewUserMessage(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {

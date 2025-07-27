@@ -9,6 +9,15 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck"
 )
 
+// TODO: use middleware to parse the metadata and save it to req context
+// when doing auth
+func (h *handler) getUserInfo(_ *http.Request) (factcheck.UserInfo, error) {
+	return factcheck.UserInfo{
+		UserType: factcheck.TypeUserMessageAdmin,
+		UserID:   "user-mock-getuserinfo",
+	}, nil
+}
+
 func (h *handler) GetMessageByID(w http.ResponseWriter, r *http.Request) {
 	getBy(w, r, paramID(r), func(ctx context.Context, id string) (factcheck.MessageV2, error) {
 		return h.messagesv2.GetByID(ctx, id)
@@ -16,7 +25,7 @@ func (h *handler) GetMessageByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) DeleteMessageByID(w http.ResponseWriter, r *http.Request) {
-	deleteByID[factcheck.Message](w, r, func(ctx context.Context, s string) error {
+	deleteByID[factcheck.MessageV2](w, r, func(ctx context.Context, s string) error {
 		return h.messagesv2.Delete(ctx, s)
 	})
 }
@@ -36,7 +45,17 @@ func (h *handler) SubmitMessage(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
-	msg, group, err := h.service.Submit(r.Context(), "user-id", body.Text, body.TopicID)
+	userInfo, err := h.getUserInfo(r)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	msg, group, err := h.service.Submit(
+		r.Context(),
+		userInfo,
+		body.Text,
+		body.TopicID,
+	)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

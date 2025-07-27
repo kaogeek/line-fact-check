@@ -36,7 +36,6 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 
 	messages.Post("/", h.SubmitMessage)
 	messages.Delete("/", h.DeleteMessageByID)
-	userMessages.Post("/", h.NewUserMessage)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

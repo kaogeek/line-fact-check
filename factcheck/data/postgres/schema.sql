@@ -12,29 +12,6 @@ CREATE TABLE topics (
     updated_at    timestamptz
 );
 
--- User messages table (generic table for UserMessage struct)
-CREATE TABLE user_messages (
-    id         UUID NOT NULL PRIMARY KEY,
-    type       text NOT NULL,
-    replied_at timestamptz,
-    metadata   jsonb, -- Using jsonb for generic metadata
-    created_at timestamptz NOT NULL,
-    updated_at timestamptz
-);
-
--- Messages table
-CREATE TABLE messages (
-    id             UUID NOT NULL PRIMARY KEY,
-    user_message_id UUID NOT NULL REFERENCES user_messages(id) ON DELETE CASCADE,
-    type           text NOT NULL,
-    status         text NOT NULL,
-    topic_id       UUID REFERENCES topics(id) ON DELETE SET NULL,
-    text           text NOT NULL,
-    language       text,
-    created_at     timestamptz NOT NULL,
-    updated_at     timestamptz
-);
-
 -- MessageGroup table (groups messages with identical text)
 CREATE TABLE message_groups (
     id         UUID NOT NULL PRIMARY KEY,

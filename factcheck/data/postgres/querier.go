@@ -12,45 +12,32 @@ import (
 
 type Querier interface {
 	AssignMessageGroupToTopic(ctx context.Context, arg AssignMessageGroupToTopicParams) (MessageGroup, error)
-	AssignMessageToTopic(ctx context.Context, arg AssignMessageToTopicParams) (Message, error)
 	AssignMessageV2ToMessageGroup(ctx context.Context, arg AssignMessageV2ToMessageGroupParams) (MessagesV2, error)
 	AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV2ToTopicParams) (MessagesV2, error)
 	CountTopicsByStatus(ctx context.Context, status string) (int64, error)
-	CountTopicsGroupByStatusDynamic(ctx context.Context, arg CountTopicsGroupByStatusDynamicParams) ([]CountTopicsGroupByStatusDynamicRow, error)
 	CountTopicsGroupByStatusDynamicV2(ctx context.Context, arg CountTopicsGroupByStatusDynamicV2Params) ([]CountTopicsGroupByStatusDynamicV2Row, error)
-	CountTopicsGroupByStatusLikeID(ctx context.Context, dollar_1 string) ([]CountTopicsGroupByStatusLikeIDRow, error)
-	CountTopicsGroupByStatusLikeIDLikeMessageText(ctx context.Context, arg CountTopicsGroupByStatusLikeIDLikeMessageTextParams) ([]CountTopicsGroupByStatusLikeIDLikeMessageTextRow, error)
-	CountTopicsGroupByStatusLikeMessageText(ctx context.Context, text string) ([]CountTopicsGroupByStatusLikeMessageTextRow, error)
 	CountTopicsGroupedByStatus(ctx context.Context) ([]CountTopicsGroupedByStatusRow, error)
 	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
-	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	CreateMessageGroup(ctx context.Context, arg CreateMessageGroupParams) (MessageGroup, error)
 	CreateMessageV2(ctx context.Context, arg CreateMessageV2Params) (MessagesV2, error)
 	CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error)
-	CreateUserMessage(ctx context.Context, arg CreateUserMessageParams) (UserMessage, error)
 	DeleteAnswer(ctx context.Context, id pgtype.UUID) error
-	DeleteMessage(ctx context.Context, id pgtype.UUID) error
 	DeleteMessageGroup(ctx context.Context, id pgtype.UUID) error
 	DeleteMessageV2(ctx context.Context, id pgtype.UUID) error
 	DeleteTopic(ctx context.Context, id pgtype.UUID) error
-	DeleteUserMessage(ctx context.Context, id pgtype.UUID) error
 	GetAnswerByID(ctx context.Context, id pgtype.UUID) (Answer, error)
 	GetAnswerByTopicID(ctx context.Context, topicID pgtype.UUID) (Answer, error)
-	GetMessage(ctx context.Context, id pgtype.UUID) (Message, error)
 	GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
 	GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (MessageGroup, error)
 	GetMessageV2(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
 	GetTopicStatus(ctx context.Context, id pgtype.UUID) (string, error)
-	GetUserMessage(ctx context.Context, id pgtype.UUID) (UserMessage, error)
 	ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID) ([]Answer, error)
 	ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error)
-	ListMessagesByTopic(ctx context.Context, topicID pgtype.UUID) ([]Message, error)
 	ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error)
 	ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error)
 	ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListTopicsRow, error)
 	ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]ListTopicsByStatusRow, error)
-	ListTopicsDynamic(ctx context.Context, arg ListTopicsDynamicParams) ([]Topic, error)
 	ListTopicsDynamicV2(ctx context.Context, arg ListTopicsDynamicV2Params) ([]Topic, error)
 	ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error)
 	ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error)

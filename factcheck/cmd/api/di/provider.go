@@ -11,11 +11,13 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 var ProviderSet = wire.NewSet(
 	ProviderSetBase,
 	repo.New,
+	service.New,
 	handler.New,
 	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,
@@ -25,6 +27,7 @@ var ProviderSet = wire.NewSet(
 var ProviderSetTest = wire.NewSet(
 	ProviderSetBaseTest,
 	repo.New,
+	service.New,
 	handler.New,
 	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,

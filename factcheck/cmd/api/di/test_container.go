@@ -9,6 +9,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 // ContainerTest is a container for testing.
@@ -22,6 +23,7 @@ func NewTest(
 	conn postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
+	service service.Service,
 	handler handler.Handler,
 	server server.Server,
 ) (
@@ -37,6 +39,7 @@ func NewTest(
 		conn,
 		querier,
 		repo,
+		service,
 		handler,
 		server,
 	)), cleanup

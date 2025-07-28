@@ -35,7 +35,12 @@ type Handler interface {
 	// API /messages
 
 	SubmitMessage(http.ResponseWriter, *http.Request)
+	AssignMessageGroup(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
+
+	// API /groups
+
+	AssignTopic(http.ResponseWriter, *http.Request)
 }
 
 type handler struct {

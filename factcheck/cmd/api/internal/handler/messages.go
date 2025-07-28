@@ -50,7 +50,7 @@ func (h *handler) AssignMessageGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.GroupID == "" {
-		errBadRequest(w, err.Error())
+		errBadRequest(w, "missing group_id")
 		return
 	}
 	msg, err := h.messagesv2.AssignGroup(r.Context(), id, body.GroupID)

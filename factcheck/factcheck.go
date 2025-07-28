@@ -25,12 +25,16 @@ type (
 	TypeUser    string
 	Language    string
 
-	StatusMessage string
+	StatusMGroup string
 )
 
 const (
-	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // topic automatically created, no answer yet
-	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // topic resolved by human admins
+
+	// StatusTopicPending is used when topic is automatically created.
+	// Note that since only admins can create topics,
+	// topics do not need approval or rejection like message groups
+	StatusTopicPending  StatusTopic = "TOPIC_PENDING"
+	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED"
 
 	TypeMessageText TypeMessage = "MSG_TEXT"
 
@@ -38,9 +42,9 @@ const (
 	TypeUserMessageLINEGroupChat TypeUser = "USER_GROUPCHAT"
 	TypeUserMessageAdmin         TypeUser = "USER_ADMIN"
 
-	StatusMessageSubmitted      StatusMessage = "MSG_SUBMITTED"
-	StatusMessageTopicSubmitted StatusMessage = "MSG_TOPIC_SUBMITTED"
-	StatusMessageTopicAssigned  StatusMessage = "MSG_TOPIC_ASSIGNED"
+	StatusMGroupPending  StatusMGroup = "PENDING"
+	StatusMGroupApproved StatusMGroup = "APPROVED"
+	StatusMGroupRejected StatusMGroup = "REJECTED"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"
@@ -59,26 +63,28 @@ type Topic struct {
 
 type MessageV2 struct {
 	ID          string          `json:"id"`
+	GroupID     string          `json:"group_id"`
 	TopicID     string          `json:"topic_id"`
 	UserID      string          `json:"user_id"`
-	GroupID     string          `json:"group_id"`
 	TypeUser    TypeUser        `json:"type_user"`
 	TypeMessage TypeMessage     `json:"type"`
 	Text        string          `json:"text"`
 	Metadata    json.RawMessage `json:"metadata"`
+	RepliedAt   *time.Time      `json:"replied_at"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   *time.Time      `json:"updated_at"`
 }
 
 type MessageGroup struct {
-	ID        string     `json:"id"`
-	TopicID   string     `json:"topic_id"`
-	Name      string     `json:"name"`
-	Text      string     `json:"text"`
-	TextSHA1  string     `json:"text_sha1"`
-	Language  Language   `json:"language"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	ID        string       `json:"id"`
+	Status    StatusMGroup `json:"status"`
+	TopicID   string       `json:"topic_id"`
+	Name      string       `json:"name"`
+	Text      string       `json:"text"`
+	TextSHA1  string       `json:"text_sha1"`
+	Language  Language     `json:"language"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt *time.Time   `json:"updated_at"`
 }
 
 type Answer struct {

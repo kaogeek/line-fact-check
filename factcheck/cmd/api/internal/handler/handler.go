@@ -23,6 +23,8 @@ type Handler interface {
 	ListTopicsHome(http.ResponseWriter, *http.Request)
 	CountTopicsHome(http.ResponseWriter, *http.Request)
 	GetTopicByID(http.ResponseWriter, *http.Request)
+	GetAnswer(http.ResponseWriter, *http.Request)
+	ListAnswers(http.ResponseWriter, *http.Request)
 	DeleteTopicByID(http.ResponseWriter, *http.Request)
 	UpdateTopicStatus(http.ResponseWriter, *http.Request)
 	UpdateTopicDescription(http.ResponseWriter, *http.Request)

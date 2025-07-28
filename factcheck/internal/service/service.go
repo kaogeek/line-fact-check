@@ -86,7 +86,7 @@ func (s *service) Submit(
 	ctx context.Context,
 	user factcheck.UserInfo,
 	text string,
-	topicID string, // If empty, the new message will be topic-less
+	topicID string, // Users can submit with topic_id, but this will be pending approval for inclusion into topic
 ) (
 	factcheck.MessageV2,
 	factcheck.MessageGroup,
@@ -123,6 +123,11 @@ func (s *service) Submit(
 	}
 
 	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
+	if err == nil && !utils.Empty(topicID, group.ID) && topicID != group.ID {
+		// TODO: what to do?
+		// Mismatch topicID
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("mismatch topic '%s': found group %s (%s) has topic '%s'", topicID, group.ID, textSHA1, group.TopicID)
+	}
 	if err != nil {
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
@@ -132,6 +137,7 @@ func (s *service) Submit(
 		// But the group will not have topicID - to be assigned topic by admin
 		group = factcheck.MessageGroup{
 			ID:        utils.NewID().String(),
+			Status:    factcheck.StatusMGroupPending,
 			Text:      text,
 			TextSHA1:  textSHA1,
 			CreatedAt: now,
@@ -158,9 +164,9 @@ func (s *service) Submit(
 	message := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
 		TopicID:     group.TopicID,
-		UserID:      user.UserID,
 		GroupID:     group.ID,
-		TypeUser:    factcheck.TypeUserMessageAdmin,
+		UserID:      user.UserID,
+		TypeUser:    user.UserType,
 		TypeMessage: factcheck.TypeMessageText,
 		Text:        text,
 		Metadata:    metaJSON,

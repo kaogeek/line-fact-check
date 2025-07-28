@@ -3,6 +3,7 @@ package utils
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -53,4 +54,8 @@ func MapNoError[T any, U any](slice []T, fn func(T) U) []U {
 
 func String[S1 ~string, S2 ~string](s1 S1) S2 {
 	return S2(s1)
+}
+
+func Empty[S ~string](s ...S) bool {
+	return slices.Contains(s, "")
 }

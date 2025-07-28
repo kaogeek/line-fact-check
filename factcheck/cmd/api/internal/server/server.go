@@ -27,6 +27,8 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	topics.Get("/", h.ListTopicsHome)
 	topics.Get("/count", h.CountTopicsHome)
 	topics.Get("/{id}", h.GetTopicByID)
+	topics.Get("/{id}/answer", h.GetAnswer)
+	topics.Get("/{id}/answers", h.ListAnswers)
 	topics.Get("/{id}/messages", h.ListTopicMessages)
 	topics.Get("/{id}/message-group", h.ListTopicMessageGroups)
 	topics.Put("/{id}/status", h.UpdateTopicStatus)

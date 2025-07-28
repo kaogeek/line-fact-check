@@ -172,17 +172,29 @@ func (h *handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
-	answer, err := h.answers.Create(r.Context(), factcheck.Answer{
-		ID:        utils.NewID().String(),
-		TopicID:   paramID(r),
-		Text:      data.Text,
-		CreatedAt: utils.TimeNow(),
-	})
+	user, err := h.getUserInfo(r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	answer, _, _, err := h.service.ResolveTopic(r.Context(), user, paramID(r), data.Text)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
 	}
 	sendJSON(r.Context(), w, http.StatusOK, answer)
+}
+
+func (h *handler) GetAnswer(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, paramID(r), func(ctx context.Context, s string) (factcheck.Answer, error) {
+		return h.answers.GetByTopicID(ctx, s)
+	})
+}
+
+func (h *handler) ListAnswers(w http.ResponseWriter, r *http.Request) {
+	getBy(w, r, paramID(r), func(ctx context.Context, s string) ([]factcheck.Answer, error) {
+		return h.answers.ListByTopicID(ctx, s)
+	})
 }
 
 func toTopicOptions(r *http.Request) []repo.OptionTopic {

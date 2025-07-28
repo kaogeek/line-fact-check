@@ -18,33 +18,27 @@ import (
 var checksum = sha1.New()
 
 type (
-	TopicResult string
-	StatusTopic string
-	StatusUser  string
-	TypeMessage string
-	TypeUser    string
-	Language    string
-
+	Language     string
+	TypeMessage  string
+	TypeUser     string
+	StatusTopic  string
 	StatusMGroup string
 )
 
 const (
-
-	// StatusTopicPending is used when topic is automatically created.
-	// Note that since only admins can create topics,
-	// topics do not need approval or rejection like message groups
-	StatusTopicPending  StatusTopic = "TOPIC_PENDING"
-	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED"
+	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // Pending answer
+	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // Resolved with answer
 
 	TypeMessageText TypeMessage = "MSG_TEXT"
+	TypeMessageURL  TypeMessage = "MSG_URL"
 
 	TypeUserMessageLINEChat      TypeUser = "USER_CHAT"
 	TypeUserMessageLINEGroupChat TypeUser = "USER_GROUPCHAT"
 	TypeUserMessageAdmin         TypeUser = "USER_ADMIN"
 
-	StatusMGroupPending  StatusMGroup = "PENDING"
-	StatusMGroupApproved StatusMGroup = "APPROVED"
-	StatusMGroupRejected StatusMGroup = "REJECTED"
+	StatusMGroupPending  StatusMGroup = "MGROUP_PENDING"
+	StatusMGroupApproved StatusMGroup = "MGROUP_APPROVED"
+	StatusMGroupRejected StatusMGroup = "MGROUP_REJECTED"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"

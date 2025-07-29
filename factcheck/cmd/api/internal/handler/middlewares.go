@@ -41,12 +41,12 @@ func MiddlewareAdmin(next http.Handler) http.Handler {
 		userType := r.Context().Value(CtxKeyUserType)
 		userType, ok := userType.(factcheck.TypeUser)
 		if !ok {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("unauthorized: missing data"))
 			return
 		}
 		if userType != factcheck.TypeUserMessageAdmin {
-			w.WriteHeader(401)
+			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("unauthorized: bad data"))
 			return
 		}

@@ -21,15 +21,22 @@ type Server interface {
 }
 
 func New(conf config.Config, h handler.Handler) *http.Server {
-	messages, messageGroups, topics := chi.NewMux(), chi.NewMux(), chi.NewMux()
+	admin := chi.NewMux()
+	admin.Put("/messages/assign/{id}", h.AssignMessageGroup)
+	admin.Put("/message-groups/assign/{id}", h.AssignGroupTopic)
+	admin.Post("/topics/resolve/{id}", h.PostAnswer)
 
+	messages := chi.NewMux()
 	messages.Post("/", h.SubmitMessage)
 	messages.Put("/{id}/assign-message-group", h.AssignMessageGroup)
 	messages.Delete("/", h.DeleteMessageByID)
 
-	messageGroups.Put("/{id}/assign-topic", h.AssignMessageGroup)
+	messageGroups := chi.NewMux()
+	messageGroups.Put("/{id}/assign-topic", h.AssignGroupTopic)
+	messageGroups.Delete("/{id}", h.DeleteGroupByID)
 
-	topics.Post("/", h.CreateTopic)
+	topics := chi.NewMux()
+	topics.Post("/", h.CreateTopic) // TODO: move to admin API
 	topics.Get("/all", h.ListAllTopics)
 	topics.Get("/", h.ListTopicsHome)
 	topics.Get("/count", h.CountTopicsHome)
@@ -50,6 +57,7 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	r.Use(middleware.Recoverer)
 	r.Handle("/", pillars.HandlerEcho(conf.AppName))
 	r.Handle("/health", pillars.HandlerOk(conf.AppName))
+	r.Mount("/admin", admin)
 	r.Mount("/topics", topics)
 	r.Mount("/messages", messages)
 	r.Mount("/message-groups", messageGroups)

@@ -40,7 +40,11 @@ type Handler interface {
 
 	// API /groups
 
-	AssignTopic(http.ResponseWriter, *http.Request)
+	AssignGroupTopic(http.ResponseWriter, *http.Request)
+	DeleteGroupByID(http.ResponseWriter, *http.Request)
+
+	// API for admin
+	PostAnswer(w http.ResponseWriter, r *http.Request)
 }
 
 type handler struct {
@@ -162,6 +166,11 @@ func errBadRequest(w http.ResponseWriter, err string) {
 	w.WriteHeader(http.StatusBadRequest)
 	contentTypeText(w.Header())
 	fmt.Fprintf(w, "bad request: %s", err)
+}
+
+func errAuth(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusUnauthorized)
+	contentTypeText(w.Header())
 }
 
 func contentTypeJSON(h http.Header) {

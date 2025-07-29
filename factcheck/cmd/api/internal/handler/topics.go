@@ -39,12 +39,6 @@ func (h *handler) GetTopicByID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *handler) DeleteTopicByID(w http.ResponseWriter, r *http.Request) {
-	deleteByID[factcheck.Topic](w, r, func(ctx context.Context, s string) error {
-		return h.topics.Delete(ctx, s)
-	})
-}
-
 func (h *handler) ListTopicsHome(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := limitOffSet(r)
 	if err != nil {
@@ -162,27 +156,6 @@ func (h *handler) ListTopicMessageGroups(w http.ResponseWriter, r *http.Request)
 	getBy(w, r, paramID(r), func(ctx context.Context, s string) ([]factcheck.MessageGroup, error) {
 		return h.groups.ListByTopic(ctx, s)
 	})
-}
-
-func (h *handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
-	data, err := decode[struct {
-		Text string `json:"text"`
-	}](r)
-	if err != nil {
-		errBadRequest(w, err.Error())
-		return
-	}
-	user, err := h.getUserInfo(r)
-	if err != nil {
-		errBadRequest(w, err.Error())
-		return
-	}
-	answer, _, _, err := h.service.ResolveTopic(r.Context(), user, paramID(r), data.Text)
-	if err != nil {
-		errInternalError(w, err.Error())
-		return
-	}
-	sendJSON(r.Context(), w, http.StatusOK, answer)
 }
 
 func (h *handler) GetAnswer(w http.ResponseWriter, r *http.Request) {

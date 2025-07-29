@@ -39,6 +39,11 @@ func MiddlewareAuth(next http.Handler) http.Handler {
 func MiddlewareAdmin(next http.Handler) http.Handler {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		userType := r.Context().Value(CtxKeyUserType)
+		if userType == nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("unauthorized: missing data"))
+			return
+		}
 		userType, ok := userType.(factcheck.TypeUser)
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)

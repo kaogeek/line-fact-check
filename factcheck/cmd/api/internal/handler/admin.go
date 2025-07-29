@@ -7,9 +7,6 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck"
 )
 
-func (h *handler) adminMiddleware(w http.ResponseWriter, r *http.Request) {
-}
-
 func (h *handler) AssignMessageGroup(w http.ResponseWriter, r *http.Request) {
 	id := paramID(r)
 	if id == "" {

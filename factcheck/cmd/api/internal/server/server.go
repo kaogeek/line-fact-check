@@ -22,6 +22,10 @@ type Server interface {
 
 func New(conf config.Config, h handler.Handler) *http.Server {
 	admin := chi.NewMux()
+	admin.Use(
+		handler.MiddlewareAuth,
+		handler.MiddlewareAdmin,
+	)
 	admin.Put("/messages/assign/{id}", h.AssignMessageGroup)
 	admin.Put("/message-groups/assign/{id}", h.AssignGroupTopic)
 	admin.Post("/topics/resolve/{id}", h.PostAnswer)

@@ -20,8 +20,8 @@ type Service interface {
 	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Answer, factcheck.Topic, []factcheck.MessageV2, error)
 }
 
-func New(repo repo.Repository) Service {
-	return &ServiceFactcheck{repo: repo}
+func New(repo repo.Repository) ServiceFactcheck {
+	return ServiceFactcheck{repo: repo}
 }
 
 type ServiceFactcheck struct {

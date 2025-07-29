@@ -15,21 +15,23 @@ import (
 )
 
 var ProviderSet = wire.NewSet(
+	wire.Bind(new(server.Server), new(*http.Server)),
+	wire.Bind(new(service.Service), new(service.ServiceFactcheck)),
 	ProviderSetBase,
 	repo.New,
 	service.New,
 	handler.New,
-	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,
 	New,
 )
 
 var ProviderSetTest = wire.NewSet(
+	wire.Bind(new(server.Server), new(*http.Server)),
+	wire.Bind(new(service.Service), new(service.ServiceFactcheck)),
 	ProviderSetBaseTest,
 	repo.New,
 	service.New,
 	handler.New,
-	wire.Bind(new(server.Server), new(*http.Server)),
 	server.New,
 	NewTest,
 )

@@ -1,3 +1,5 @@
+// Package di provides common provider sets for factcheck programs,
+// like database connection, data repository, core service object, etc.
 package di
 
 import (

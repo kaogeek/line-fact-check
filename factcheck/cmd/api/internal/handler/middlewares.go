@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
@@ -37,25 +38,35 @@ func MiddlewareAuth(next http.Handler) http.Handler {
 }
 
 func MiddlewareAdmin(next http.Handler) http.Handler {
-	f := func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userType := r.Context().Value(CtxKeyUserType)
 		if userType == nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("unauthorized: missing data"))
+			write(r.Context(), w, []byte("unauthorized: missing data"))
 			return
 		}
 		userType, ok := userType.(factcheck.TypeUser)
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("unauthorized: missing data"))
+			write(r.Context(), w, []byte("unauthorized: missing data"))
 			return
 		}
 		if userType != factcheck.TypeUserMessageAdmin {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("unauthorized: bad data"))
+			write(r.Context(), w, []byte("unauthorized: bad data"))
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+func write(ctx context.Context, w http.ResponseWriter, b []byte) {
+	_, err := w.Write(b)
+	if err != nil {
+		slog.ErrorContext(ctx, "error writing response",
+			"err", err,
+			"bytes", string(b),
+		)
+		return
 	}
-	return http.HandlerFunc(f)
 }

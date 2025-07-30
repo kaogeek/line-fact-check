@@ -3,9 +3,8 @@
 package factcheck
 
 import (
-	"bytes"
 	"crypto/sha1" //nolint:gosec
-	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,29 +18,27 @@ import (
 var checksum = sha1.New()
 
 type (
-	TopicResult string
-	StatusTopic string
-	StatusUser  string
-	TypeMessage string
-	TypeUser    string
-	Language    string
-
-	StatusMessage string
+	Language     string
+	TypeMessage  string
+	TypeUser     string
+	StatusTopic  string
+	StatusMGroup string
 )
 
 const (
-	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // topic automatically created, no answer yet
-	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // topic resolved by human admins
+	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // Pending answer
+	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // Resolved with answer
 
 	TypeMessageText TypeMessage = "MSG_TEXT"
+	TypeMessageURL  TypeMessage = "MSG_URL"
 
 	TypeUserMessageLINEChat      TypeUser = "USER_CHAT"
 	TypeUserMessageLINEGroupChat TypeUser = "USER_GROUPCHAT"
 	TypeUserMessageAdmin         TypeUser = "USER_ADMIN"
 
-	StatusMessageSubmitted      StatusMessage = "MSG_SUBMITTED"
-	StatusMessageTopicSubmitted StatusMessage = "MSG_TOPIC_SUBMITTED"
-	StatusMessageTopicAssigned  StatusMessage = "MSG_TOPIC_ASSIGNED"
+	StatusMGroupPending  StatusMGroup = "MGROUP_PENDING"
+	StatusMGroupApproved StatusMGroup = "MGROUP_APPROVED"
+	StatusMGroupRejected StatusMGroup = "MGROUP_REJECTED"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"
@@ -60,26 +57,28 @@ type Topic struct {
 
 type MessageV2 struct {
 	ID          string          `json:"id"`
+	GroupID     string          `json:"group_id"`
 	TopicID     string          `json:"topic_id"`
 	UserID      string          `json:"user_id"`
-	GroupID     string          `json:"group_id"`
 	TypeUser    TypeUser        `json:"type_user"`
 	TypeMessage TypeMessage     `json:"type"`
 	Text        string          `json:"text"`
 	Metadata    json.RawMessage `json:"metadata"`
+	RepliedAt   *time.Time      `json:"replied_at"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   *time.Time      `json:"updated_at"`
 }
 
 type MessageGroup struct {
-	ID        string     `json:"id"`
-	TopicID   string     `json:"topic_id"`
-	Name      string     `json:"name"`
-	Text      string     `json:"text"`
-	TextSHA1  string     `json:"text_sha1"`
-	Language  Language   `json:"language"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	ID        string       `json:"id"`
+	Status    StatusMGroup `json:"status"`
+	TopicID   string       `json:"topic_id"`
+	Name      string       `json:"name"`
+	Text      string       `json:"text"`
+	TextSHA1  string       `json:"text_sha1"`
+	Language  Language     `json:"language"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt *time.Time   `json:"updated_at"`
 }
 
 type Answer struct {
@@ -149,25 +148,16 @@ func (m MessageV2) SHA1() (string, error) {
 	if m.Text == "" {
 		return "", errors.New("message has empty text")
 	}
-	return SHA1Base64(m.Text)
+	return SHA1(m.Text), nil
 }
 
 func (g MessageGroup) SHA1() (string, error) {
-	return SHA1Base64(g.Text)
+	return SHA1(g.Text), nil
 }
 
-func SHA1Base64(s string) (string, error) {
-	s = strings.TrimSpace(s)
-	hash := sha1sum([]byte(s))
-	buf := bytes.NewBuffer(nil)
-	_, err := base64.
-		NewEncoder(base64.StdEncoding, buf).
-		Write(hash)
-	if err != nil {
-		return "", fmt.Errorf("base64 error: %w", err)
-	}
-	b64 := buf.String()
-	return strings.ToLower(b64), nil
+func SHA1(s string) string {
+	hash := sha1sum([]byte(strings.TrimSpace(s)))
+	return hex.EncodeToString(hash)
 }
 
 func sha1sum(b []byte) []byte { return checksum.Sum(b) }

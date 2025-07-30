@@ -11,8 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 type Handler interface {
@@ -23,6 +23,8 @@ type Handler interface {
 	ListTopicsHome(http.ResponseWriter, *http.Request)
 	CountTopicsHome(http.ResponseWriter, *http.Request)
 	GetTopicByID(http.ResponseWriter, *http.Request)
+	GetAnswer(http.ResponseWriter, *http.Request)
+	ListAnswers(http.ResponseWriter, *http.Request)
 	DeleteTopicByID(http.ResponseWriter, *http.Request)
 	UpdateTopicStatus(http.ResponseWriter, *http.Request)
 	UpdateTopicDescription(http.ResponseWriter, *http.Request)
@@ -33,12 +35,21 @@ type Handler interface {
 	// API /messages
 
 	SubmitMessage(http.ResponseWriter, *http.Request)
+	AssignMessageGroup(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
+
+	// API /groups
+
+	AssignGroupTopic(http.ResponseWriter, *http.Request)
+	DeleteGroupByID(http.ResponseWriter, *http.Request)
+
+	// API for admin
+	PostAnswer(w http.ResponseWriter, r *http.Request)
 }
 
 type handler struct {
 	repository repo.Repository
-	service    service.Service
+	service    core.Service
 	topics     repo.Topics
 	messagesv2 repo.MessagesV2
 	groups     repo.MessageGroups
@@ -155,6 +166,11 @@ func errBadRequest(w http.ResponseWriter, err string) {
 	w.WriteHeader(http.StatusBadRequest)
 	contentTypeText(w.Header())
 	fmt.Fprintf(w, "bad request: %s", err)
+}
+
+func errAuth(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusUnauthorized)
+	contentTypeText(w.Header())
 }
 
 func contentTypeJSON(h http.Header) {

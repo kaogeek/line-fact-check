@@ -6,8 +6,8 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 type Container struct {
@@ -15,7 +15,7 @@ type Container struct {
 	PostgresConn    postgres.DBTX
 	PostgresQuerier postgres.Querier
 	Repository      repo.Repository
-	Service         service.Service
+	Service         core.Service
 	Handler         handler.Handler
 	Server          server.Server
 }
@@ -25,7 +25,7 @@ func New(
 	conn postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
-	service service.Service,
+	service core.Service,
 	handler handler.Handler,
 	server server.Server,
 ) Container {

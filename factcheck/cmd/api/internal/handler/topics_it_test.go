@@ -126,7 +126,7 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 			Status:      factcheck.StatusTopicResolved,
 			CreatedAt:   now,
 			//nolint:unused
-			UpdatedAt: nil, // Underlying database will set this to NOW()
+			// UpdatedAt: nil, // Underlying database will set this to NOW()
 		}
 		assertEq(t, updatedStatus.ID, expectedUpdateStatus.ID)
 		assertEq(t, updatedStatus.Name, expectedUpdateStatus.Name)

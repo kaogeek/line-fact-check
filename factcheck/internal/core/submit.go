@@ -1,6 +1,4 @@
-// Package service defines entrypoints for complex business use cases
-// If your logic is just getting/listing/deleting stuff, do it directly in the HTTP handler.
-package service
+package core
 
 import (
 	"context"
@@ -14,89 +12,18 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
-type Service interface {
-	// Submit handles new message submission by creating the message and assigning it to a group.
-	// Submit returns message created, message group assigned to the new message, and topic (if any)
-	//
-	// Caller could call this Submit, and on success gets all the messages from users for replies.
-	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, *factcheck.Topic, error)
-
-	// ResolveTopic resolves topic and returns list of messages associated with the topic.
-	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Answer, factcheck.Topic, []factcheck.MessageV2, error)
-}
-
-func New(repo repo.Repository) Service { return &service{repo: repo} }
-
-type service struct{ repo repo.Repository }
-
-func (s *service) ResolveTopic(
-	ctx context.Context,
-	user factcheck.UserInfo,
-	topicID string,
-	answerText string,
-) (
-	factcheck.Answer,
-	factcheck.Topic,
-	[]factcheck.MessageV2,
-	error,
-) {
-	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
-	if err != nil {
-		return factcheck.Answer{}, factcheck.Topic{}, nil, err
-	}
-	defer func() {
-		err := tx.Rollback(ctx)
-		if err == nil {
-			return
-		}
-		slog.ErrorContext(ctx, "error rolling back after failure to resolve topic",
-			"topic_id", topicID,
-			"user", user,
-		)
-	}()
-
-	withTx := repo.WithTx(tx)
-	answer := factcheck.Answer{
-		ID:        utils.NewID().String(),
-		UserID:    user.UserID,
-		TopicID:   topicID,
-		Text:      answerText,
-		CreatedAt: utils.TimeNow(),
-	}
-	answer, err = s.repo.Answers.Create(ctx, answer, withTx)
-	if err != nil {
-		return factcheck.Answer{}, factcheck.Topic{}, nil, err
-	}
-	resolved, err := s.repo.Topics.Resolve(ctx, topicID, answerText, withTx)
-	if err != nil {
-		return factcheck.Answer{}, factcheck.Topic{}, nil, err
-	}
-	messages, err := s.repo.MessagesV2.ListByTopic(ctx, topicID, withTx)
-	if err != nil {
-		return factcheck.Answer{}, factcheck.Topic{}, nil, err
-	}
-	err = tx.Commit(ctx)
-	if err != nil {
-		return factcheck.Answer{}, factcheck.Topic{}, nil, err
-	}
-	return answer, resolved, messages, nil
-}
-
-func (s *service) Submit(
+func (s ServiceFactcheck) Submit(
 	ctx context.Context,
 	user factcheck.UserInfo,
 	text string,
-	topicID string, // If empty, the new message will be topic-less
+	topicID string, // Users can submit with topic_id, but this will be pending approval for inclusion into topic
 ) (
 	factcheck.MessageV2,
 	factcheck.MessageGroup,
 	*factcheck.Topic,
 	error,
 ) {
-	textSHA1, err := factcheck.SHA1Base64(text)
-	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
-	}
+	textSHA1 := factcheck.SHA1(text)
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
@@ -126,6 +53,11 @@ func (s *service) Submit(
 	}
 
 	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
+	if err == nil && !utils.Empty(topicID, group.ID) && topicID != group.ID {
+		// TODO: what to do?
+		// Mismatch topicID
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("mismatch topic '%s': found group %s (%s) has topic '%s'", topicID, group.ID, textSHA1, group.TopicID)
+	}
 	if err != nil {
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
@@ -135,6 +67,7 @@ func (s *service) Submit(
 		// But the group will not have topicID - to be assigned topic by admin
 		group = factcheck.MessageGroup{
 			ID:        utils.NewID().String(),
+			Status:    factcheck.StatusMGroupPending,
 			Text:      text,
 			TextSHA1:  textSHA1,
 			CreatedAt: now,
@@ -161,9 +94,9 @@ func (s *service) Submit(
 	message := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
 		TopicID:     group.TopicID,
-		UserID:      user.UserID,
 		GroupID:     group.ID,
-		TypeUser:    factcheck.TypeUserMessageAdmin,
+		UserID:      user.UserID,
+		TypeUser:    user.UserType,
 		TypeMessage: factcheck.TypeMessageText,
 		Text:        text,
 		Metadata:    metaJSON,

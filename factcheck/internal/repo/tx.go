@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 
-	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
 )
 
 type (

@@ -1,4 +1,4 @@
-name: test etc
+name: test dev experience
 on:
   workflow_dispatch:
   push:

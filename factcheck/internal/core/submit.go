@@ -23,7 +23,15 @@ func (s ServiceFactcheck) Submit(
 	*factcheck.Topic,
 	error,
 ) {
+	meta := factcheck.Metadata[factcheck.UserInfo]{
+		Type: factcheck.TypeMetadataUserInfo,
+		Data: user,
+	}
 	textSHA1 := factcheck.SHA1(text)
+	metaJSON, err := json.Marshal(meta)
+	if err != nil {
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error creating metadata %s: %w", textSHA1, err)
+	}
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
@@ -51,14 +59,7 @@ func (s ServiceFactcheck) Submit(
 		}
 		topic = &topicDB
 	}
-	meta := factcheck.Metadata[factcheck.UserInfo]{
-		Type: factcheck.TypeMetadataUserInfo,
-		Data: user,
-	}
-	metaJSON, err := json.Marshal(meta)
-	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s", textSHA1)
-	}
+
 	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
 	if err == nil && !utils.Empty(topicID, group.ID) && topicID != group.ID {
 		// TODO: what to do?

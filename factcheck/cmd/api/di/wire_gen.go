@@ -12,7 +12,6 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
-	service "github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
@@ -70,7 +69,7 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 	}
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
-	serviceFactcheck := service.New(repository)
+	serviceFactcheck := core.New(repository)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)

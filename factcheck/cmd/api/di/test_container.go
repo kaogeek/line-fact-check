@@ -48,7 +48,6 @@ func NewTest(
 func clearData(conn postgres.DBTX, stage string) {
 	ctx := context.Background()
 	slog.WarnContext(ctx, "Clearing all data from database", "stage", stage)
-
 	_, err := conn.Exec(ctx, "DELETE FROM topics")
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to delete topics", "error", err)
@@ -64,6 +63,5 @@ func clearData(conn postgres.DBTX, stage string) {
 		slog.ErrorContext(ctx, "Failed to delete user_messages", "error", err)
 		panic(err)
 	}
-
 	slog.WarnContext(ctx, "Cleared all data from database", "stage", stage)
 }

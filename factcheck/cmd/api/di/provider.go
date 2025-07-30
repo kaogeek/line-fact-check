@@ -10,8 +10,8 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/data/postgres"
+	service "github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 var ProviderSet = wire.NewSet(

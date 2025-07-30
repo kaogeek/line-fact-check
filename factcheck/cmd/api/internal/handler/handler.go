@@ -11,8 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/service"
 )
 
 type Handler interface {
@@ -49,7 +49,7 @@ type Handler interface {
 
 type handler struct {
 	repository repo.Repository
-	service    service.Service
+	service    core.Service
 	topics     repo.Topics
 	messagesv2 repo.MessagesV2
 	groups     repo.MessageGroups

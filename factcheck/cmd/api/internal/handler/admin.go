@@ -70,7 +70,7 @@ func (h *handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
-	answer, _, _, err := h.service.ResolveTopic(r.Context(), user, paramID(r), data.Text)
+	answer, _, _, err := h.service.Resolve(r.Context(), user, paramID(r), data.Text)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return

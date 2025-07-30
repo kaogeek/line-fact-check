@@ -16,8 +16,8 @@ type Service interface {
 	// Caller could call this Submit, and on success gets all the messages from users for replies.
 	Submit(ctx context.Context, user factcheck.UserInfo, text string, topicID string) (factcheck.MessageV2, factcheck.MessageGroup, *factcheck.Topic, error)
 
-	// ResolveTopic resolves topic and returns list of messages associated with the topic.
-	ResolveTopic(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Answer, factcheck.Topic, []factcheck.MessageV2, error)
+	// Resolve resolves topic and returns list of messages associated with the topic.
+	Resolve(ctx context.Context, user factcheck.UserInfo, topicID string, answer string) (factcheck.Answer, factcheck.Topic, []factcheck.MessageV2, error)
 }
 
 func New(repo repo.Repository) ServiceFactcheck {

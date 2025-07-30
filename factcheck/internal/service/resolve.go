@@ -9,7 +9,7 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
-func (s ServiceFactcheck) ResolveTopic(
+func (s ServiceFactcheck) Resolve(
 	ctx context.Context,
 	user factcheck.UserInfo,
 	topicID string,

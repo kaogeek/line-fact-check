@@ -9,7 +9,7 @@ CONTAINER_NAME="factcheck-postgres"
 DB_NAME="factcheck"
 DB_USER="postgres"
 DB_PASSWORD="postgres"
-SCHEMA_FILE="data/postgres/schema.sql"
+SCHEMA_FILE="internal/data/postgres/schema.sql"
 
 echo "Running database migration (DROP + CREATE)..."
 

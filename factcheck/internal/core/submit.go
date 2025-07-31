@@ -23,7 +23,15 @@ func (s ServiceFactcheck) Submit(
 	*factcheck.Topic,
 	error,
 ) {
+	meta := factcheck.Metadata[factcheck.UserInfo]{
+		Type: factcheck.TypeMetadataUserInfo,
+		Data: user,
+	}
 	textSHA1 := factcheck.SHA1(text)
+	metaJSON, err := json.Marshal(meta)
+	if err != nil {
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error creating metadata %s: %w", textSHA1, err)
+	}
 	tx, err := s.repo.BeginTx(ctx, repo.RepeatableRead)
 	if err != nil {
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
@@ -62,7 +70,6 @@ func (s ServiceFactcheck) Submit(
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
 		}
-
 		// If not found, we'll create a new group for it.
 		// But the group will not have topicID - to be assigned topic by admin
 		group = factcheck.MessageGroup{
@@ -83,14 +90,6 @@ func (s ServiceFactcheck) Submit(
 		}
 	}
 
-	meta := factcheck.Metadata[factcheck.UserInfo]{
-		Type: factcheck.TypeMetadataUserInfo,
-		Data: user,
-	}
-	metaJSON, err := json.Marshal(meta)
-	if err != nil {
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s", textSHA1)
-	}
 	message := factcheck.MessageV2{
 		ID:          utils.NewID().String(),
 		TopicID:     group.TopicID,

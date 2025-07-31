@@ -7,11 +7,12 @@
 package di
 
 import (
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
@@ -30,8 +31,9 @@ func InitializeServer() (server.Server, func(), error) {
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
+	httpServer, cleanup2 := server.New(configConfig, handlerHandler)
 	return httpServer, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
@@ -50,30 +52,48 @@ func InitializeContainer() (Container, func(), error) {
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	serviceFactcheck := core.New(repository)
+	container := di.Container{
+		Config:          configConfig,
+		PostgresConn:    pool,
+		PostgresQuerier: queries,
+		Repository:      repository,
+		Service:         serviceFactcheck,
+	}
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
-	container := New(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)
-	return container, func() {
+	httpServer, cleanup2 := server.New(configConfig, handlerHandler)
+	diContainer := Container{
+		Container: container,
+		Handler:   handlerHandler,
+		Server:    httpServer,
+	}
+	return diContainer, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
 
-func InitializeContainerTest() (ContainerTest, func(), error) {
+func InitializeContainerTest() (Container, func(), error) {
 	configConfig, err := config.NewTest()
 	if err != nil {
-		return ContainerTest{}, nil, err
+		return Container{}, nil, err
 	}
 	pool, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
-		return ContainerTest{}, nil, err
+		return Container{}, nil, err
 	}
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	serviceFactcheck := core.New(repository)
+	container, cleanup2 := di.NewTest(configConfig, pool, queries, repository, serviceFactcheck)
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
-	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)
-	return containerTest, func() {
+	httpServer, cleanup3 := server.New(configConfig, handlerHandler)
+	diContainer := Container{
+		Container: container,
+		Handler:   handlerHandler,
+		Server:    httpServer,
+	}
+	return diContainer, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil

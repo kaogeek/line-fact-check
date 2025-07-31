@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
 )
@@ -20,28 +19,21 @@ func main() {
 	}
 	ctx := context.Background()
 	defer func() {
-		slog.InfoContext(ctx, "server cleaning up")
+		slog.InfoContext(ctx, "[main] server cleaning up")
 		cleanup()
-		slog.InfoContext(ctx, "server cleanup completed, exiting...")
+		slog.InfoContext(ctx, "[main] server cleanup completed, exiting...")
 	}()
+
+	quit := make(chan os.Signal, 1) // Buffered so it won't block on 2x Ctrl-C
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		slog.InfoContext(ctx, "server starting", "addr", container.Conf.HTTP.ListenAddr)
+		slog.InfoContext(ctx, "[main] server starting", "config_http", container.Config.HTTP)
 		err := container.Server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.ErrorContext(ctx, "server error", "error", err)
+			slog.ErrorContext(ctx, "[main] server error", "error", err)
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	slog.InfoContext(ctx, "server shutting down...")
-
-	timeout := time.Second * 30
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	if err := container.Server.Shutdown(ctx); err != nil {
-		slog.ErrorContext(ctx, "server forced to shutdown", "timeout", timeout.String(), "error", err)
-	}
+	slog.InfoContext(ctx, "[main] server shutting down...")
 }

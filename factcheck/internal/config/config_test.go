@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 )
 
 func TestParseEnvConfig(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 )
 
 type (

@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kaogeek/line-fact-check/pillars"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
@@ -20,7 +21,7 @@ type Server interface {
 	Shutdown(context.Context) error
 }
 
-func New(conf config.Config, h handler.Handler) *http.Server {
+func New(conf config.Config, h handler.Handler) (*http.Server, func()) {
 	admin := chi.NewMux()
 	admin.Use(
 		handler.MiddlewareAuth,
@@ -66,10 +67,22 @@ func New(conf config.Config, h handler.Handler) *http.Server {
 	r.Mount("/messages", messages)
 	r.Mount("/message-groups", messageGroups)
 
-	return &http.Server{
+	server := &http.Server{
 		Addr:         utils.DefaultIfZero(conf.HTTP.ListenAddr, ":8080"),
 		Handler:      r,
 		ReadTimeout:  utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutMsRead)*time.Millisecond, time.Second),
 		WriteTimeout: utils.DefaultIfZero(time.Duration(conf.HTTP.TimeoutMsWrite)*time.Millisecond, time.Second),
 	}
+	cleanup := func() {
+		ctx := context.Background()
+		start := utils.TimeNow()
+		err := server.Shutdown(ctx)
+		dur := utils.TimeSince(start)
+		if err != nil {
+			slog.ErrorContext(ctx, "http server shutdown error", "duration", dur, "err", err, "config_http", conf.HTTP)
+			return
+		}
+		slog.InfoContext(ctx, "http server shutdown ok", "duration", dur)
+	}
+	return server, cleanup
 }

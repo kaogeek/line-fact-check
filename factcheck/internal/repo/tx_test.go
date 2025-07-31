@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )

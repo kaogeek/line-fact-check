@@ -21,7 +21,7 @@ import (
 func TestTransactionIsolationLevels(t *testing.T) {
 	t.Run("ReadCommitted", func(t *testing.T) {
 		t.Run("CommitAfterTx2", func(t *testing.T) {
-			app, cleanup, err := di.InitializeContainerTest()
+			app, cleanup, err := di.InitializeContainerTestV2()
 			if err != nil {
 				t.Fatalf("Failed to initialize test container: %v", err)
 			}
@@ -52,7 +52,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		})
 
 		t.Run("CommitBeforeTx2", func(t *testing.T) {
-			app, cleanup, err := di.InitializeContainerTest()
+			app, cleanup, err := di.InitializeContainerTestV2()
 			if err != nil {
 				t.Fatalf("Failed to initialize test container: %v", err)
 			}
@@ -83,7 +83,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("RepeatableRead_ShouldPreventDirtyReads", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := di.InitializeContainerTestV2()
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
@@ -113,7 +113,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("Serializable_ShouldPreventPhantomReads", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := di.InitializeContainerTestV2()
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
@@ -145,7 +145,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("ConcurrentUpdates_ShouldHandleConflicts", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := di.InitializeContainerTestV2()
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}

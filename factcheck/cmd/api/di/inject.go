@@ -26,3 +26,8 @@ func InitializeContainerTest() (ContainerTest, func(), error) {
 	wire.Build(ProviderSetTest)
 	return ContainerTest{}, nil, nil
 }
+
+func InitializeContainerTestV2() (ContainerTest, func(), error) {
+	wire.Build(ProviderSetTestV2)
+	return ContainerTest{}, nil, nil
+}

@@ -13,7 +13,7 @@ import (
 )
 
 func TestRepository_CountByStatusDynamicV2(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := di.InitializeContainerTestV2()
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
 	}

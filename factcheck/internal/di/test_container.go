@@ -6,8 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
@@ -21,54 +19,25 @@ type ContainerTest Container
 
 func NewTest(
 	conf config.Config,
-	conn postgres.DBTX,
+	db postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
 	service core.Service,
-	handler handler.Handler,
-	server server.Server,
 ) (
 	ContainerTest,
 	func(),
 ) {
-	clearData(conn, "init")
+	clearData(db, "init")
 	cleanup := func() {
-		clearData(conn, "teardown")
+		clearData(db, "teardown")
 	}
 	return ContainerTest(New(
 		conf,
-		conn,
+		db,
 		querier,
 		repo,
 		service,
-		handler,
-		server,
 	)), cleanup
-}
-
-func NewTestV2(
-	conf config.Config,
-	conn postgres.DBTX,
-	querier postgres.Querier,
-	repo repo.Repository,
-	service core.Service,
-	handler handler.Handler,
-	server server.Server,
-) (
-	ContainerTest,
-	func(),
-) {
-	return ContainerTest(New(
-			conf,
-			conn,
-			querier,
-			repo,
-			service,
-			handler,
-			server,
-		)), func() {
-			slog.Debug("containerTest cleanup")
-		}
 }
 
 func clearData(conn postgres.DBTX, stage string) {
@@ -78,7 +47,6 @@ func clearData(conn postgres.DBTX, stage string) {
 		"message_groups",
 		"answers",
 	}
-
 	ctx := context.Background()
 	slog.WarnContext(ctx, "Clearing all data from database", "stage", stage)
 	for i, t := range tables {

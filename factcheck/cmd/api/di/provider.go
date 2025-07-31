@@ -32,3 +32,15 @@ var ProviderSetTest = wire.NewSet(
 	server.New,
 	NewTest,
 )
+
+var ProviderSetTestV2 = wire.NewSet(
+	wire.Bind(new(server.Server), new(*http.Server)),
+	config.NewTest,
+	di.ProviderSetDatabase,
+	di.ProviderSetRepo,
+	di.ProviderSetCore,
+	di.NewTest,
+	handler.New,
+	server.New,
+	NewTestV2,
+)

@@ -6,10 +6,19 @@ import (
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+)
+
+// ProviderSetTest provides all of internal objects, including ContainerTest
+var ProviderSetTest = wire.NewSet(
+	config.NewTest,
+	ProviderSetDatabase,
+	ProviderSetRepo,
+	ProviderSetCore,
+	NewTest,
 )
 
 // ProviderSetDatabase provides all database-related dependencies
@@ -29,12 +38,4 @@ var ProviderSetRepo = wire.NewSet(
 var ProviderSetCore = wire.NewSet(
 	wire.Bind(new(core.Service), new(core.ServiceFactcheck)),
 	core.New,
-)
-
-var ProviderSetTest = wire.NewSet(
-	config.NewTest,
-	ProviderSetDatabase,
-	ProviderSetRepo,
-	ProviderSetCore,
-	NewTest,
 )

@@ -2,9 +2,9 @@
 package di
 
 import (
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/core"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"

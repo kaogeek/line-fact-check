@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 )
 
 func main() {

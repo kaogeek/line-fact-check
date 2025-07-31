@@ -18,6 +18,10 @@ func TimeNow() time.Time {
 	return now()
 }
 
+func TimeSince(since time.Time) time.Duration {
+	return TimeNow().Sub(since)
+}
+
 func TimeFreeze(t time.Time) {
 	now = func() time.Time {
 		return t

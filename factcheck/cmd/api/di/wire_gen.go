@@ -31,8 +31,9 @@ func InitializeServer() (server.Server, func(), error) {
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
+	httpServer, cleanup2 := server.New(configConfig, handlerHandler)
 	return httpServer, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
@@ -59,13 +60,14 @@ func InitializeContainer() (Container, func(), error) {
 		Service:         serviceFactcheck,
 	}
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
+	httpServer, cleanup2 := server.New(configConfig, handlerHandler)
 	diContainer := Container{
 		Container: container,
 		Handler:   handlerHandler,
 		Server:    httpServer,
 	}
 	return diContainer, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
@@ -84,13 +86,14 @@ func InitializeContainerTest() (Container, func(), error) {
 	serviceFactcheck := core.New(repository)
 	container, cleanup2 := di.NewTest(configConfig, pool, queries, repository, serviceFactcheck)
 	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
+	httpServer, cleanup3 := server.New(configConfig, handlerHandler)
 	diContainer := Container{
 		Container: container,
 		Handler:   handlerHandler,
 		Server:    httpServer,
 	}
 	return diContainer, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil

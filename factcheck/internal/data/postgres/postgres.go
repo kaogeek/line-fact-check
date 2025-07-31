@@ -43,15 +43,15 @@ func NewTxnManager(conn *pgxpool.Pool) TxnManager {
 }
 
 func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
-	poolCtx := context.Background()
-	slog.InfoContext(poolCtx, "connecting to postgres",
+	ctx := context.Background()
+	slog.InfoContext(ctx, "connecting to postgres",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
 		"dbname", c.Postgres.DB,
 	)
 	pool, err := pgxpool.New(
-		poolCtx,
+		ctx,
 		fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 			c.Postgres.Host, c.Postgres.Port, c.Postgres.User, c.Postgres.Password, c.Postgres.DB,
@@ -60,21 +60,25 @@ func NewConn(c config.Config) (*pgxpool.Pool, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	slog.InfoContext(poolCtx, "postgres connected",
+	slog.InfoContext(ctx, "postgres connected",
 		"host", c.Postgres.Host,
 		"port", c.Postgres.Port,
 		"user", c.Postgres.User,
 		"dbname", c.Postgres.DB,
 	)
+	err = pool.Ping(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("postgres pool ping error: %w", err)
+	}
 	cleanup := func() {
-		defer slog.InfoContext(poolCtx, "postgres conn closed or cleaned up")
+		defer slog.InfoContext(ctx, "postgres conn closed or cleaned up")
 		if pool == nil {
-			slog.WarnContext(poolCtx, "postgres conn is nil")
+			slog.WarnContext(ctx, "postgres conn is nil")
 			return
 		}
 		pool.Close()
 		if err != nil {
-			slog.ErrorContext(poolCtx, "error closing postgres conn", "error", err)
+			slog.ErrorContext(ctx, "error closing postgres conn", "error", err)
 		}
 	}
 	return pool, cleanup, nil

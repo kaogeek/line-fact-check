@@ -51,7 +51,13 @@ func InitializeContainer() (Container, func(), error) {
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	serviceFactcheck := core.New(repository)
-	container := di.New(configConfig, pool, queries, repository, serviceFactcheck)
+	container := di.Container{
+		Config:          configConfig,
+		PostgresConn:    pool,
+		PostgresQuerier: queries,
+		Repository:      repository,
+		Service:         serviceFactcheck,
+	}
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
 	diContainer := Container{

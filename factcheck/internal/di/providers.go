@@ -18,7 +18,7 @@ var ProviderSet = wire.NewSet(
 	ProviderSetDatabase,
 	ProviderSetRepo,
 	ProviderSetCore,
-	New,
+	wire.Struct(new(Container), "*"),
 )
 
 // ProviderSetTest provides all of internal objects, including ContainerTest

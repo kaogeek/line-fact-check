@@ -14,19 +14,3 @@ type Container struct {
 	Repository      repo.Repository
 	Service         core.Service
 }
-
-func New(
-	conf config.Config,
-	db postgres.DBTX,
-	querier postgres.Querier,
-	repo repo.Repository,
-	service core.Service,
-) Container {
-	return Container{
-		Config:          conf,
-		PostgresConn:    db,
-		PostgresQuerier: querier,
-		Repository:      repo,
-		Service:         service,
-	}
-}

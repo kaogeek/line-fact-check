@@ -13,7 +13,7 @@ import (
 
 func NewTest(
 	conf config.Config,
-	db postgres.DBTX,
+	conn postgres.DBTX,
 	querier postgres.Querier,
 	repo repo.Repository,
 	service core.Service,
@@ -21,17 +21,17 @@ func NewTest(
 	Container,
 	func(),
 ) {
-	clearData(db, "init")
+	clearData(conn, "init")
 	cleanup := func() {
-		clearData(db, "teardown")
+		clearData(conn, "teardown")
 	}
-	return New(
-		conf,
-		db,
-		querier,
-		repo,
-		service,
-	), cleanup
+	return Container{
+		Config:          conf,
+		PostgresConn:    conn,
+		PostgresQuerier: querier,
+		Repository:      repo,
+		Service:         service,
+	}, cleanup
 }
 
 func clearData(conn postgres.DBTX, stage string) {

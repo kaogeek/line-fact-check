@@ -66,6 +66,6 @@ func NewTest(
 			handler,
 			server,
 		)), func() {
-			slog.Debug("containerTest cleanup")
+			slog.Debug("containerTest cleanup") //nolint
 		}
 }

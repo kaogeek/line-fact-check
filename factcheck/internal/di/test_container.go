@@ -52,7 +52,7 @@ func clearData(conn postgres.DBTX, stage string) {
 	for i, t := range tables {
 		err := delete(ctx, conn, t)
 		if err != nil {
-			slog.Error("failed to delete table", "i", i, "table", t)
+			slog.ErrorContext(ctx, "failed to delete table", "i", i, "table", t)
 			panic(err)
 		}
 	}

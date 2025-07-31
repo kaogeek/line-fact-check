@@ -16,7 +16,7 @@ var ProviderSet = wire.NewSet(
 	di.ProviderSet,
 	handler.New,
 	server.New,
-	New,
+	wire.Struct(new(Container), "*"),
 )
 
 // ProviderSetTest provides everything [ProviderSet] does,
@@ -26,5 +26,5 @@ var ProviderSetTest = wire.NewSet(
 	di.ProviderSetTest,
 	handler.New,
 	server.New,
-	NewTest,
+	wire.Struct(new(Container), "*"),
 )

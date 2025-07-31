@@ -12,27 +12,3 @@ type Container struct {
 	Handler handler.Handler
 	Server  server.Server
 }
-
-func New(
-	container di.Container,
-	handler handler.Handler,
-	server server.Server,
-) Container {
-	return Container{
-		Container: container,
-		Handler:   handler,
-		Server:    server,
-	}
-}
-
-func NewTest(
-	container di.Container,
-	handler handler.Handler,
-	server server.Server,
-) Container {
-	return Container{
-		Container: container,
-		Handler:   handler,
-		Server:    server,
-	}
-}

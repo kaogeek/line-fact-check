@@ -54,7 +54,11 @@ func InitializeContainer() (Container, func(), error) {
 	container := di.New(configConfig, pool, queries, repository, serviceFactcheck)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	diContainer := New(container, handlerHandler, httpServer)
+	diContainer := Container{
+		Container: container,
+		Handler:   handlerHandler,
+		Server:    httpServer,
+	}
 	return diContainer, func() {
 		cleanup()
 	}, nil
@@ -75,7 +79,11 @@ func InitializeContainerTest() (Container, func(), error) {
 	container, cleanup2 := di.NewTest(configConfig, pool, queries, repository, serviceFactcheck)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	diContainer := NewTest(container, handlerHandler, httpServer)
+	diContainer := Container{
+		Container: container,
+		Handler:   handlerHandler,
+		Server:    httpServer,
+	}
 	return diContainer, func() {
 		cleanup2()
 		cleanup()

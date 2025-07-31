@@ -12,6 +12,15 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
+// ProviderSet provides all of internal objects
+var ProviderSet = wire.NewSet(
+	config.New,
+	ProviderSetDatabase,
+	ProviderSetRepo,
+	ProviderSetCore,
+	New,
+)
+
 // ProviderSetTest provides all of internal objects, including ContainerTest
 var ProviderSetTest = wire.NewSet(
 	config.NewTest,

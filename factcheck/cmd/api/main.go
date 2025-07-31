@@ -25,7 +25,7 @@ func main() {
 		slog.InfoContext(ctx, "server cleanup completed, exiting...")
 	}()
 	go func() {
-		slog.InfoContext(ctx, "server starting", "addr", container.Conf.HTTP.ListenAddr)
+		slog.InfoContext(ctx, "server starting", "addr", container.Config.HTTP.ListenAddr)
 		err := container.Server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.ErrorContext(ctx, "server error", "error", err)

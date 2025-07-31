@@ -11,12 +11,6 @@ import (
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 )
 
-// ContainerTest is a container for testing.
-// In addition to the usual cleanup functions provided by [Container],
-// it also provides cleanup function to clear all data from the database
-// BEFORE and AFTER each test.
-type ContainerTest Container
-
 func NewTest(
 	conf config.Config,
 	db postgres.DBTX,
@@ -24,20 +18,20 @@ func NewTest(
 	repo repo.Repository,
 	service core.Service,
 ) (
-	ContainerTest,
+	Container,
 	func(),
 ) {
 	clearData(db, "init")
 	cleanup := func() {
 		clearData(db, "teardown")
 	}
-	return ContainerTest(New(
+	return New(
 		conf,
 		db,
 		querier,
 		repo,
 		service,
-	)), cleanup
+	), cleanup
 }
 
 func clearData(conn postgres.DBTX, stage string) {

@@ -11,7 +11,7 @@ import (
 )
 
 type TestSuite struct {
-	container di.ContainerTest
+	container di.Container
 }
 
 func init() {

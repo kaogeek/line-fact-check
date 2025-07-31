@@ -15,20 +15,20 @@ import (
 
 // Injectors from inject.go:
 
-func InitializeContainerTest() (ContainerTest, func(), error) {
+func InitializeContainerTest() (Container, func(), error) {
 	configConfig, err := config.NewTest()
 	if err != nil {
-		return ContainerTest{}, nil, err
+		return Container{}, nil, err
 	}
 	pool, cleanup, err := postgres.NewConn(configConfig)
 	if err != nil {
-		return ContainerTest{}, nil, err
+		return Container{}, nil, err
 	}
 	queries := postgres.New(pool)
 	repository := repo.New(queries, pool)
 	serviceFactcheck := core.New(repository)
-	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck)
-	return containerTest, func() {
+	container, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck)
+	return container, func() {
 		cleanup2()
 		cleanup()
 	}, nil

@@ -58,27 +58,6 @@ func InitializeContainer() (Container, func(), error) {
 	}, nil
 }
 
-func InitializeContainerTest() (ContainerTest, func(), error) {
-	configConfig, err := config.NewTest()
-	if err != nil {
-		return ContainerTest{}, nil, err
-	}
-	pool, cleanup, err := postgres.NewConn(configConfig)
-	if err != nil {
-		return ContainerTest{}, nil, err
-	}
-	queries := postgres.New(pool)
-	repository := repo.New(queries, pool)
-	serviceFactcheck := core.New(repository)
-	handlerHandler := handler.New(repository)
-	httpServer := server.New(configConfig, handlerHandler)
-	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)
-	return containerTest, func() {
-		cleanup2()
-		cleanup()
-	}, nil
-}
-
 func InitializeContainerTestV2() (ContainerTest, func(), error) {
 	configConfig, err := config.NewTest()
 	if err != nil {

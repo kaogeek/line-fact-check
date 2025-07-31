@@ -1,8 +1,6 @@
 package di
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/config"
@@ -17,34 +15,9 @@ import (
 // In addition to the usual cleanup functions provided by [Container],
 // it also provides cleanup function to clear all data from the database
 // BEFORE and AFTER each test.
+//
+// They are defined separate just in case we need something
 type ContainerTest Container
-
-func NewTest(
-	conf config.Config,
-	conn postgres.DBTX,
-	querier postgres.Querier,
-	repo repo.Repository,
-	service core.Service,
-	handler handler.Handler,
-	server server.Server,
-) (
-	ContainerTest,
-	func(),
-) {
-	clearData(conn, "init")
-	cleanup := func() {
-		clearData(conn, "teardown")
-	}
-	return ContainerTest(New(
-		conf,
-		conn,
-		querier,
-		repo,
-		service,
-		handler,
-		server,
-	)), cleanup
-}
 
 func NewTestV2(
 	conf config.Config,
@@ -69,29 +42,4 @@ func NewTestV2(
 		)), func() {
 			slog.Debug("containerTest cleanup")
 		}
-}
-
-func clearData(conn postgres.DBTX, stage string) {
-	tables := [4]string{
-		"topics",
-		"messages_v2",
-		"message_groups",
-		"answers",
-	}
-
-	ctx := context.Background()
-	slog.WarnContext(ctx, "Clearing all data from database", "stage", stage)
-	for i, t := range tables {
-		err := delete(ctx, conn, t)
-		if err != nil {
-			slog.Error("failed to delete table", "i", i, "table", t)
-			panic(err)
-		}
-	}
-	slog.WarnContext(ctx, "Cleared all data from database", "stage", stage)
-}
-
-func delete(ctx context.Context, conn postgres.DBTX, table string) error {
-	_, err := conn.Exec(ctx, fmt.Sprintf("DELETE FROM %s", table))
-	return err
 }

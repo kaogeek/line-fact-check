@@ -22,17 +22,6 @@ var ProviderSet = wire.NewSet(
 	New,
 )
 
-var ProviderSetTest = wire.NewSet(
-	wire.Bind(new(server.Server), new(*http.Server)),
-	config.NewTest,
-	di.ProviderSetDatabase,
-	di.ProviderSetRepo,
-	di.ProviderSetCore,
-	handler.New,
-	server.New,
-	NewTest,
-)
-
 var ProviderSetTestV2 = wire.NewSet(
 	wire.Bind(new(server.Server), new(*http.Server)),
 	config.NewTest,

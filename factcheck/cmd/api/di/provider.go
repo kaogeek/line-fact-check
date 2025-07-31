@@ -26,5 +26,5 @@ var ProviderSetTest = wire.NewSet(
 	di.ProviderSetTest,
 	handler.New,
 	server.New,
-	NewTestV2,
+	NewTest,
 )

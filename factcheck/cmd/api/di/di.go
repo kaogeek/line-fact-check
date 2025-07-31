@@ -2,6 +2,8 @@
 package di
 
 import (
+	"log/slog"
+
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/handler"
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/internal/server"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
@@ -20,6 +22,10 @@ type Container struct {
 	Server          server.Server
 }
 
+// ContainerTest is defined separately just in case we need something
+// that prod does not need.
+type ContainerTest Container
+
 func New(
 	conf config.Config,
 	conn postgres.DBTX,
@@ -37,4 +43,29 @@ func New(
 		Handler:         handler,
 		Server:          server,
 	}
+}
+
+func NewTest(
+	conf config.Config,
+	conn postgres.DBTX,
+	querier postgres.Querier,
+	repo repo.Repository,
+	service core.Service,
+	handler handler.Handler,
+	server server.Server,
+) (
+	ContainerTest,
+	func(),
+) {
+	return ContainerTest(New(
+			conf,
+			conn,
+			querier,
+			repo,
+			service,
+			handler,
+			server,
+		)), func() {
+			slog.Debug("containerTest cleanup")
+		}
 }

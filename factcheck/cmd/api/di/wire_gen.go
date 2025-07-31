@@ -58,7 +58,7 @@ func InitializeContainer() (Container, func(), error) {
 	}, nil
 }
 
-func InitializeContainerTestV2() (ContainerTest, func(), error) {
+func InitializeContainerTest() (ContainerTest, func(), error) {
 	configConfig, err := config.NewTest()
 	if err != nil {
 		return ContainerTest{}, nil, err
@@ -72,7 +72,7 @@ func InitializeContainerTestV2() (ContainerTest, func(), error) {
 	serviceFactcheck := core.New(repository)
 	handlerHandler := handler.New(repository)
 	httpServer := server.New(configConfig, handlerHandler)
-	containerTest, cleanup2 := NewTestV2(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)
+	containerTest, cleanup2 := NewTest(configConfig, pool, queries, repository, serviceFactcheck, handlerHandler, httpServer)
 	return containerTest, func() {
 		cleanup2()
 		cleanup()

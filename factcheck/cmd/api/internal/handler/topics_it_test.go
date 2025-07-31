@@ -316,7 +316,7 @@ func TestHandlerTopic_Stateful(t *testing.T) {
 }
 
 func TestHandlerTopic_CountTopicsHome(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := di.InitializeContainerTestV2()
 	if err != nil {
 		panic(err)
 	}
@@ -675,7 +675,7 @@ func TestHandlerTopic_CountTopicsHome(t *testing.T) {
 }
 
 func TestHandlerTopic_ListTopicsHome(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := di.InitializeContainerTestV2()
 	if err != nil {
 		panic(err)
 	}

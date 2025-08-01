@@ -258,24 +258,7 @@ rec {
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"
             echo "Waiting for PostgreSQL to be ready..."
-            timeout=90
-            counter=0
-            while [ $counter -lt $timeout ]; do
-              if docker exec postgres-it-test pg_isready -U postgres -d factcheck > /dev/null 2>&1; then
-                echo "PostgreSQL is ready!"
-                break
-              fi
-              echo "Waiting for PostgreSQL... ($counter/$timeout seconds)"
-              sleep 2
-              counter=$((counter + 2))
-            done
-            
-            if [ $counter -ge $timeout ]; then
-              echo "Error: PostgreSQL did not become ready within $timeout seconds"
-              docker logs postgres-it-test
-              exit 1
-            fi
-            
+            bash ${./compose/scripts/wait-for-postgres.sh} localhost
             echo "Use 'docker stop postgres-it-test && docker rm postgres-it-test' to clean up"
           '';
         };

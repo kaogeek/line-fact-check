@@ -20,12 +20,10 @@ services:
         condition: service_completed_successfully
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_DB: factcheck
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
     volumes:
       - factcheck-postgres_data:/var/lib/postgresql/data
+    env_file:
+      - compose/compose.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -43,21 +41,10 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
-    environment:
-      POSTGRES_HOST: factcheck-postgres
-      POSTGRES_DB: factcheck
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      FACTCHECKAPI_LISTEN_ADDRESS: ":8080"
     volumes:
       - ./compose/scripts/wait-for-postgres.sh:/wait-for-postgres.sh
-    command: >
-      sh -c "
-        chmod +x /wait-for-postgres.sh &&
-        /wait-for-postgres.sh factcheck-postgres:5432 &&
-        /bin/api
-      "
+    env_file:
+      - compose/compose.env
 
   # Backoffice webapp service using the built image
   backoffice-webapp:
@@ -68,6 +55,8 @@ services:
         condition: service_healthy
     ports:
       - "3000:80"
+    env_file:
+      - compose/compose.env
 
 volumes:
   factcheck-nix_store:

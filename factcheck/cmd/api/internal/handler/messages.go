@@ -45,12 +45,16 @@ func (h *handler) SubmitMessage(w http.ResponseWriter, r *http.Request) {
 		errBadRequest(w, err.Error())
 		return
 	}
+	if body.Text == "" {
+		errBadRequest(w, "empty text")
+		return
+	}
 	userInfo, err := h.getUserInfo(r)
 	if err != nil {
 		errInternalError(w, err.Error())
 		return
 	}
-	topic, msg, group, err := h.service.Submit(
+	msg, group, topic, err := h.service.Submit(
 		r.Context(),
 		userInfo,
 		body.Text,
@@ -61,8 +65,8 @@ func (h *handler) SubmitMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendJSON(r.Context(), w, http.StatusCreated, map[string]any{
-		"topic":   topic,
-		"group":   group,
 		"message": msg,
+		"group":   group,
+		"topic":   topic,
 	})
 }

@@ -43,6 +43,7 @@ func (c *cmdSubmit) submit(
 	if err != nil {
 		panic(err)
 	}
+	slog.Info("body to be sent", "body", body.String())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return err

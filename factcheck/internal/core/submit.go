@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -23,6 +24,11 @@ func (s ServiceFactcheck) Submit(
 	*factcheck.Topic,
 	error,
 ) {
+	if text == "" {
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, errors.New("empty message text submitted")
+	}
+
+	slog.Info("got submission", "text", text, "topic_id", topicID)
 	meta := factcheck.Metadata[factcheck.UserInfo]{
 		Type: factcheck.TypeMetadataUserInfo,
 		Data: user,
@@ -65,9 +71,11 @@ func (s ServiceFactcheck) Submit(
 		if !repo.IsNotFound(err) {
 			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s': %s", textSHA1, err)
 		}
+
 		// If not found, we'll create a new group for it.
 		// But the group will not have topicID - to be assigned topic by admin
-		group := factcheck.MessageGroup{
+		slog.Info("pre-creating new group", "sha1", textSHA1)
+		group = factcheck.MessageGroup{
 			ID:        utils.NewID().String(),
 			Status:    factcheck.StatusMGroupPending,
 			Text:      text,

@@ -276,9 +276,9 @@ func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroup
 
 const createMessageV2 = `-- name: CreateMessageV2 :one
 INSERT INTO messages_v2 (
-    id, user_id, topic_id, type_user, type, text, language, metadata, created_at, updated_at
+    id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 ) RETURNING id, user_id, topic_id, group_id, type_user, type, text, language, metadata, created_at, updated_at
 `
 
@@ -286,6 +286,7 @@ type CreateMessageV2Params struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    string             `json:"user_id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
 	TypeUser  string             `json:"type_user"`
 	Type      string             `json:"type"`
 	Text      string             `json:"text"`
@@ -300,6 +301,7 @@ func (q *Queries) CreateMessageV2(ctx context.Context, arg CreateMessageV2Params
 		arg.ID,
 		arg.UserID,
 		arg.TopicID,
+		arg.GroupID,
 		arg.TypeUser,
 		arg.Type,
 		arg.Text,

@@ -137,7 +137,6 @@ func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 		return CreateMessageV2Params{}, err
 	}
 	// Could be nil
-	topicID, _ := UUID(m.TopicID)
 	createdAt, err := Timestamptz(m.CreatedAt)
 	if err != nil {
 		return CreateMessageV2Params{}, err
@@ -153,7 +152,8 @@ func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 	return CreateMessageV2Params{
 		ID:        id,
 		UserID:    m.UserID,
-		TopicID:   topicID,
+		TopicID:   UUIDNullable(m.TopicID),
+		GroupID:   UUIDNullable(m.GroupID),
 		TypeUser:  string(m.TypeUser),
 		Type:      string(m.TypeMessage),
 		Text:      m.Text,

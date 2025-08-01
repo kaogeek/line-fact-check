@@ -49,7 +49,12 @@ func main() {
 	go func() {
 		switch {
 		case c.Submit != nil:
-			err := c.Submit.submit(ctx, container.Config.HTTP, c.Submit.Text, c.Submit.TopicID)
+			text := c.Submit.Text
+			topicID := c.Submit.TopicID
+			if text == "" {
+				text = "dummy debug text"
+			}
+			err := c.Submit.submit(ctx, container.Config.HTTP, text, topicID)
 			if err != nil {
 				panic(err)
 			}

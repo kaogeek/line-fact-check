@@ -157,7 +157,7 @@ func (g MessageGroup) SHA1() (string, error) {
 
 func SHA1(s string) string {
 	hash := sha1sum([]byte(strings.TrimSpace(s)))
-	return hex.EncodeToString(hash)
+	return strings.ToLower(hex.EncodeToString(hash))
 }
 
 func sha1sum(b []byte) []byte { return checksum.Sum(b) }

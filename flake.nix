@@ -258,7 +258,7 @@ rec {
 
             echo "PostgreSQL container started on $POSTGRES_HOST:$POSTGRES_PORT"
             echo "Waiting for PostgreSQL to be ready..."
-            bash ${./compose/scripts/wait-for-postgres.sh} postgres-it-test
+            bash ${./compose/scripts/wait-for-postgres.sh} localhost
             echo "Use 'docker stop postgres-it-test && docker rm postgres-it-test' to clean up"
           '';
         };

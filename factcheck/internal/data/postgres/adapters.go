@@ -137,7 +137,6 @@ func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 		return CreateMessageV2Params{}, err
 	}
 	// Could be nil
-	topicID, _ := UUID(m.TopicID)
 	createdAt, err := Timestamptz(m.CreatedAt)
 	if err != nil {
 		return CreateMessageV2Params{}, err
@@ -153,7 +152,8 @@ func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 	return CreateMessageV2Params{
 		ID:        id,
 		UserID:    m.UserID,
-		TopicID:   topicID,
+		TopicID:   UUIDNullable(m.TopicID),
+		GroupID:   UUIDNullable(m.GroupID),
 		TypeUser:  string(m.TypeUser),
 		Type:      string(m.TypeMessage),
 		Text:      m.Text,
@@ -206,10 +206,6 @@ func MessageGroupCreator(g factcheck.MessageGroup) (CreateMessageGroupParams, er
 	if err != nil {
 		return CreateMessageGroupParams{}, err
 	}
-	topicID, err := UUID(g.TopicID)
-	if err != nil {
-		return CreateMessageGroupParams{}, err
-	}
 	createdAt, err := Timestamptz(g.CreatedAt)
 	if err != nil {
 		return CreateMessageGroupParams{}, err
@@ -222,6 +218,7 @@ func MessageGroupCreator(g factcheck.MessageGroup) (CreateMessageGroupParams, er
 	if err != nil {
 		return CreateMessageGroupParams{}, err
 	}
+	topicID := UUIDNullable(g.TopicID)
 
 	return CreateMessageGroupParams{
 		ID:        id,
@@ -240,9 +237,12 @@ func ToMessageGroup(data MessageGroup) (factcheck.MessageGroup, error) {
 	if err != nil {
 		return factcheck.MessageGroup{}, err
 	}
-	topicID, err := FromUUID(data.TopicID)
-	if err != nil {
-		return factcheck.MessageGroup{}, err
+	var topicID string
+	if data.TopicID.Valid {
+		topicID, err = FromUUID(data.TopicID)
+		if err != nil {
+			return factcheck.MessageGroup{}, err
+		}
 	}
 	createdAt, err := Time(data.CreatedAt)
 	if err != nil {
@@ -267,7 +267,10 @@ func ToMessageGroups(data []MessageGroup) ([]factcheck.MessageGroup, error) {
 func UUID(id string) (pgtype.UUID, error) {
 	var uuid pgtype.UUID
 	err := uuid.Scan(id)
-	return uuid, err
+	if err != nil {
+		return pgtype.UUID{}, err
+	}
+	return uuid, nil
 }
 
 func UUIDs(ids []string) ([]pgtype.UUID, error) {
@@ -275,12 +278,7 @@ func UUIDs(ids []string) ([]pgtype.UUID, error) {
 }
 
 func UUIDNullable(id string) pgtype.UUID {
-	//nolint
-	uuid, err := UUID(id)
-	if err != nil && id != "" {
-		//nolint:noctx
-		slog.Error("unexpected bad uuid '%s' in our system: %w", id, err.Error())
-	}
+	uuid, _ := UUID(id) //nolint
 	return uuid
 }
 

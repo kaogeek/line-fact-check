@@ -52,7 +52,7 @@ rec {
           env = goEnvs;
           src = ./.;
           modRoot = "./factcheck";
-          vendorHash = "sha256-dpggYNs50dyXcfZYH/TCw/uLB2Nl/Kf0nGqQfrNpQm8=";
+          vendorHash = "sha256-edScJM95OI6FwYvC0JU+gbfr10IRxx1KFxiX5bwh7Rk=";
           meta = {
             inherit homepage;
             description = "${description} - factcheck";
@@ -137,8 +137,21 @@ rec {
             Entrypoint = [ "docker-entrypoint.sh" ];
             Cmd = [ "postgres" ];
             Env = [
+              "POSTGRES_PORT=5432"
               "POSTGRES_DB=factcheck"
+              "POSTGRES_USER=postgres"
+              "POSTGRES_PASSWORD=postgres"
             ];
+            Healthcheck = {
+              Test = [
+                "CMD-SHELL"
+                "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"
+              ];
+              StartPeriod = 5000000000; # 5 seconds
+              Interval = 10000000000; # 15 seconds
+              Timeout = 5000000000;  # 5 seconds
+              Retries = 3;
+            };
           };
         };
 
@@ -227,10 +240,10 @@ rec {
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
           FACTCHECKAPI_TIMEOUTMS_WRITE = "3000";
+          POSTGRES_PORT = "5432";
+          POSTGRES_DB = "factcheck";
           POSTGRES_USER = "postgres";
           POSTGRES_PASSWORD = "postgres";
-          POSTGRES_DB = "factcheck";
-          POSTGRES_PORT = "5432";
 
           shellHook = ''
             echo "Entering Nix shell go-it-test"
@@ -240,9 +253,6 @@ rec {
             echo "Starting PostgreSQL container for integration tests..."
             docker run -d \
               --name postgres-it-test \
-              -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-              -e POSTGRES_USER=$POSTGRES_USER \
-              -e POSTGRES_DB=$POSTGRES_DB \
               -p 5432:$POSTGRES_PORT \
               factcheck/postgres:16
 

@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -23,6 +24,11 @@ func (s ServiceFactcheck) Submit(
 	*factcheck.Topic,
 	error,
 ) {
+	if text == "" {
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, errors.New("empty message text submitted")
+	}
+
+	slog.InfoContext(ctx, "got submission", "text", text, "topic_id", topicID)
 	meta := factcheck.Metadata[factcheck.UserInfo]{
 		Type: factcheck.TypeMetadataUserInfo,
 		Data: user,
@@ -61,17 +67,14 @@ func (s ServiceFactcheck) Submit(
 	}
 
 	group, err := s.repo.MessageGroups.GetBySHA1(ctx, textSHA1, withTx)
-	if err == nil && !utils.Empty(topicID, group.ID) && topicID != group.ID {
-		// TODO: what to do?
-		// Mismatch topicID
-		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("mismatch topic '%s': found group %s (%s) has topic '%s'", topicID, group.ID, textSHA1, group.TopicID)
-	}
 	if err != nil {
 		if !repo.IsNotFound(err) {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s'", textSHA1)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error finding group based on sha1 hash '%s': %w", textSHA1, err)
 		}
+
 		// If not found, we'll create a new group for it.
 		// But the group will not have topicID - to be assigned topic by admin
+		slog.InfoContext(ctx, "pre-creating new group", "sha1", textSHA1)
 		group = factcheck.MessageGroup{
 			ID:        utils.NewID().String(),
 			Status:    factcheck.StatusMGroupPending,
@@ -82,12 +85,22 @@ func (s ServiceFactcheck) Submit(
 		slog.InfoContext(ctx, "creating new group without topic",
 			"gid", group.ID,
 			"name", group.Name,
-			"text_sha1", group.SHA1,
+			"sha1", group.SHA1,
 		)
 		group, err = s.repo.MessageGroups.Create(ctx, group, withTx)
 		if err != nil {
-			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s", textSHA1)
+			slog.ErrorContext(ctx, "error pre-creating group",
+				"gid", group.ID,
+				"sha1", textSHA1,
+				"err", err,
+			)
+			return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("error pre-creating group %s: %w", textSHA1, err)
 		}
+	}
+	if !utils.Empty(topicID, group.ID) && topicID != group.ID {
+		// TODO: what to do?
+		// Mismatch topicID
+		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, fmt.Errorf("mismatch topic '%s': found group %s (%s) has topic '%s'", topicID, group.ID, textSHA1, group.TopicID)
 	}
 
 	message := factcheck.MessageV2{

@@ -6,10 +6,10 @@ It is structured as a multi-language monorepo, with focus on cross-platform deve
 
 # Running this project with Docker Compose (WIP 90%)
 
-> Note: this Docker Compose setup uses Docker daemon socket mount for it to be able
-> to load images to host Docker daemon. This has security implications, but since everything
-> is controlled by Nix, the risk is minimized.
->
+> Note: this [Docker Compose setup](/docker-compose.yaml) uses **your host's Docker daemon** socket mount
+> for it to be able to load images to host Docker daemon.
+> 
+> This has security implications, but since everything is controlled by Nix, the risk is minimized.
 > We still need a better way to pin Docker Compose's services to images built by the build service.
 
 Because Nix use is encouraged in the build process, the best way to bring up the project's environment
@@ -30,13 +30,27 @@ docker-compose up build-images
 After `build-images` has finished, we can bring up other components:
 
 ```sh
+# Bring up all components
 docker-compose up
+```
+
+Or you can refer to individual Docker Compose service:
+
+```sh
+# Start PostgreSQL listening on local port 5432
+docker-compose up -d factcheck-postgres
+
+# Start our API
+docker-compose up -d factcheck-api
+
+# Start our frontend NGINX
+docker-compose up -d backoffice-webapp
 ```
 
 To simplify and minimize Nix build time, we use stateful multi-stage Docker Compose definition for each compose run.
 Each run is also attached to a Docker volume, which is shared across runs, so that we can cache Nix store across builds.
 
-You must manually clean up your Nix store cache volume.
+You must manually manage your Nix store cache volum for the compose.
 
 ## Docker Compose build service `build-images`
 
@@ -60,18 +74,25 @@ to manually build new images.
 
 # Nix flake
 
-We use Nix flake to pin everything and have reproducible builds.
-
 Nix flake is heavily used in our GitHub Actions CICD pipelines,
-and it does most of the heavy lifting of setting stuff up.
+and it does most of the heavy lifting of setting stuff up and
+have reproducible builds across all hosts.
 
-Thanks to Nix flake, we can build this repository without having to clone it first:
+Thanks to Nix flake, we can even access this repository without having to clone it first,
+via Nix URL `github:kaogeek/line-fact-check`:
 
 ```sh
-# Build from branch main
-nix build\ 
-    --extra-experimental-features nix-command \ 
-    --extra-experimental-features flakes \ 
+# Enter default test environment from GitHub's default branch,
+# with PostgreSQL running on port 5432 and all the NodeJS tooling from Flake
+nix develop \
+    --extra-experimental-features nix-command \
+    --extra-experimental-features flakes \
+    github:kaogeek/line-fact-check
+
+# Build output docker-factcheck from branch main
+nix build \
+    --extra-experimental-features nix-command \
+    --extra-experimental-features flakes \
     github:kaogeek/line-fact-check/main#docker-factcheck
 ```
 
@@ -85,9 +106,6 @@ For example, our backend in [/factcheck](./factcheck/) is built into Go binary a
 
 # Contributing without Nix
 
-However, most of our devs don't have Nix installed locally. But most have Docker.
-
-To hack around this, the official NixOS image `nixos/nix` is actually very handy.
 We can run the NixOS container and use it to try to interact with Nix:
 
 ```sh
@@ -105,22 +123,34 @@ We finish off by copying the result to host machine filesystem,
 mounted at /workspace within the container
 
 ```sh
+# Cheat sheet 1
 docker run --rm -v $(pwd):/workspace nixos/nix:latest sh -c \
+    "nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes && cp result /workspace/"
+```
+
+However, this command is "stateless" in that every build will start from scratch with long ass build time.
+
+We can fix that by mounting a Docker volume to build containers, and we can mount that volume to
+our new builders to benefit from the cache. Let's say our new Docker volume is `line-fact-check-nix-store`
+then we just give docker run this volume option `-v line-fact-check-nix-store:/nix/store`:
+
+```sh
+# Cheat sheet 1, revised with caching Docker volume
+docker run --rm -v $(pwd):/workspace -v line-fact-check-nix-store:/nix/store nixos/nix:latest sh -c \
     "nix build github:kaogeek/line-fact-check/main#docker-factcheck --extra-experimental-features nix-command --extra-experimental-features flakes && cp result /workspace/"
 ```
 
 ## Cheat sheet 2: Cached build of Docker images from local files
 The command above, while simple, will write result to your `./result`. This is stateful, and will break if run back-to-back. This script will fix that by appending our flake "version" to the name of file.
 
-Differences to example above
+Differences from cheat sheet 1:
 
 - Read from local directory instead of remote GitHub repository with `.#docker-factcheck`
-
-- Cache Nix store with simple Docker volume with `-v line-fact-check-nix-store:/nix/store`.
 
 - Unique output, where FLAKE_VERSION is appended to the result image filename
 
 ```sh
+# Cheat sheet 2
 docker run --rm -v $(pwd):/workspace -v line-fact-check-nix-store:/nix/store nixos/nix:latest sh -c '
     cp -r /workspace /source
     cd source

@@ -56,9 +56,13 @@ type handler struct {
 	answers    repo.Answers
 }
 
-func New(repo repo.Repository) Handler {
+func New(
+	repo repo.Repository,
+	core core.Service,
+) Handler {
 	return &handler{
 		repository: repo,
+		service:    core,
 		topics:     repo.Topics,
 		messagesv2: repo.MessagesV2,
 		groups:     repo.MessageGroups,

@@ -137,7 +137,10 @@ rec {
             Entrypoint = [ "docker-entrypoint.sh" ];
             Cmd = [ "postgres" ];
             Env = [
+              "POSTGRES_PORT=5432"
               "POSTGRES_DB=factcheck"
+              "POSTGRES_USER=postgres"
+              "POSTGRES_PASSWORD=postgres"
             ];
           };
         };
@@ -227,10 +230,10 @@ rec {
           FACTCHECKAPI_LISTEN_ADDRESS = ":8080";
           FACTCHECKAPI_TIMEOUTMS_READ = "3000";
           FACTCHECKAPI_TIMEOUTMS_WRITE = "3000";
+          POSTGRES_PORT = "5432";
+          POSTGRES_DB = "factcheck";
           POSTGRES_USER = "postgres";
           POSTGRES_PASSWORD = "postgres";
-          POSTGRES_DB = "factcheck";
-          POSTGRES_PORT = "5432";
 
           shellHook = ''
             echo "Entering Nix shell go-it-test"
@@ -240,9 +243,6 @@ rec {
             echo "Starting PostgreSQL container for integration tests..."
             docker run -d \
               --name postgres-it-test \
-              -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-              -e POSTGRES_USER=$POSTGRES_USER \
-              -e POSTGRES_DB=$POSTGRES_DB \
               -p 5432:$POSTGRES_PORT \
               factcheck/postgres:16
 

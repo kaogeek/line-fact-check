@@ -3,14 +3,18 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexflint/go-arg"
 
 	"github.com/kaogeek/line-fact-check/factcheck/cmd/api/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 )
 
 type cli struct {
@@ -61,16 +65,22 @@ func main() {
 		if text == "" {
 			text = "dummy debug text"
 		}
-		err := c.Submit.submit(ctx, conf.HTTP, text, topicID)
+		err := submit(ctx, conf.HTTP, text, topicID)
 		if err != nil {
 			panic(err)
 		}
 
 	case c.CreateTopic != nil:
-		c.CreateTopic.createTopic(ctx, conf.HTTP)
+		err := createTopic(ctx, conf.HTTP, c.CreateTopic.Name, c.CreateTopic.Description)
+		if err != nil {
+			panic(err)
+		}
 
 	case c.AssignTopic != nil:
-		c.AssignTopic.assignTopic(ctx, conf.HTTP)
+		err := assignTopic(ctx, conf.HTTP, c.AssignTopic.GroupID, c.AssignTopic.TopicID)
+		if err != nil {
+			panic(err)
+		}
 
 	case c.Dump != nil:
 		topics, err := container.Repository.Topics.List(ctx, 0, 0)
@@ -112,4 +122,76 @@ func callHTTP(
 		"body", respBody.String(),
 	)
 	return nil
+}
+
+func submit(
+	ctx context.Context,
+	conf config.HTTP,
+	text string,
+	topicID string,
+) error {
+	url := hostURL(conf.ListenAddr)
+	url += "/messages/"
+	slog.Info("got new url", "config_http", conf, "url", url)
+	data := struct {
+		Text    string `json:"text"`
+		TopicID string `json:"topic_id"`
+	}{
+		Text:    text,
+		TopicID: topicID,
+	}
+	body := bytes.NewBuffer(nil)
+	err := json.NewEncoder(body).Encode(data)
+	if err != nil {
+		panic(err)
+	}
+	return callHTTP(ctx, http.MethodPost, url, body)
+}
+
+func createTopic(
+	ctx context.Context,
+	conf config.HTTP,
+	name string,
+	description string,
+) error {
+	url := hostURL(conf.ListenAddr)
+	url += "/topics"
+	slog.InfoContext(ctx, "got new url", "config_http", conf, "url", url)
+	data := map[string]any{
+		"name":        name,
+		"description": description,
+	}
+	body := bytes.NewBuffer(nil)
+	err := json.NewEncoder(body).Encode(data)
+	if err != nil {
+		panic(err)
+	}
+	return callHTTP(ctx, http.MethodPost, url, body)
+}
+
+func assignTopic(
+	ctx context.Context,
+	conf config.HTTP,
+	gid string,
+	tid string,
+) error {
+	url := hostURL(conf.ListenAddr)
+	url += "/admin/message-groups/assign/" + gid
+	slog.InfoContext(ctx, "got new url", "config_http", conf, "url", url)
+	data := map[string]any{
+		"topic_id": tid,
+	}
+	body := bytes.NewBuffer(nil)
+	err := json.NewEncoder(body).Encode(data)
+	if err != nil {
+		panic(err)
+	}
+	return callHTTP(ctx, http.MethodPut, url, body)
+}
+
+func hostURL(u string) string {
+	if strings.HasPrefix(u, ":") {
+		u = fmt.Sprintf("localhost%s", u)
+	}
+	return fmt.Sprintf("http://%s", u)
 }

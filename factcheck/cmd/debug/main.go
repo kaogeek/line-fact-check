@@ -87,7 +87,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		slog.Info("dumping topics", "data", topics)
+		slog.InfoContext(ctx, "dumping topics", "data", topics)
 	}
 }
 
@@ -132,7 +132,7 @@ func submit(
 ) error {
 	url := hostURL(conf.ListenAddr)
 	url += "/messages/"
-	slog.Info("got new url", "config_http", conf, "url", url)
+	slog.InfoContext(ctx, "got new url", "config_http", conf, "url", url)
 	data := struct {
 		Text    string `json:"text"`
 		TopicID string `json:"topic_id"`

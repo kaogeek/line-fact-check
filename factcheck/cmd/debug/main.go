@@ -6,9 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/alexflint/go-arg"
@@ -55,41 +52,33 @@ func main() {
 	}
 	defer cleanup()
 
-	quit := make(chan os.Signal, 1) // Buffered so it won't block on 2x Ctrl-C
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
-
 	conf := container.Config
-	go func() {
-		switch {
-		case c.Submit != nil:
-			text := c.Submit.Text
-			topicID := c.Submit.TopicID
-			if text == "" {
-				text = "dummy debug text"
-			}
-			err := c.Submit.submit(ctx, conf.HTTP, text, topicID)
-			if err != nil {
-				panic(err)
-			}
-
-		case c.CreateTopic != nil:
-			c.CreateTopic.createTopic(ctx, conf.HTTP)
-
-		case c.AssignTopic != nil:
-			c.AssignTopic.assignTopic(ctx, conf.HTTP)
-
-		case c.Dump != nil:
-			topics, err := container.Repository.Topics.List(ctx, 0, 0)
-			if err != nil {
-				panic(err)
-			}
-			slog.Info("dumping topics", "data", topics)
+	switch {
+	case c.Submit != nil:
+		text := c.Submit.Text
+		topicID := c.Submit.TopicID
+		if text == "" {
+			text = "dummy debug text"
 		}
-	}()
+		err := c.Submit.submit(ctx, conf.HTTP, text, topicID)
+		if err != nil {
+			panic(err)
+		}
 
-	<-quit
-	slog.Info("[main] exitting")
+	case c.CreateTopic != nil:
+		c.CreateTopic.createTopic(ctx, conf.HTTP)
+
+	case c.AssignTopic != nil:
+		c.AssignTopic.assignTopic(ctx, conf.HTTP)
+
+	case c.Dump != nil:
+		topics, err := container.Repository.Topics.List(ctx, 0, 0)
+		if err != nil {
+			panic(err)
+		}
+		slog.Info("dumping topics", "data", topics)
+	}
 }
 
 func callHTTP(

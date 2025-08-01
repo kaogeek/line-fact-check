@@ -142,6 +142,16 @@ rec {
               "POSTGRES_USER=postgres"
               "POSTGRES_PASSWORD=postgres"
             ];
+            Healthcheck = {
+              Test = [
+                "CMD-SHELL"
+                "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"
+              ];
+              StartPeriod = 5000000000; # 5 seconds
+              Interval = 10000000000; # 15 seconds
+              Timeout = 5000000000;  # 5 seconds
+              Retries = 3;
+            };
           };
         };
 

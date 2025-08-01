@@ -1,11 +1,11 @@
-name: test dev experience
+name: test dx
 on:
   workflow_dispatch:
   push:
 
 jobs:
   test:
-    name: Test other aspects of projects
+    name: Test aspects related to dev experience
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -33,7 +33,6 @@ jobs:
           "
 
       - name: Test package with Docker
-        if: matrix.os != 'macos-latest'
         run: |
           nix develop .#go-develop --command bash -c "
             nix build .#docker-foo
@@ -52,4 +51,14 @@ jobs:
 
             echo "Cleaning up..."
             docker stop foo-test && docker rm foo-test
+          "
+
+      - name: Test local dev environment with docker-compose
+        run: |
+          nix develop .#go-develop --command bash -c "
+            docker-compose up -d build-images
+            docker-compose up -d factcheck-api
+            echo "docker-compose up factcheck-api completed, waiting for service to be healthy"
+            docker-compose ps -a | grep factcheck:compose | grep '(healthy)'
+            curl localhost:8080/
           "

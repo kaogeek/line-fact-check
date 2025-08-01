@@ -29,17 +29,14 @@ type Topics interface {
 	UpdateName(ctx context.Context, id string, name string, opts ...Option) (factcheck.Topic, error)
 }
 
-// topics implements RepositoryTopic
 type topics struct {
 	queries *postgres.Queries
 }
 
-// NewTopics creates a new topic repository
 func NewTopics(queries *postgres.Queries) Topics {
 	return &topics{queries: queries}
 }
 
-// List retrieves topics with pagination using the topicDomain adapter
 func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	queries := queries(t.queries, options(opts...))
 	rows, err := queries.ListTopics(ctx, postgres.ListTopicsParams{
@@ -150,7 +147,6 @@ func (t *topics) CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic
 	return result, nil
 }
 
-// ListByStatus retrieves topics by status with pagination
 func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
 	queries := queries(t.queries, options(opts...))
@@ -165,7 +161,6 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 	return utils.MapNoError(rows, postgres.ToTopicFromStatusRow), nil
 }
 
-// ListLikeID retrieves topics by ID pattern matching using SQL LIKE with pagination
 func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	limit, offset = sanitize(limit, offset)
 	queries := queries(t.queries, options(opts...))
@@ -180,7 +175,6 @@ func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset
 	return utils.MapNoError(rows, postgres.ToTopicFromIDRow), nil
 }
 
-// Create creates a new topic using the topic adapter
 func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...Option) (factcheck.Topic, error) {
 	queries := queries(t.queries, options(opts...))
 	params, err := postgres.TopicCreator(top)
@@ -194,7 +188,6 @@ func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...Option
 	return postgres.ToTopic(created), nil
 }
 
-// GetByID retrieves a topic by ID using the topicDomain adapter
 func (t *topics) GetByID(ctx context.Context, id string, opts ...Option) (factcheck.Topic, error) {
 	queries := queries(t.queries, options(opts...))
 	uuid, err := postgres.UUID(id)
@@ -243,7 +236,6 @@ func (t *topics) CountByStatus(ctx context.Context, opts ...Option) (map[factche
 	return result, nil
 }
 
-// Delete deletes a topic by ID using the stringToUUID adapter
 func (t *topics) Delete(ctx context.Context, id string, opts ...Option) error {
 	options := options(opts...)
 	queries := queries(t.queries, options)

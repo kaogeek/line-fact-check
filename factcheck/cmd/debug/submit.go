@@ -5,11 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck/internal/config"
 )
@@ -43,29 +41,5 @@ func (c *cmdSubmit) submit(
 	if err != nil {
 		panic(err)
 	}
-	slog.Info("body to be sent", "body", body.String())
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
-	if err != nil {
-		return err
-	}
-	client := http.Client{
-		Timeout: time.Second * 2,
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	respBody := bytes.NewBuffer(nil)
-	_, err = io.Copy(respBody, resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	slog.Info("got response",
-		"url", url,
-		"status_code", resp.StatusCode,
-		"body", respBody.String(),
-	)
-	return nil
+	return callHTTP(ctx, http.MethodPost, url, body)
 }

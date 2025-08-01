@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alexflint/go-arg"
 
@@ -13,16 +17,25 @@ import (
 )
 
 type cli struct {
-	// Submit submits new message as user
-	Submit *cmdSubmit `arg:"subcommand:submit"`
-
-	// Dump dumps stuff in DB
-	Dump *cmdDump `arg:"subcommand:dump"`
+	Submit      *cmdSubmit      `arg:"subcommand:submit"` // Submit submits new message as user
+	CreateTopic *cmdCreateTopic `arg:"subcommand:create-topic"`
+	AssignTopic *cmdAssignTopic `arg:"subcommand:assign-topic"` // AssignTopic assigns a msg group to topicID
+	Dump        *cmdDump        `arg:"subcommand:dump"`         // Dump dumps stuff in DB
 }
 
 type cmdSubmit struct {
 	Text    string `arg:"positional"`
 	TopicID string `arg:"positional"`
+}
+
+type cmdAssignTopic struct {
+	GroupID string `arg:"positional"`
+	TopicID string `arg:"positional"`
+}
+
+type cmdCreateTopic struct {
+	Name        string `arg:"positional"`
+	Description string `arg:"positional"`
 }
 
 type cmdDump struct {
@@ -46,6 +59,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	ctx := context.Background()
 
+	conf := container.Config
 	go func() {
 		switch {
 		case c.Submit != nil:
@@ -54,10 +68,17 @@ func main() {
 			if text == "" {
 				text = "dummy debug text"
 			}
-			err := c.Submit.submit(ctx, container.Config.HTTP, text, topicID)
+			err := c.Submit.submit(ctx, conf.HTTP, text, topicID)
 			if err != nil {
 				panic(err)
 			}
+
+		case c.CreateTopic != nil:
+			c.CreateTopic.createTopic(ctx, conf.HTTP)
+
+		case c.AssignTopic != nil:
+			c.AssignTopic.assignTopic(ctx, conf.HTTP)
+
 		case c.Dump != nil:
 			topics, err := container.Repository.Topics.List(ctx, 0, 0)
 			if err != nil {
@@ -69,4 +90,37 @@ func main() {
 
 	<-quit
 	slog.Info("[main] exitting")
+}
+
+func callHTTP(
+	ctx context.Context,
+	method string,
+	url string,
+	body *bytes.Buffer,
+) error {
+	slog.InfoContext(ctx, "callHTTP: start", "url", url)
+	slog.InfoContext(ctx, "callHTTP: body to be sent", "body", body.String())
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return err
+	}
+	client := http.Client{
+		Timeout: time.Second * 2,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	respBody := bytes.NewBuffer(nil)
+	_, err = io.Copy(respBody, resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	slog.InfoContext(ctx, "callHTTP: got response",
+		"url", url,
+		"status_code", resp.StatusCode,
+		"body", respBody.String(),
+	)
+	return nil
 }

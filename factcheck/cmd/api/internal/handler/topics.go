@@ -70,32 +70,32 @@ func (h *handler) CountTopicsHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
-	create(
-		w, r,
-		func(ctx context.Context, topic factcheck.Topic) (factcheck.Topic, error) {
-			return h.topics.Create(ctx, topic)
-		},
-		createCheck(func(_ context.Context, topic factcheck.Topic) error {
-			if topic.ID != "" {
-				return fmt.Errorf("unexpected topic id (expecting empty topic id): '%s'", topic.Status)
-			}
-			if topic.Status != "" {
-				return fmt.Errorf("unexpected topic status (expecting empty topic status): '%s'", topic.Status)
-			}
-			return nil
-		}),
-		createModify(func(_ context.Context, topic factcheck.Topic) factcheck.Topic {
-			return factcheck.Topic{
-				ID:          utils.NewID().String(),
-				Name:        topic.Name,
-				Description: topic.Description,
-				Status:      factcheck.StatusTopicPending,
-				Result:      topic.Result,
-				CreatedAt:   utils.TimeNow(),
-				UpdatedAt:   nil,
-			}
-		}),
-	)
+	data, err := decode[struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}](r)
+	if err != nil {
+		errBadRequest(w, err.Error())
+		return
+	}
+	now := utils.TimeNow()
+	name, desc := data.Name, data.Description
+	if name == "" {
+		name = fmt.Sprintf("topic-%d", now.Unix())
+	}
+	topic := factcheck.Topic{
+		ID:          utils.NewID().String(),
+		Name:        name,
+		Description: desc,
+		Status:      factcheck.StatusTopicPending,
+		CreatedAt:   now,
+	}
+	created, err := h.topics.Create(r.Context(), topic)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	sendJSON(r.Context(), w, http.StatusCreated, created)
 }
 
 func (h *handler) UpdateTopicStatus(w http.ResponseWriter, r *http.Request) {

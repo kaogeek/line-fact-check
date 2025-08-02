@@ -1,0 +1,22 @@
+meta {
+  name: Get topic answers
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{host}}/topics/b409dcd3-1822-4b06-8805-c656a7956b45/answers
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "test",
+    "description": "asdasd"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

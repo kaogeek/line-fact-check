@@ -1,0 +1,21 @@
+meta {
+  name: Assign Group to topic
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{host}}/message-groups/e3fad942-8a11-4890-a276-8607fff1ff87/assign-topic
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "topic_id": "b409dcd3-1822-4b06-8805-c656a7956b45"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

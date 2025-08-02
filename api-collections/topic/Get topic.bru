@@ -1,0 +1,28 @@
+meta {
+  name: Get topic
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/topics
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~limit: 1
+  ~offset: 2
+  ~like_message_text: asdasdß
+}
+
+body:json {
+  {
+    "name": "test",
+    "description": "asdasd"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

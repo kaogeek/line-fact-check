@@ -1,0 +1,21 @@
+meta {
+  name: Post anwser
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/admin/topics/resolve/b409dcd3-1822-4b06-8805-c656a7956b45
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "text": "answered"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

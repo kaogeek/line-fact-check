@@ -16,7 +16,7 @@ interface TopicMessageDetailProps {
   onClickCreate: () => void;
 }
 
-const colSpan = 4;
+const colSpan = 5;
 
 export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate }: TopicMessageDetailProps) {
   const { t } = useTranslation();

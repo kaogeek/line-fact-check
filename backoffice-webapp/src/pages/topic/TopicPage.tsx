@@ -7,13 +7,15 @@ import { useEffect, useState } from 'react';
 import TabIndex from '../../components/TabIndex';
 import { TopicStatus, type GetTopicCriteria, type Topic } from '@/lib/api/type/topic';
 import { TYH3 } from '@/components/Typography';
-import type { PaginationReq } from '@/lib/api/type/base';
-import PaginationControl from '@/components/PaginationControl';
 import { rejectTopic } from '@/lib/api/service/topic';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useLoader } from '@/hooks/loader';
 import { ConfirmAlertDialog } from '@/components/ConfirmAlertDialog';
+import type { Pagination } from '@/lib/api/type/base';
+import { calPagination } from '@/lib/utils/page-utils';
+import PaginationControl from '@/components/PaginationControl';
+import { usePaginationReqState } from '@/hooks/usePagination';
 
 export default function TopicPage() {
   const { t } = useTranslation();
@@ -21,15 +23,15 @@ export default function TopicPage() {
   const tabs = [
     {
       label: t('topic.total'),
-      statusIn: [TopicStatus.PENDING, TopicStatus.ANSWERED],
+      statusIn: [TopicStatus.TOPIC_PENDING, TopicStatus.TOPIC_RESOLVED],
     },
     {
       label: t('topic.status.pending'),
-      statusIn: [TopicStatus.PENDING],
+      statusIn: [TopicStatus.TOPIC_PENDING],
     },
     {
       label: t('topic.status.answered'),
-      statusIn: [TopicStatus.ANSWERED],
+      statusIn: [TopicStatus.TOPIC_RESOLVED],
     },
     {
       label: t('topic.status.rejected'),
@@ -41,15 +43,24 @@ export default function TopicPage() {
     },
   ];
 
-  const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0]);
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     statusIn: tabs[0].statusIn,
     codeLike: '',
     messageLike: '',
   });
-  const [paginationReq, setPaginationReq] = useState<PaginationReq>({
+
+  const [counts, setCounts] = useState<number[]>([0, 0, 0, 0, 0]);
+
+  const { paginationReq, setPage, resetPage } = usePaginationReqState({
     page: 1,
+    pageSize: 10,
   });
+
+  const [pagination, setPagination] = useState<Pagination>({
+    totalItems: 0,
+    totalPages: 1,
+  });
+
   const [activeTab, setActiveTab] = useState<number>(0);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [topicToReject, setTopicToReject] = useState<Topic | null>(null);
@@ -79,15 +90,19 @@ export default function TopicPage() {
       return;
     }
 
-    const { total, pending, answered } = countTopics;
+    const { total, TOPIC_PENDING, TOPIC_RESOLVED } = countTopics;
 
-    setCounts([total, pending, answered, 0, 0]);
-  }, [countTopics]);
+    setCounts([total, TOPIC_PENDING, TOPIC_RESOLVED, 0, 0]);
+    setPagination(calPagination(total, paginationReq));
+  }, [countTopics, paginationReq]);
 
   function handleSearch(criteria: { codeLike?: string; messageLike?: string }) {
-    setCriteria((prev) => {
-      return { ...prev, codeLike: criteria.codeLike, messageLike: criteria.messageLike };
-    });
+    resetPage();
+    setCriteria((prev) => ({
+      ...prev,
+      codeLike: criteria.codeLike,
+      messageLike: criteria.messageLike,
+    }));
     queryClient.removeQueries({ queryKey: topicQueryKeys.all });
   }
 
@@ -95,14 +110,15 @@ export default function TopicPage() {
     setActiveTab(activeTabIdx);
     const tab = tabs[activeTabIdx];
 
-    setCriteria({
-      ...criteria,
+    resetPage();
+    setCriteria((prev) => ({
+      ...prev,
       statusIn: tab.statusIn,
-    });
+    }));
   }
 
-  function handlePageChange(paginationReq: PaginationReq) {
-    setPaginationReq(paginationReq);
+  function handlePageChange(page: number) {
+    setPage(page);
   }
 
   function handleRejectClick(topic: Topic) {
@@ -128,9 +144,9 @@ export default function TopicPage() {
       />
       <TabIndex activeTab={activeTab} setActiveTab={handleTabChange} tabs={tabs} counts={counts} />
       <div className="flex-1 overflow-auto">
-        <TopicData isLoading={isLoading} dataList={data?.items} error={error} onReject={handleRejectClick}></TopicData>
+        <TopicData isLoading={isLoading} dataList={data} error={error} onReject={handleRejectClick}></TopicData>
       </div>
-      <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+      <PaginationControl paginationReq={paginationReq} pagination={pagination} onPageChange={handlePageChange} />
       <ConfirmAlertDialog
         open={showRejectDialog}
         onOpenChange={setShowRejectDialog}

@@ -224,7 +224,7 @@ export default function TopicDetailPage() {
                 </DropdownMenu>
               </div>
               <TYMuted>
-                {t('topic.createdAt')}: {formatDate(topic.createDate)}
+                {t('topic.createdAt')}: {formatDate(topic.created_at)}
               </TYMuted>
             </div>
             <TopicMessageDetail

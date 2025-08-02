@@ -62,7 +62,7 @@ export default function TopicPickerData({ className, isLoading, dataList, error,
                 {data.countOfMessageGroup > 0 && <Badge variant="secondary">+{data.countOfMessageGroup}</Badge>}
               </TableCell>
               <TableCell className="text-right">{data.countOfTotalMessage}</TableCell>
-              <TableCell>{formatDate(data.createDate)}</TableCell>
+              <TableCell>{formatDate(data.created_at)}</TableCell>
               <TableCell>
                 <TopicStatusBadge status={data.status}></TopicStatusBadge>
               </TableCell>

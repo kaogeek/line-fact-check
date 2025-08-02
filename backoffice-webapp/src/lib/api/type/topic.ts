@@ -1,6 +1,6 @@
 export enum TopicStatus {
-  PENDING = 'PENDING',
-  ANSWERED = 'ANSWERED',
+  TOPIC_PENDING = 'TOPIC_PENDING',
+  TOPIC_RESOLVED = 'TOPIC_RESOLVED',
   REJECTED = 'REJECTED',
   APPROVED = 'APPROVED',
 }
@@ -14,11 +14,11 @@ type TopicStatusOptionSpec = {
 type TopicStatusOption = Record<TopicStatus, TopicStatusOptionSpec>;
 
 export const topicStatusOption: TopicStatusOption = {
-  PENDING: {
+  TOPIC_PENDING: {
     variant: 'warning',
     label: 'topic.status.pending',
   },
-  ANSWERED: {
+  TOPIC_RESOLVED: {
     variant: 'blue',
     label: 'topic.status.answered',
   },
@@ -39,18 +39,23 @@ export interface Stat {
 
 export interface Topic {
   id: string;
-  code: string;
   status: TopicStatus;
+  result: string;
   description: string;
-  createDate: Date;
+  created_at: Date;
+  replied_at: string;
+  updated_at: string;
+
+  // not have in backend
+  code: string;
   countOfMessageGroup: number;
   countOfTotalMessage: number;
 }
 
 export interface CountTopic {
   total: number;
-  pending: number;
-  answered: number;
+  TOPIC_PENDING: number;
+  TOPIC_RESOLVED: number;
 }
 
 export interface CountTopicCriteria {

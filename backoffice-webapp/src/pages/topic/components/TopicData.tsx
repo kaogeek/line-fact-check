@@ -68,7 +68,7 @@ export default function TopicData({ isLoading, dataList, error, onReject }: Topi
                 {topic.countOfMessageGroup > 0 && <Badge variant="secondary">+{topic.countOfMessageGroup}</Badge>}
               </TableCell>
               <TableCell className="text-right">{topic.countOfTotalMessage}</TableCell>
-              <TableCell>{formatDate(topic.createDate)}</TableCell>
+              <TableCell>{formatDate(topic.created_at)}</TableCell>
               <TableCell>
                 <TopicStatusBadge status={topic.status} />
               </TableCell>

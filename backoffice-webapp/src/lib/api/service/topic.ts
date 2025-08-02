@@ -1,224 +1,68 @@
-import { mockApi } from '@/lib/utils/mock-api-utils';
-import {
-  TopicStatus,
-  type CountTopic,
-  type CountTopicCriteria,
-  type GetTopicCriteria,
-  type Topic,
-} from '../type/topic';
-import type { PaginationReq, PaginationRes } from '../type/base';
-import { paginate } from '@/lib/utils/page-utils';
+import axios from 'axios';
+import type { CountTopic, CountTopicCriteria, GetTopicCriteria, Topic } from '../type/topic';
+import type { PaginationReq } from '../type/base';
+import apiClient from '../client';
+import { appendPaginationParams } from './base';
 
-function isCodeLike(data: Topic, keyword: string): boolean {
-  return data.code.toLowerCase().includes(keyword.toLowerCase());
-}
+function buildTopicSearchParams(
+  criteria: GetTopicCriteria | CountTopicCriteria,
+  pagination?: PaginationReq
+): URLSearchParams {
+  const params = new URLSearchParams();
 
-function isMessageLike(data: Topic, keyword: string): boolean {
-  return data.description.toLowerCase().includes(keyword.toLowerCase());
-}
+  if (criteria.codeLike) params.append('codeLike', criteria.codeLike);
+  if (criteria.messageLike) params.append('like_message_text', criteria.messageLike);
 
-function isIdIn(data: Topic, idIn: string[]): boolean {
-  return idIn.includes(data.id);
-}
-
-function isInStatus(data: Topic, statusIn: string[]): boolean {
-  return statusIn.includes(data.status);
-}
-
-export function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<PaginationRes<Topic>> {
-  return mockApi(() => {
-    const { codeLike, messageLike, statusIn, idNotIn } = criteria;
-    const conditions: ((data: Topic) => boolean)[] = [];
-
-    if (codeLike) {
-      conditions.push((data) => isCodeLike(data, codeLike));
-    }
-
-    if (messageLike) {
-      conditions.push((data) => isMessageLike(data, messageLike));
-    }
-
-    if (statusIn) {
-      conditions.push((data) => isInStatus(data, statusIn));
-    }
-
-    if (idNotIn) {
-      conditions.push((data) => !isIdIn(data, idNotIn));
-    }
-
-    const filteredTopics = dataList
-      .filter((data) => conditions.every((condition) => condition(data)))
-      .map((data) => ({
-        ...data,
-        countOfMessageGroup: data.countOfMessageGroup,
-        countOfTotalMessage: data.countOfTotalMessage,
-      }));
-    return paginate(filteredTopics, pagination);
-  }, 'getTopics');
-}
-
-export function getTopicById(id: string): Promise<Topic | null> {
-  return mockApi(() => {
-    const topic = dataList.find((data) => data.id === id) || null;
-    return topic;
-  }, 'getTopicById');
-}
-
-function countByCriteriaAndStatus(statusIn: TopicStatus[], criteria: CountTopicCriteria): number {
-  const { codeLike, messageLike } = criteria;
-  const conditions: ((data: Topic) => boolean)[] = [];
-
-  if (codeLike) {
-    conditions.push((data) => isCodeLike(data, codeLike));
+  if ('statusIn' in criteria && criteria.statusIn?.length) {
+    params.append('in_statuses', criteria.statusIn.join(','));
+  }
+  if ('idNotIn' in criteria && criteria.idNotIn?.length) {
+    params.append('idNotIn', criteria.idNotIn.join(','));
   }
 
-  if (messageLike) {
-    conditions.push((data) => isMessageLike(data, messageLike));
+  if (pagination) {
+    appendPaginationParams(params, pagination);
   }
 
-  conditions.push((data) => isInStatus(data, statusIn));
-
-  return dataList.filter((data) => conditions.every((condition) => condition(data))).length;
+  return params;
 }
 
-export function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
-  return mockApi(
-    () => ({
-      total: countByCriteriaAndStatus([TopicStatus.PENDING, TopicStatus.ANSWERED], criteria),
-      pending: countByCriteriaAndStatus([TopicStatus.PENDING], criteria),
-      answered: countByCriteriaAndStatus([TopicStatus.ANSWERED], criteria),
-    }),
-    'countTopics'
-  );
+function patchData(topic: Topic): Topic {
+  // TODO resolve this with real code
+  return {
+    ...topic,
+    code: topic.id,
+  };
 }
 
-export async function approveTopic(topicId: string) {
-  return mockApi(() => {
-    console.log(`Approving topic ${topicId}`);
-    const topic = dataList.find((t) => t.id === topicId);
-    if (topic) {
-      topic.status = TopicStatus.APPROVED;
+export async function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<Topic[]> {
+  const params = buildTopicSearchParams(criteria, pagination);
+  const response = await apiClient.get<Topic[]>('/topics', { params });
+  return response.data.map(patchData) ?? [];
+}
+
+export async function getTopicById(id: string): Promise<Topic | null> {
+  try {
+    const response = await apiClient.get<Topic>(`/topics/${id}`);
+    return patchData(response.data);
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
     }
-  }, 'approveTopic');
+    throw error;
+  }
 }
 
-export async function rejectTopic(topicId: string) {
-  return mockApi(() => {
-    console.log(`Rejecting topic ${topicId}`);
-    const topic = dataList.find((t) => t.id === topicId);
-    if (topic) {
-      topic.status = TopicStatus.REJECTED;
-    }
-  }, 'rejectTopic');
+export async function countTopics(criteria: CountTopicCriteria): Promise<CountTopic> {
+  const params = buildTopicSearchParams(criteria);
+  const response = await apiClient.get<CountTopic>('/topics/count', { params });
+  return response.data;
 }
 
-export const dataList: Topic[] = [
-  {
-    id: '1',
-    code: 'T001',
-    status: TopicStatus.PENDING,
-    description: 'This is the first topic.',
-    createDate: new Date('2023-10-01T10:00:00Z'),
-    countOfMessageGroup: 3,
-    countOfTotalMessage: 12,
-  },
-  {
-    id: '2',
-    code: 'T002',
-    status: TopicStatus.ANSWERED,
-    description: 'This is the second topic.',
-    createDate: new Date('2023-10-02T14:30:00Z'),
-    countOfMessageGroup: 5,
-    countOfTotalMessage: 20,
-  },
-  {
-    id: '3',
-    code: 'T003',
-    status: TopicStatus.REJECTED,
-    description: 'This is the third topic.',
-    createDate: new Date('2023-10-03T09:15:00Z'),
-    countOfMessageGroup: 1,
-    countOfTotalMessage: 5,
-  },
-  {
-    id: '4',
-    code: 'T004',
-    status: TopicStatus.APPROVED,
-    description: 'This is the fourth topic.',
-    createDate: new Date('2023-10-04T11:45:00Z'),
-    countOfMessageGroup: 4,
-    countOfTotalMessage: 18,
-  },
-  {
-    id: '5',
-    code: 'T005',
-    status: TopicStatus.PENDING,
-    description: 'Topic about product feedback',
-    createDate: new Date('2023-10-05T08:20:00Z'),
-    countOfMessageGroup: 2,
-    countOfTotalMessage: 8,
-  },
-  {
-    id: '6',
-    code: 'T006',
-    status: TopicStatus.ANSWERED,
-    description: 'Customer support inquiry',
-    createDate: new Date('2023-10-06T13:10:00Z'),
-    countOfMessageGroup: 7,
-    countOfTotalMessage: 25,
-  },
-  {
-    id: '7',
-    code: 'T007',
-    status: TopicStatus.REJECTED,
-    description: 'Feature request discussion',
-    createDate: new Date('2023-10-07T16:45:00Z'),
-    countOfMessageGroup: 1,
-    countOfTotalMessage: 4,
-  },
-  {
-    id: '8',
-    code: 'T008',
-    status: TopicStatus.APPROVED,
-    description: 'Bug report investigation',
-    createDate: new Date('2023-10-08T09:30:00Z'),
-    countOfMessageGroup: 3,
-    countOfTotalMessage: 15,
-  },
-  {
-    id: '9',
-    code: 'T009',
-    status: TopicStatus.PENDING,
-    description: 'General question about service',
-    createDate: new Date('2023-10-09T11:15:00Z'),
-    countOfMessageGroup: 4,
-    countOfTotalMessage: 12,
-  },
-  {
-    id: '10',
-    code: 'T010',
-    status: TopicStatus.ANSWERED,
-    description: 'Account management issue',
-    createDate: new Date('2023-10-10T14:50:00Z'),
-    countOfMessageGroup: 6,
-    countOfTotalMessage: 22,
-  },
-  {
-    id: '11',
-    code: 'T011',
-    status: TopicStatus.REJECTED,
-    description: 'Billing question',
-    createDate: new Date('2023-10-11T10:25:00Z'),
-    countOfMessageGroup: 2,
-    countOfTotalMessage: 7,
-  },
-  {
-    id: '12',
-    code: 'T012',
-    status: TopicStatus.APPROVED,
-    description: 'Technical support request',
-    createDate: new Date('2023-10-12T15:40:00Z'),
-    countOfMessageGroup: 5,
-    countOfTotalMessage: 19,
-  },
-];
+export async function approveTopic(topicId: string): Promise<void> {
+  await apiClient.patch(`/topics/${topicId}/approve`);
+}
+
+export async function rejectTopic(topicId: string): Promise<void> {
+  await apiClient.patch(`/topics/${topicId}/reject`);
+}

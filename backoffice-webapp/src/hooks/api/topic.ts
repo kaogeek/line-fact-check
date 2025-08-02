@@ -2,7 +2,7 @@ import { countTopics, getTopicById, getTopics } from '@/lib/api/service/topic';
 import type { CountTopic, CountTopicCriteria, GetTopicCriteria, Topic } from '@/lib/api/type/topic';
 import { useQuery } from '@tanstack/react-query';
 import type { BaseQueryOptions } from './type';
-import type { PaginationReq, PaginationRes } from '@/lib/api/type/base';
+import type { PaginationReq } from '@/lib/api/type/base';
 import { countKey } from './key';
 
 const domainKey = 'topics';
@@ -17,7 +17,7 @@ export const topicQueryKeys = {
 export function useGetTopics(
   criteria: GetTopicCriteria,
   pagination: PaginationReq,
-  options?: BaseQueryOptions<PaginationRes<Topic>>
+  options?: BaseQueryOptions<Topic[]>
 ) {
   return useQuery({
     ...options,

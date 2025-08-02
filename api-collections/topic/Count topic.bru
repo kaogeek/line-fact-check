@@ -1,0 +1,27 @@
+meta {
+  name: Count topic
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/topics/count?like_message_text=test
+  body: none
+  auth: inherit
+}
+
+params:query {
+  like_message_text: test
+  : 
+}
+
+body:json {
+  {
+    "name": "test",
+    "description": "asdasd"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

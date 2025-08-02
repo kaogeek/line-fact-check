@@ -1,0 +1,22 @@
+meta {
+  name: Create topic
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/topics
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "test",
+    "description": "asdasd"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

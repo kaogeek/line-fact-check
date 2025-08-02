@@ -1,0 +1,21 @@
+meta {
+  name: submit message
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/messages
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "text": "asddasd"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -13,6 +13,7 @@ type MessageGroups interface {
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error)
 	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error)
+	UpdateStatus(ctx context.Context, id string, status factcheck.StatusMGroup, opts ...Option) (factcheck.MessageGroup, error)
 	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageGroup, error)
 	UnassignTopic(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	Delete(ctx context.Context, id string, opts ...Option) error
@@ -52,6 +53,22 @@ func (m *messageGroups) GetByID(ctx context.Context, id string, opts ...Option) 
 		return factcheck.MessageGroup{}, err
 	}
 	result, err := queries.GetMessageGroup(ctx, uuid)
+	if err != nil {
+		return factcheck.MessageGroup{}, handleNotFound(err, map[string]string{"id": id})
+	}
+	return postgres.ToMessageGroup(result)
+}
+
+func (m *messageGroups) UpdateStatus(ctx context.Context, id string, status factcheck.StatusMGroup, opts ...Option) (factcheck.MessageGroup, error) {
+	queries := queries(m.queries, options(opts...))
+	uuid, err := postgres.UUID(id)
+	if err != nil {
+		return factcheck.MessageGroup{}, err
+	}
+	result, err := queries.UpdateMessageGroupStatus(ctx, postgres.UpdateMessageGroupStatusParams{
+		ID:     uuid,
+		Status: string(status),
+	})
 	if err != nil {
 		return factcheck.MessageGroup{}, handleNotFound(err, map[string]string{"id": id})
 	}

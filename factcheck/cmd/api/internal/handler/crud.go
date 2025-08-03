@@ -46,7 +46,7 @@ func deleteByID[T any](
 	}
 	err := deleteFn(r.Context(), id)
 	if err != nil {
-		errInternalError(w, err.Error())
+		handleNotFound(w, err, "resource", id)
 		return
 	}
 	sendText(r.Context(), w, "ok", http.StatusOK)

@@ -28,6 +28,7 @@ type (
 const (
 	StatusTopicPending  StatusTopic = "TOPIC_PENDING"  // Pending answer
 	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // Resolved with answer
+	StatusTopicRejected StatusTopic = "TOPIC_REJECTED" // Rejected by admin
 
 	TypeMessageText TypeMessage = "MSG_TEXT"
 	TypeMessageURL  TypeMessage = "MSG_URL"
@@ -43,17 +44,6 @@ const (
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"
 )
-
-type Topic struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Status      StatusTopic `json:"status"`
-	Result      string      `json:"result"`
-	RepliedAt   *time.Time  `json:"replied_at"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   *time.Time  `json:"updated_at"`
-}
 
 type MessageV2 struct {
 	ID          string          `json:"id"`
@@ -79,6 +69,17 @@ type MessageGroup struct {
 	Language  Language     `json:"language"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt *time.Time   `json:"updated_at"`
+}
+
+type Topic struct {
+	ID          string      `json:"id"`
+	Status      StatusTopic `json:"status"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Result      string      `json:"result"`
+	RepliedAt   *time.Time  `json:"replied_at"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   *time.Time  `json:"updated_at"`
 }
 
 type Answer struct {

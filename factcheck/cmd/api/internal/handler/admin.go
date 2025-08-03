@@ -21,7 +21,7 @@ func (h *handler) AssignMessageGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.GroupID == "" {
-		errBadRequest(w, "missing group_id")
+		errBadRequest(w, "missing message_group_id")
 		return
 	}
 	msg, err := h.messagesv2.AssignGroup(r.Context(), id, body.GroupID)
@@ -133,4 +133,32 @@ func (h *handler) DeleteGroupByID(w http.ResponseWriter, r *http.Request) {
 	deleteByID[factcheck.MessageGroup](w, r, func(ctx context.Context, id string) error {
 		return h.groups.Delete(ctx, id)
 	})
+}
+
+func (h *handler) RejectTopicByID(w http.ResponseWriter, r *http.Request) {
+	id := paramID(r)
+	if id == "" {
+		errBadRequest(w, "missing topic_id")
+		return
+	}
+	updated, err := h.topics.UpdateStatus(r.Context(), id, factcheck.StatusTopicRejected)
+	if err != nil {
+		handleNotFound(w, err, "topic", id)
+		return
+	}
+	sendJSON(r.Context(), w, http.StatusOK, updated)
+}
+
+func (h *handler) RejectMessageGroupByID(w http.ResponseWriter, r *http.Request) {
+	id := paramID(r)
+	if id == "" {
+		errBadRequest(w, "missing topic_id")
+		return
+	}
+	updated, err := h.groups.UpdateStatus(r.Context(), id, factcheck.StatusMGroupRejected)
+	if err != nil {
+		handleNotFound(w, err, "message_group", id)
+		return
+	}
+	sendJSON(r.Context(), w, http.StatusOK, updated)
 }

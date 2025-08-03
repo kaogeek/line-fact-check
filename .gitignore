@@ -25,3 +25,6 @@ dist-ssr
 
 # Nix result
 result*
+
+# Personal ignore files
+/.ignore

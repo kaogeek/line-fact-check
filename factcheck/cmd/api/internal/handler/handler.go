@@ -45,6 +45,8 @@ type Handler interface {
 
 	// API for admin
 	PostAnswer(w http.ResponseWriter, r *http.Request)
+	RejectTopicByID(w http.ResponseWriter, r *http.Request)
+	RejectMessageGroupByID(w http.ResponseWriter, r *http.Request)
 }
 
 type handler struct {

@@ -29,6 +29,8 @@ func New(conf config.Config, h handler.Handler) (*http.Server, func()) {
 	)
 	admin.Put("/messages/assign/{id}", h.AssignMessageGroup)
 	admin.Put("/message-groups/assign/{id}", h.AssignGroupTopic)
+	admin.Put("/message-groups/reject/{id}", h.RejectMessageGroupByID)
+	admin.Put("/topics/reject/{id}", h.RejectTopicByID)
 	admin.Post("/topics/resolve/{id}", h.PostAnswer)
 
 	messages := chi.NewMux()

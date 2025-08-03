@@ -27,4 +27,4 @@ dist-ssr
 result*
 
 # Personal ignore files
-/.ignore
+.ignore

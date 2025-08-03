@@ -30,16 +30,16 @@ const (
 	StatusTopicResolved StatusTopic = "TOPIC_RESOLVED" // Resolved with answer
 	StatusTopicRejected StatusTopic = "TOPIC_REJECTED" // Rejected by admin
 
+	StatusMGroupPending  StatusMGroup = "MGROUP_PENDING"
+	StatusMGroupApproved StatusMGroup = "MGROUP_APPRleVED"
+	StatusMGroupRejected StatusMGroup = "MGROUP_REJECTED"
+
 	TypeMessageText TypeMessage = "MSG_TEXT"
 	TypeMessageURL  TypeMessage = "MSG_URL"
 
 	TypeUserMessageLINEChat      TypeUser = "USER_CHAT"
 	TypeUserMessageLINEGroupChat TypeUser = "USER_GROUPCHAT"
 	TypeUserMessageAdmin         TypeUser = "USER_ADMIN"
-
-	StatusMGroupPending  StatusMGroup = "MGROUP_PENDING"
-	StatusMGroupApproved StatusMGroup = "MGROUP_APPROVED"
-	StatusMGroupRejected StatusMGroup = "MGROUP_REJECTED"
 
 	LanguageEnglish Language = "en"
 	LanguageThai    Language = "th"

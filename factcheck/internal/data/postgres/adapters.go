@@ -222,6 +222,7 @@ func MessageGroupCreator(g factcheck.MessageGroup) (CreateMessageGroupParams, er
 
 	return CreateMessageGroupParams{
 		ID:        id,
+		Status:    string(g.Status),
 		TopicID:   topicID,
 		Name:      g.Name,
 		Text:      g.Text,
@@ -250,6 +251,7 @@ func ToMessageGroup(data MessageGroup) (factcheck.MessageGroup, error) {
 	}
 	group := factcheck.MessageGroup{
 		ID:        id,
+		Status:    factcheck.StatusMGroup(data.Status),
 		Name:      data.Name,
 		Text:      data.Text,
 		TextSHA1:  data.TextSha1,

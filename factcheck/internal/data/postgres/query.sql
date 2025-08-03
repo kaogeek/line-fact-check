@@ -192,9 +192,9 @@ DELETE FROM messages_v2 WHERE id = $1;
 
 -- name: CreateMessageGroup :one
 INSERT INTO message_groups (
-    id, topic_id, name, text, text_sha1, language, created_at, updated_at
+    id, status, topic_id, name, text, text_sha1, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
 
 -- name: GetMessageGroup :one
@@ -209,6 +209,12 @@ SELECT * FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC;
 -- name: UpdateMessageGroupName :one
 UPDATE message_groups SET
     name = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING *;
+
+-- name: UpdateMessageGroupStatus :one
+UPDATE message_groups SET
+    status = $2,
     updated_at = NOW()
 WHERE id = $1 RETURNING *;
 

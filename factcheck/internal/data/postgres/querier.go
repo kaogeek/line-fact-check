@@ -46,6 +46,7 @@ type Querier interface {
 	UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.UUID) (MessageGroup, error)
 	UnassignMessageV2FromTopic(ctx context.Context, id pgtype.UUID) (MessagesV2, error)
 	UpdateMessageGroupName(ctx context.Context, arg UpdateMessageGroupNameParams) (MessageGroup, error)
+	UpdateMessageGroupStatus(ctx context.Context, arg UpdateMessageGroupStatusParams) (MessageGroup, error)
 	UpdateTopicDescription(ctx context.Context, arg UpdateTopicDescriptionParams) (Topic, error)
 	UpdateTopicName(ctx context.Context, arg UpdateTopicNameParams) (Topic, error)
 	UpdateTopicStatus(ctx context.Context, arg UpdateTopicStatusParams) (Topic, error)

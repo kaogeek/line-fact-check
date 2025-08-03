@@ -15,7 +15,7 @@ const assignMessageGroupToTopic = `-- name: AssignMessageGroupToTopic :one
 UPDATE message_groups SET
     topic_id = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, status, name, text, text_sha1, language, created_at, updated_at
 `
 
 type AssignMessageGroupToTopicParams struct {
@@ -29,6 +29,7 @@ func (q *Queries) AssignMessageGroupToTopic(ctx context.Context, arg AssignMessa
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
@@ -232,14 +233,15 @@ func (q *Queries) CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Ans
 
 const createMessageGroup = `-- name: CreateMessageGroup :one
 INSERT INTO message_groups (
-    id, topic_id, name, text, text_sha1, language, created_at, updated_at
+    id, status, topic_id, name, text, text_sha1, language, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9
+) RETURNING id, topic_id, status, name, text, text_sha1, language, created_at, updated_at
 `
 
 type CreateMessageGroupParams struct {
 	ID        pgtype.UUID        `json:"id"`
+	Status    string             `json:"status"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
 	Name      string             `json:"name"`
 	Text      string             `json:"text"`
@@ -252,6 +254,7 @@ type CreateMessageGroupParams struct {
 func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroupParams) (MessageGroup, error) {
 	row := q.db.QueryRow(ctx, createMessageGroup,
 		arg.ID,
+		arg.Status,
 		arg.TopicID,
 		arg.Name,
 		arg.Text,
@@ -264,6 +267,7 @@ func (q *Queries) CreateMessageGroup(ctx context.Context, arg CreateMessageGroup
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
@@ -442,7 +446,7 @@ func (q *Queries) GetAnswerByTopicID(ctx context.Context, topicID pgtype.UUID) (
 }
 
 const getMessageGroup = `-- name: GetMessageGroup :one
-SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE id = $1
+SELECT id, topic_id, status, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE id = $1
 `
 
 func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
@@ -451,6 +455,7 @@ func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageG
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
@@ -462,7 +467,7 @@ func (q *Queries) GetMessageGroup(ctx context.Context, id pgtype.UUID) (MessageG
 }
 
 const getMessageGroupBySHA1 = `-- name: GetMessageGroupBySHA1 :one
-SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
+SELECT id, topic_id, status, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE text_sha1 = $1
 `
 
 func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (MessageGroup, error) {
@@ -471,6 +476,7 @@ func (q *Queries) GetMessageGroupBySHA1(ctx context.Context, textSha1 string) (M
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
@@ -566,7 +572,7 @@ func (q *Queries) ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID)
 }
 
 const listMessageGroupsByTopic = `-- name: ListMessageGroupsByTopic :many
-SELECT id, topic_id, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
+SELECT id, topic_id, status, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
 `
 
 func (q *Queries) ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error) {
@@ -581,6 +587,7 @@ func (q *Queries) ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.U
 		if err := rows.Scan(
 			&i.ID,
 			&i.TopicID,
+			&i.Status,
 			&i.Name,
 			&i.Text,
 			&i.TextSha1,
@@ -1011,7 +1018,7 @@ const unassignMessageGroupFromTopic = `-- name: UnassignMessageGroupFromTopic :o
 UPDATE message_groups SET
     topic_id = NULL,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, status, name, text, text_sha1, language, created_at, updated_at
 `
 
 func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.UUID) (MessageGroup, error) {
@@ -1020,6 +1027,7 @@ func (q *Queries) UnassignMessageGroupFromTopic(ctx context.Context, id pgtype.U
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,
@@ -1060,7 +1068,7 @@ const updateMessageGroupName = `-- name: UpdateMessageGroupName :one
 UPDATE message_groups SET
     name = $2,
     updated_at = NOW()
-WHERE id = $1 RETURNING id, topic_id, name, text, text_sha1, language, created_at, updated_at
+WHERE id = $1 RETURNING id, topic_id, status, name, text, text_sha1, language, created_at, updated_at
 `
 
 type UpdateMessageGroupNameParams struct {
@@ -1074,6 +1082,36 @@ func (q *Queries) UpdateMessageGroupName(ctx context.Context, arg UpdateMessageG
 	err := row.Scan(
 		&i.ID,
 		&i.TopicID,
+		&i.Status,
+		&i.Name,
+		&i.Text,
+		&i.TextSha1,
+		&i.Language,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateMessageGroupStatus = `-- name: UpdateMessageGroupStatus :one
+UPDATE message_groups SET
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1 RETURNING id, topic_id, status, name, text, text_sha1, language, created_at, updated_at
+`
+
+type UpdateMessageGroupStatusParams struct {
+	ID     pgtype.UUID `json:"id"`
+	Status string      `json:"status"`
+}
+
+func (q *Queries) UpdateMessageGroupStatus(ctx context.Context, arg UpdateMessageGroupStatusParams) (MessageGroup, error) {
+	row := q.db.QueryRow(ctx, updateMessageGroupStatus, arg.ID, arg.Status)
+	var i MessageGroup
+	err := row.Scan(
+		&i.ID,
+		&i.TopicID,
+		&i.Status,
 		&i.Name,
 		&i.Text,
 		&i.TextSha1,

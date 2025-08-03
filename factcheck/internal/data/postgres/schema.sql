@@ -16,6 +16,7 @@ CREATE TABLE topics (
 CREATE TABLE message_groups (
     id         UUID NOT NULL PRIMARY KEY,
     topic_id   UUID REFERENCES topics(id) ON DELETE CASCADE,
+    status     text NOT NULL,
     name       text NOT NULL,
     text       text NOT NULL,
     text_sha1  text NOT NULL,

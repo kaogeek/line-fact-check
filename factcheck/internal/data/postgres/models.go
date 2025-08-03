@@ -19,6 +19,7 @@ type Answer struct {
 type MessageGroup struct {
 	ID        pgtype.UUID        `json:"id"`
 	TopicID   pgtype.UUID        `json:"topic_id"`
+	Status    string             `json:"status"`
 	Name      string             `json:"name"`
 	Text      string             `json:"text"`
 	TextSha1  string             `json:"text_sha1"`

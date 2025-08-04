@@ -2,9 +2,11 @@ export enum TopicAnswerType {
   REAL = 'REAL',
   FAKE = 'FAKE',
 }
-
 export interface TopicAnswer {
-  answer: string;
+  id: string;
+  user_id: string;
+  topic_id: string;
+  text: string;
   type: TopicAnswerType;
-  topicId: string;
+  created_at: string;
 }

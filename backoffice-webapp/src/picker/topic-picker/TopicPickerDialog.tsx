@@ -36,8 +36,9 @@ export default function TopicPickerDialog({
   });
 
   const { paginationReq, setPage } = usePaginationReqState({
+    /* TODO: make this to default value */
     page: 1,
-    pageSize: 1,
+    pageSize: 10,
   });
 
   const { isLoading, data, error } = useGetTopics(criteria, paginationReq, {

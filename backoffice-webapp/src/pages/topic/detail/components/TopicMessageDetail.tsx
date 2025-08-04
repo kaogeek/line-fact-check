@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { MoveRight, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/formatter/date-formatter';
-import { useGetMessageByTopicId } from '@/hooks/api/message';
 import TableStateRow from '@/components/table/TableStateRow';
 import LoadingState from '@/components/state/LoadingState';
 import ErrorState from '@/components/state/ErrorState';
 import NoDataState from '@/components/state/NoDataState';
+import { useGetMessageGroupsByTopicId } from '@/hooks/api/message-group';
 
 interface TopicMessageDetailProps {
   topicId: string | null;
@@ -20,7 +20,7 @@ const colSpan = 5;
 
 export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate }: TopicMessageDetailProps) {
   const { t } = useTranslation();
-  const { isLoading, data: dataList, error } = useGetMessageByTopicId(topicId || '');
+  const { isLoading, data: dataList, error } = useGetMessageGroupsByTopicId(topicId || '');
 
   if (!topicId) {
     return <></>;
@@ -60,10 +60,10 @@ export default function TopicMessageDetail({ topicId, onClickMove, onClickCreate
           ) : (
             dataList.map((data, idx) => (
               <TableRow key={idx}>
-                <TableCell>{data.code}</TableCell>
-                <TableCell>{data.message}</TableCell>
-                <TableCell className="text-right">{data.countOfMessageGroup}</TableCell>
-                <TableCell>{formatDate(data.createDate)}</TableCell>
+                <TableCell>{data.id}</TableCell>
+                <TableCell>{data.text}</TableCell>
+                <TableCell className="text-right">{/* TODO: add count of message */}-</TableCell>
+                <TableCell>{formatDate(data.created_at)}</TableCell>
                 <TableCell>
                   <Button
                     variant="outline"

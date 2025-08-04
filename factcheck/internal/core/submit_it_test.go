@@ -8,9 +8,44 @@ import (
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 func TestSubmit(t *testing.T) {
+	msgText := "TestSubmit.Text"
+	user := factcheck.UserInfo{
+		UserType: factcheck.TypeUserMessageLINEChat,
+		UserID:   "TestSubmit.UserID",
+	}
+
+	t.Run("error - empty text", func(t *testing.T) {
+		container, cleanup, err := di.InitializeContainerTest()
+		if err != nil {
+			panic(err)
+		}
+		defer cleanup()
+
+		emptyText := ""
+		_, _, _, err = container.Service.Submit(t.Context(), user, emptyText, "")
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
+	t.Run("error - no such topic", func(t *testing.T) {
+		container, cleanup, err := di.InitializeContainerTest()
+		if err != nil {
+			panic(err)
+		}
+		defer cleanup()
+
+		noSuchTopicID := utils.NewID().String()
+		_, _, _, err = container.Service.Submit(t.Context(), user, msgText, noSuchTopicID)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+	})
+
 	t.Run("normal - all new", func(t *testing.T) {
 		container, cleanup, err := di.InitializeContainerTest()
 		if err != nil {
@@ -20,13 +55,6 @@ func TestSubmit(t *testing.T) {
 		ctx := t.Context()
 		service := container.Service
 		repo := container.Repository
-
-		msgText := "text-it-test"
-		msgText2 := "text-it-test-2"
-		user := factcheck.UserInfo{
-			UserType: factcheck.TypeUserMessageLINEChat,
-			UserID:   "it-test",
-		}
 
 		msg1, group, topic, err := service.Submit(ctx, user, msgText, "")
 		if err != nil {
@@ -64,6 +92,7 @@ func TestSubmit(t *testing.T) {
 		}
 
 		// Different text, different hash, different group
+		msgText2 := "TestSubmit.1.msgText2"
 		msg3, group, topic, err := service.Submit(ctx, user, msgText2, "")
 		if err != nil {
 			t.Fatal(err)

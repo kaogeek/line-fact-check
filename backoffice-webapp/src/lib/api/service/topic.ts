@@ -28,7 +28,6 @@ function buildTopicSearchParams(
 }
 
 function patchData(topic: Topic): Topic {
-  // TODO resolve this with real code
   return {
     ...topic,
     code: topic.id,
@@ -38,12 +37,24 @@ function patchData(topic: Topic): Topic {
 export async function getTopics(criteria: GetTopicCriteria, pagination: PaginationReq): Promise<Topic[]> {
   const params = buildTopicSearchParams(criteria, pagination);
   const response = await apiClient.get<Topic[]>('/topics', { params });
-  return response.data.map(patchData) ?? [];
+  const data = response.data;
+
+  if (!data) {
+    return [];
+  }
+
+  return data.map(patchData);
 }
 
 export async function getTopicById(id: string): Promise<Topic | null> {
   try {
     const response = await apiClient.get<Topic>(`/topics/${id}`);
+    const data = response.data;
+
+    if (!data) {
+      return null;
+    }
+
     return patchData(response.data);
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {

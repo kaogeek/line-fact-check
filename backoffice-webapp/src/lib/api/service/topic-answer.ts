@@ -3,15 +3,16 @@ import apiClient from '../client';
 
 export async function getTopicAnswerByTopicId(topicId: string): Promise<TopicAnswer | null> {
   const response = await apiClient.get<TopicAnswer | null>(`/topics/${topicId}/answer`);
-  return patchData(response.data);
-}
+  const data = response.data;
 
-function patchData(topic: TopicAnswer | null): TopicAnswer | null {
-  // TODO resolve this with real code
-  if (!topic) {
+  if (!data) {
     return null;
   }
 
+  return patchData(data);
+}
+
+function patchData(topic: TopicAnswer): TopicAnswer {
   return {
     ...topic,
     type: TopicAnswerType.REAL,

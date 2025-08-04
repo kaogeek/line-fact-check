@@ -18,11 +18,13 @@ import PaginationControl from '@/components/PaginationControl';
 import { usePaginationReqState } from '@/hooks/usePagination';
 
 export default function TopicPage() {
+  const { startLoading, stopLoading } = useLoader();
+
   const { t } = useTranslation();
 
-  const tabs = [
+  const tabs: TopicPageTab[] = [
     {
-      label: t('topic.total'),
+      label: t('common.total'),
       statusIn: [TopicStatus.TOPIC_PENDING, TopicStatus.TOPIC_RESOLVED],
     },
     {
@@ -62,13 +64,13 @@ export default function TopicPage() {
   });
 
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [topicToReject, setTopicToReject] = useState<Topic | null>(null);
+
   const { data: data, isLoading, error } = useGetTopics(criteria, paginationReq);
   const { data: countTopics } = useCountTopics(criteria);
   const queryClient = useQueryClient();
 
-  const { startLoading, stopLoading } = useLoader();
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [topicToReject, setTopicToReject] = useState<Topic | null>(null);
 
   const { mutate: rejectTopicMutation } = useMutation({
     mutationFn: (topicId: string) => rejectTopic(topicId),

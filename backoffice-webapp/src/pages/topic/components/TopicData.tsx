@@ -30,6 +30,7 @@ const colSpan = 6;
 
 export default function TopicData({ isLoading, dataList, error, onReject }: TopicDataProps) {
   const { t } = useTranslation();
+
   return (
     <Table containerClassName="table-round h-full">
       <TableHeader>

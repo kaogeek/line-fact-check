@@ -59,11 +59,11 @@ export interface CountTopic {
 }
 
 export interface CountTopicCriteria {
+  idNotIn?: string[];
   codeLike?: string;
   messageLike?: string;
 }
 
 export interface GetTopicCriteria extends CountTopicCriteria {
-  idNotIn?: string[];
   statusIn?: string[];
 }

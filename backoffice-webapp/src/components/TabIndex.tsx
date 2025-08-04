@@ -1,9 +1,13 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import type { TopicPageTab } from '../pages/topic/TopicPage';
+
+export interface TabData {
+  label: string;
+  statusIn: string[];
+}
 
 interface TabIndexProps {
-  tabs: TopicPageTab[];
+  tabs: TabData[];
   counts: number[];
   activeTab: number;
   setActiveTab: (activeTab: number) => void;

@@ -43,11 +43,15 @@ func (s ServiceFactcheck) Submit(
 		return factcheck.MessageV2{}, factcheck.MessageGroup{}, nil, err
 	}
 	defer func() {
-		err := tx.Rollback(ctx)
 		if err == nil {
 			return
 		}
-		slog.ErrorContext(ctx, "error rolling back AdminSubmit", "err", err)
+		errRollback := tx.Rollback(ctx)
+		if errRollback == nil {
+			slog.ErrorContext(ctx, "Submit: transaction rolled back successfully", "err_original", err)
+			return
+		}
+		slog.ErrorContext(ctx, "Submit: error rolling back transaction", "err_orignal", err, "err_rollback", errRollback)
 	}()
 
 	now := time.Now()

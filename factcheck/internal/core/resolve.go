@@ -25,14 +25,15 @@ func (s ServiceFactcheck) Resolve(
 		return factcheck.Answer{}, factcheck.Topic{}, nil, err
 	}
 	defer func() {
-		err := tx.Rollback(ctx)
 		if err == nil {
 			return
 		}
-		slog.ErrorContext(ctx, "error rolling back after failure to resolve topic",
-			"topic_id", topicID,
-			"user", user,
-		)
+		errRollback := tx.Rollback(ctx)
+		if errRollback == nil {
+			slog.ErrorContext(ctx, "Resolve: transaction rolled back successfully", "err_original", err)
+			return
+		}
+		slog.ErrorContext(ctx, "Resolve: error rolling back transaction", "err_orignal", err, "err_rollback", errRollback)
 	}()
 
 	withTx := repo.WithTx(tx)

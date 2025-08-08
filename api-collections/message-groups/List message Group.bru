@@ -1,0 +1,21 @@
+meta {
+  name: List message Group
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/message-groups
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "topic_id": "b409dcd3-1822-4b06-8805-c656a7956b45"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

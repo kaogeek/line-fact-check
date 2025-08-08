@@ -39,7 +39,7 @@ type Handler interface {
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
 
 	// API /groups
-
+	ListMessageGroupDynamic(http.ResponseWriter, *http.Request)
 	AssignGroupTopic(http.ResponseWriter, *http.Request)
 	DeleteGroupByID(http.ResponseWriter, *http.Request)
 

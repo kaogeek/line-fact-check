@@ -33,6 +33,7 @@ type Querier interface {
 	GetTopic(ctx context.Context, id pgtype.UUID) (Topic, error)
 	GetTopicStatus(ctx context.Context, id pgtype.UUID) (string, error)
 	ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID) ([]Answer, error)
+	ListMessageGroupDynamic(ctx context.Context, arg ListMessageGroupDynamicParams) ([]MessageGroup, error)
 	ListMessageGroupsByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessageGroup, error)
 	ListMessagesV2ByGroup(ctx context.Context, groupID pgtype.UUID) ([]MessagesV2, error)
 	ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID) ([]MessagesV2, error)

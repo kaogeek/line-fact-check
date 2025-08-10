@@ -121,17 +121,11 @@ As a fact-checker platform, our business logic can be classified into 3 steps:
         - If we already have a group with "similar" text
 
             We assign the new message to this group.
-            If the group was already assigned topic,
-            this new message will also automatically
-            inherit its group's topic.
 
         - If we have no similar groups
 
-            We create a new group with our message as base,
-            and assign the new message to this new group.
-
-            When this happens, the message group's topic
-            stays unassigned
+            We create a new group from our new message,
+            and assign the message to this new group.
 
 2. "Admins" assign topic to new message submissions
 

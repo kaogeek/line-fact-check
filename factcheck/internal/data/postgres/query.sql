@@ -68,7 +68,8 @@ DELETE FROM topics WHERE id = $1;
 -- name: ListTopicsDynamicV2 :many
 SELECT DISTINCT t.*
 FROM topics t
-LEFT JOIN message_groups m ON t.id = m.topic_id
+LEFT JOIN message_groups mg ON t.id = mg.topic_id
+LEFT JOIN messages_v2 m ON mg.id = m.group_id
 WHERE 1=1
     AND CASE
         WHEN $1::text != '' THEN t.id::text LIKE $1::text
@@ -81,8 +82,8 @@ WHERE 1=1
     AND CASE
         WHEN $3::text != '' THEN (
             CASE
-                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
-                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                WHEN mg.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
+                WHEN mg.language = 'en' THEN m.text ILIKE $3::text
                 ELSE m.text ILIKE $3::text  -- fallback for unknown language
             END
         )

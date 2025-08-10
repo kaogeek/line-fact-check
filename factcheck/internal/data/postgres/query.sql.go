@@ -766,7 +766,8 @@ func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatus
 const listTopicsDynamicV2 = `-- name: ListTopicsDynamicV2 :many
 SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
 FROM topics t
-LEFT JOIN message_groups m ON t.id = m.topic_id
+LEFT JOIN message_groups mg ON t.id = mg.topic_id
+LEFT JOIN messages_v2 m ON mg.id = m.group_id
 WHERE 1=1
     AND CASE
         WHEN $1::text != '' THEN t.id::text LIKE $1::text
@@ -779,8 +780,8 @@ WHERE 1=1
     AND CASE
         WHEN $3::text != '' THEN (
             CASE
-                WHEN m.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
-                WHEN m.language = 'en' THEN m.text ILIKE $3::text
+                WHEN mg.language = 'th' THEN m.text LIKE $3::text COLLATE "C"
+                WHEN mg.language = 'en' THEN m.text ILIKE $3::text
                 ELSE m.text ILIKE $3::text  -- fallback for unknown language
             END
         )
@@ -814,105 +815,6 @@ func (q *Queries) ListTopicsDynamicV2(ctx context.Context, arg ListTopicsDynamic
 	var items []Topic
 	for rows.Next() {
 		var i Topic
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Status,
-			&i.Result,
-			&i.ResultStatus,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listTopicsInIDs = `-- name: ListTopicsInIDs :many
-SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at FROM topics t
-WHERE t.id = ANY($1::uuid[])
-ORDER BY t.created_at DESC
-`
-
-func (q *Queries) ListTopicsInIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopicsInIDs, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Topic
-	for rows.Next() {
-		var i Topic
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Status,
-			&i.Result,
-			&i.ResultStatus,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listTopicsLikeID = `-- name: ListTopicsLikeID :many
-WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics t
-    WHERE t.id::text LIKE $1::text
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $2 = 0 THEN true  -- No pagination
-    WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
-    WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC
-`
-
-type ListTopicsLikeIDParams struct {
-	Column1 string      `json:"column_1"`
-	Column2 interface{} `json:"column_2"`
-	Column3 interface{} `json:"column_3"`
-}
-
-type ListTopicsLikeIDRow struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Status       string             `json:"status"`
-	Result       pgtype.Text        `json:"result"`
-	ResultStatus pgtype.Text        `json:"result_status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) ListTopicsLikeID(ctx context.Context, arg ListTopicsLikeIDParams) ([]ListTopicsLikeIDRow, error) {
-	rows, err := q.db.Query(ctx, listTopicsLikeID, arg.Column1, arg.Column2, arg.Column3)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListTopicsLikeIDRow
-	for rows.Next() {
-		var i ListTopicsLikeIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

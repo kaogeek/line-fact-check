@@ -19,7 +19,6 @@ type Topics interface {
 	Exists(ctx context.Context, id string, opts ...Option) (bool, error)
 	List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	ListDynamicV2(ctx context.Context, limit, offset int, opts ...OptionTopic) ([]factcheck.Topic, error)
-	ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error)
 	ListByStatus(ctx context.Context, status factcheck.StatusTopic, limit, offset int, opts ...Option) ([]factcheck.Topic, error)
 	CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error)
 	CountByStatusDynamicV2(ctx context.Context, opts ...OptionTopic) (map[factcheck.StatusTopic]int64, error)
@@ -40,13 +39,13 @@ func NewTopics(queries *postgres.Queries) Topics {
 func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	queries := queries(t.queries, options(opts...))
 	rows, err := queries.ListTopics(ctx, postgres.ListTopicsParams{
-		Column1: limit,
-		Column2: offset,
+		Column1: int32(limit),
+		Column2: int32(offset),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapNoError(rows, postgres.ToTopicFromRow), nil
+	return utils.MapNoError(rows, postgres.ToTopic), nil
 }
 
 // ListAll retrieves all topics (backward compatibility)
@@ -152,27 +151,13 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 	queries := queries(t.queries, options(opts...))
 	rows, err := queries.ListTopicsByStatus(ctx, postgres.ListTopicsByStatusParams{
 		Status:  string(status),
-		Column2: limit,
-		Column3: offset,
+		Column2: int32(limit),
+		Column3: int32(offset),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return utils.MapNoError(rows, postgres.ToTopicFromStatusRow), nil
-}
-
-func (t *topics) ListLikeID(ctx context.Context, idPattern string, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
-	limit, offset = sanitize(limit, offset)
-	queries := queries(t.queries, options(opts...))
-	rows, err := queries.ListTopicsLikeID(ctx, postgres.ListTopicsLikeIDParams{
-		Column1: substringAuto(idPattern),
-		Column2: limit,
-		Column3: offset,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return utils.MapNoError(rows, postgres.ToTopicFromIDRow), nil
+	return utils.MapNoError(rows, postgres.ToTopic), nil
 }
 
 func (t *topics) Create(ctx context.Context, top factcheck.Topic, opts ...Option) (factcheck.Topic, error) {
@@ -199,23 +184,6 @@ func (t *topics) GetByID(ctx context.Context, id string, opts ...Option) (factch
 		return factcheck.Topic{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return postgres.ToTopic(result), nil
-}
-
-// ListInIDs retrieves topics by IDs using the topicDomain adapter
-func (t *topics) ListInIDs(ctx context.Context, ids []string, opts ...Option) ([]factcheck.Topic, error) {
-	queries := queries(t.queries, options(opts...))
-	if len(ids) == 0 {
-		return nil, nil
-	}
-	uuids, err := postgres.UUIDs(ids)
-	if err != nil {
-		return nil, err
-	}
-	rows, err := queries.ListTopicsInIDs(ctx, uuids)
-	if err != nil {
-		return nil, err
-	}
-	return utils.MapNoError(rows, postgres.ToTopic), nil
 }
 
 func (t *topics) CountByStatus(ctx context.Context, opts ...Option) (map[factcheck.StatusTopic]int64, error) {

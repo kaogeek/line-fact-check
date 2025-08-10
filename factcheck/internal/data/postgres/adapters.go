@@ -65,50 +65,6 @@ func ToTopics(topics []Topic) []factcheck.Topic {
 	return utils.MapNoError(topics, ToTopic)
 }
 
-// ToTopicFromRow converts a ListTopicsRow to factcheck.Topic
-func ToTopicFromRow(data ListTopicsRow) factcheck.Topic {
-	topic := factcheck.Topic{
-		Name:        data.Name,
-		Description: data.Description,
-		Status:      factcheck.StatusTopic(data.Status),
-	}
-	if data.ID.Valid {
-		topic.ID = data.ID.String()
-	}
-	if data.Result.Valid {
-		topic.Result = data.Result.String
-	}
-	if data.CreatedAt.Valid {
-		topic.CreatedAt = data.CreatedAt.Time
-	}
-	if data.UpdatedAt.Valid {
-		topic.UpdatedAt = &data.UpdatedAt.Time
-	}
-	return topic
-}
-
-// ToTopicFromStatusRow converts a ListTopicsByStatusRow to factcheck.Topic
-func ToTopicFromStatusRow(data ListTopicsByStatusRow) factcheck.Topic {
-	topic := factcheck.Topic{
-		Name:        data.Name,
-		Description: data.Description,
-		Status:      factcheck.StatusTopic(data.Status),
-	}
-	if data.ID.Valid {
-		topic.ID = data.ID.String()
-	}
-	if data.Result.Valid {
-		topic.Result = data.Result.String
-	}
-	if data.CreatedAt.Valid {
-		topic.CreatedAt = data.CreatedAt.Time
-	}
-	if data.UpdatedAt.Valid {
-		topic.UpdatedAt = &data.UpdatedAt.Time
-	}
-	return topic
-}
-
 // ToTopicFromIDRow converts a ListTopicsLikeIDRow to factcheck.Topic
 func ToTopicFromIDRow(data ListTopicsLikeIDRow) factcheck.Topic {
 	topic := factcheck.Topic{

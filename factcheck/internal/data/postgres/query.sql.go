@@ -678,47 +678,27 @@ func (q *Queries) ListMessagesV2ByTopic(ctx context.Context, topicID pgtype.UUID
 }
 
 const listTopics = `-- name: ListTopics :many
-WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $1 = 0 THEN true  -- No pagination
-    WHEN $1 > 0 THEN rn BETWEEN $2 + 1 AND $2 + $1  -- Normal pagination
-    WHEN $1 < 0 THEN rn BETWEEN total_count + $1 + 1 AND total_count + $2  -- Negative pagination
-END
-ORDER BY created_at DESC
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+FROM topics t
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $1::integer = 0 THEN NULL ELSE $1::integer END
+OFFSET CASE WHEN $2::integer = 0 THEN 0 ELSE $2::integer END
 `
 
 type ListTopicsParams struct {
-	Column1 interface{} `json:"column_1"`
-	Column2 interface{} `json:"column_2"`
+	Column1 int32 `json:"column_1"`
+	Column2 int32 `json:"column_2"`
 }
 
-type ListTopicsRow struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Status       string             `json:"status"`
-	Result       pgtype.Text        `json:"result"`
-	ResultStatus pgtype.Text        `json:"result_status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListTopicsRow, error) {
+func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]Topic, error) {
 	rows, err := q.db.Query(ctx, listTopics, arg.Column1, arg.Column2)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTopicsRow
+	var items []Topic
 	for rows.Next() {
-		var i ListTopicsRow
+		var i Topic
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -740,49 +720,29 @@ func (q *Queries) ListTopics(ctx context.Context, arg ListTopicsParams) ([]ListT
 }
 
 const listTopicsByStatus = `-- name: ListTopicsByStatus :many
-WITH numbered_topics AS (
-    SELECT id, name, description, status, result, result_status, created_at, updated_at,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics
-    WHERE status = $1
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $2 = 0 THEN true  -- No pagination
-    WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
-    WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC
+SELECT DISTINCT t.id, t.name, t.description, t.status, t.result, t.result_status, t.created_at, t.updated_at
+FROM topics t
+WHERE status = $1
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $2::integer = 0 THEN NULL ELSE $2::integer END
+OFFSET CASE WHEN $3::integer = 0 THEN 0 ELSE $3::integer END
 `
 
 type ListTopicsByStatusParams struct {
-	Status  string      `json:"status"`
-	Column2 interface{} `json:"column_2"`
-	Column3 interface{} `json:"column_3"`
+	Status  string `json:"status"`
+	Column2 int32  `json:"column_2"`
+	Column3 int32  `json:"column_3"`
 }
 
-type ListTopicsByStatusRow struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  string             `json:"description"`
-	Status       string             `json:"status"`
-	Result       pgtype.Text        `json:"result"`
-	ResultStatus pgtype.Text        `json:"result_status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]ListTopicsByStatusRow, error) {
+func (q *Queries) ListTopicsByStatus(ctx context.Context, arg ListTopicsByStatusParams) ([]Topic, error) {
 	rows, err := q.db.Query(ctx, listTopicsByStatus, arg.Status, arg.Column2, arg.Column3)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTopicsByStatusRow
+	var items []Topic
 	for rows.Next() {
-		var i ListTopicsByStatusRow
+		var i Topic
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

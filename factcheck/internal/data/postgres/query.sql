@@ -15,59 +15,19 @@ SELECT status FROM topics WHERE id = $1;
 SELECT EXISTS (SELECT 1 from topics where id = $1);
 
 -- name: ListTopics :many
-WITH numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $1 = 0 THEN true  -- No pagination
-    WHEN $1 > 0 THEN rn BETWEEN $2 + 1 AND $2 + $1  -- Normal pagination
-    WHEN $1 < 0 THEN rn BETWEEN total_count + $1 + 1 AND total_count + $2  -- Negative pagination
-END
-ORDER BY created_at DESC;
+SELECT DISTINCT t.*
+FROM topics t
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $1::integer = 0 THEN NULL ELSE $1::integer END
+OFFSET CASE WHEN $2::integer = 0 THEN 0 ELSE $2::integer END;
 
 -- name: ListTopicsByStatus :many
-WITH numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics
-    WHERE status = $1
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $2 = 0 THEN true  -- No pagination
-    WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
-    WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC;
-
--- name: ListTopicsInIDs :many
-SELECT DISTINCT t.* FROM topics t
-WHERE t.id = ANY($1::uuid[])
-ORDER BY t.created_at DESC;
-
--- name: ListTopicsLikeID :many
-WITH numbered_topics AS (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn,
-           COUNT(*) OVER () as total_count
-    FROM topics t
-    WHERE t.id::text LIKE $1::text
-)
-SELECT id, name, description, status, result, result_status, created_at, updated_at
-FROM numbered_topics
-WHERE CASE
-    WHEN $2 = 0 THEN true  -- No pagination
-    WHEN $2 > 0 THEN rn BETWEEN $3 + 1 AND $3 + $2  -- Normal pagination
-    WHEN $2 < 0 THEN rn BETWEEN total_count + $2 + 1 AND total_count + $3  -- Negative pagination
-END
-ORDER BY created_at DESC;
+SELECT DISTINCT t.*
+FROM topics t
+WHERE status = $1
+ORDER BY t.created_at DESC
+LIMIT CASE WHEN $2::integer = 0 THEN NULL ELSE $2::integer END
+OFFSET CASE WHEN $3::integer = 0 THEN 0 ELSE $3::integer END;
 
 -- name: UpdateTopicStatus :one
 UPDATE topics SET

@@ -98,6 +98,8 @@ These are our main "data types"
     A topic could be "answered" by admins. Once answered, the topic
     answer is assumed to have resolved all messages of the topic.
 
+    A topic has "answer pointer" that points to current answer for the topic.
+
 - Answers
 
     Answer is as direct as it is - it's an answer. It resolves a topic
@@ -140,11 +142,21 @@ As a fact-checker platform, our business logic can be classified into 3 steps:
     they will create a new topic for the group, or assigned
     it to an existing topic.
 
-3. "Admins" add answers to topic
+3. "Admins" post answers to topic
 
     Once human admins got their answer for a particular topic,
-    they add the answers to the topic, toggling the topic status
-    to resolved.
+    they *post* the answer for the topic. This action will automatically
+    resolve the topic, with answer ID pointing to the freshly inserted answer.
 
-    Another flow is "update answer" flow, where admins want to
-    update the topic's answer.
+4. "Admins" update/add more answers to topic
+
+    Admins can at any time post more answers to a resolved topic.
+    This update simply inserts the new answer, and updating pointer to topic answer
+    to point to the new answer.
+
+    Old answers don't go away, instead, they still live in the database.
+    Admins must manually delete answers.
+
+5. "Admins" delete answers
+
+    Answers could be deleted. On delete, it sets the topic's answer pointer to null.

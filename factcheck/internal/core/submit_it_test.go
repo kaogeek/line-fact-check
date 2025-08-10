@@ -56,12 +56,15 @@ func TestSubmit(t *testing.T) {
 		service := container.Service
 		repo := container.Repository
 
-		msg1, group, topic, err := service.Submit(ctx, user, msgText, "")
+		text0 := "TestSubmit.1.text0"
+		text1 := "TestSubmit.1.text1"
+
+		msg0, group, topic, err := service.Submit(ctx, user, text0, "")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if msg1.GroupID != group.ID {
-			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg1.GroupID, group.ID)
+		if msg0.GroupID != group.ID {
+			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg0.GroupID, group.ID)
 		}
 		if topic != nil {
 			t.Fatal("unexpected topic", topic)
@@ -71,7 +74,9 @@ func TestSubmit(t *testing.T) {
 		groupID := group.ID
 		groupSHA1 := group.TextSHA1
 
-		msg2, group, topic, err := service.Submit(ctx, user, msgText, "")
+		// msg1 has the same text0 as with msg0,
+		// so they should fall under the same message group
+		msg1, group, topic, err := service.Submit(ctx, user, text0, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -81,8 +86,8 @@ func TestSubmit(t *testing.T) {
 		if topic != nil {
 			t.Fatal("unexpected topic", topic)
 		}
-		if msg2.GroupID != group.ID {
-			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg1.GroupID, groupID)
+		if msg1.GroupID != group.ID {
+			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg0.GroupID, groupID)
 		}
 		if group.ID != groupID {
 			t.Fatal("unexpected group ID", groupID, group.ID)
@@ -91,33 +96,31 @@ func TestSubmit(t *testing.T) {
 			t.Fatal("unexpected group SHA1", groupSHA1, group.TextSHA1)
 		}
 
-		// Different text, different hash, different group
-		msgText2 := "TestSubmit.1.msgText2"
-		msg3, group, topic, err := service.Submit(ctx, user, msgText2, "")
+		msg2, group, topic, err := service.Submit(ctx, user, text1, "")
 		if err != nil {
 			t.Fatal(err)
 		}
 		if topic != nil {
 			t.Fatal("unexpected topic", topic)
 		}
-		if msg3.GroupID != group.ID {
-			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg1.GroupID, groupID)
+		if msg2.GroupID != group.ID {
+			t.Fatalf("unexpected message group ID '%s', expecting '%s'", msg0.GroupID, groupID)
 		}
 		if group.ID == groupID {
 			t.Fatal("expected group IDs to be different", groupID)
 		}
 
-		msgs, err := repo.MessagesV2.ListByGroup(ctx, groupID)
+		list, err := repo.MessagesV2.ListByGroup(ctx, groupID)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(msgs) != 2 {
-			t.Fatal("unexpected length", len(msgs))
+		if len(list) != 2 {
+			t.Fatal("unexpected length", len(list))
 		}
-		if msgs[0].ID != msg1.ID {
+		if list[0].ID != msg0.ID {
 			t.Fatal("unexpected msgs[0].ID")
 		}
-		if msgs[1].ID != msg2.ID {
+		if list[1].ID != msg1.ID {
 			t.Fatal("unexpected msgs[1].ID")
 		}
 	})

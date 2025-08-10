@@ -65,28 +65,6 @@ func ToTopics(topics []Topic) []factcheck.Topic {
 	return utils.MapNoError(topics, ToTopic)
 }
 
-// ToTopicFromIDRow converts a ListTopicsLikeIDRow to factcheck.Topic
-func ToTopicFromIDRow(data ListTopicsLikeIDRow) factcheck.Topic {
-	topic := factcheck.Topic{
-		Name:        data.Name,
-		Description: data.Description,
-		Status:      factcheck.StatusTopic(data.Status),
-	}
-	if data.ID.Valid {
-		topic.ID = data.ID.String()
-	}
-	if data.Result.Valid {
-		topic.Result = data.Result.String
-	}
-	if data.CreatedAt.Valid {
-		topic.CreatedAt = data.CreatedAt.Time
-	}
-	if data.UpdatedAt.Valid {
-		topic.UpdatedAt = &data.UpdatedAt.Time
-	}
-	return topic
-}
-
 func MessageV2Creator(m factcheck.MessageV2) (CreateMessageV2Params, error) {
 	id, err := UUID(m.ID)
 	if err != nil {

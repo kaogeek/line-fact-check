@@ -31,7 +31,7 @@ const (
 	StatusTopicRejected StatusTopic = "TOPIC_REJECTED" // Rejected by admin
 
 	StatusMGroupPending  StatusMGroup = "MGROUP_PENDING"
-	StatusMGroupApproved StatusMGroup = "MGROUP_APPRleVED"
+	StatusMGroupApproved StatusMGroup = "MGROUP_APPRIVED"
 	StatusMGroupRejected StatusMGroup = "MGROUP_REJECTED"
 
 	TypeMessageText TypeMessage = "MSG_TEXT"

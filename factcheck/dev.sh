@@ -1,0 +1,1 @@
+env $(cat .env | xargs) go run cmd/api/main.go

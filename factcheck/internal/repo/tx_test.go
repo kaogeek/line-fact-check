@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/di/ittest"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
@@ -21,7 +21,7 @@ import (
 func TestTransactionIsolationLevels(t *testing.T) {
 	t.Run("ReadCommitted", func(t *testing.T) {
 		t.Run("CommitAfterTx2", func(t *testing.T) {
-			app, cleanup, err := di.InitializeContainerTest()
+			app, cleanup, err := ittest.InitializeContainerTest(t)
 			if err != nil {
 				t.Fatalf("Failed to initialize test container: %v", err)
 			}
@@ -52,7 +52,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 		})
 
 		t.Run("CommitBeforeTx2", func(t *testing.T) {
-			app, cleanup, err := di.InitializeContainerTest()
+			app, cleanup, err := ittest.InitializeContainerTest(t)
 			if err != nil {
 				t.Fatalf("Failed to initialize test container: %v", err)
 			}
@@ -83,7 +83,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("RepeatableRead_ShouldPreventDirtyReads", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := ittest.InitializeContainerTest(t)
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
@@ -113,7 +113,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("Serializable_ShouldPreventPhantomReads", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := ittest.InitializeContainerTest(t)
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
@@ -145,7 +145,7 @@ func TestTransactionIsolationLevels(t *testing.T) {
 	})
 
 	t.Run("ConcurrentUpdates_ShouldHandleConflicts", func(t *testing.T) {
-		app, cleanup, err := di.InitializeContainerTest()
+		app, cleanup, err := ittest.InitializeContainerTest(t)
 		if err != nil {
 			t.Fatalf("Failed to initialize test container: %v", err)
 		}
@@ -738,7 +738,7 @@ func testConcurrentUpdates(t *testing.T, r *repo.Repository, topicID string) {
 
 // TestTransactionRollback tests that rollback works correctly
 func TestTransactionRollback(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := ittest.InitializeContainerTest(t)
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
 	}
@@ -808,7 +808,7 @@ func TestTransactionRollback(t *testing.T) {
 
 // TestTransactionCommit tests that commit works correctly
 func TestTransactionCommit(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := ittest.InitializeContainerTest(t)
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
 	}

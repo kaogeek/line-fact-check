@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/di/ittest"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 func TestRepository_CountByStatusDynamicV2(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := ittest.InitializeContainerTest(t)
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestRepository_CountByStatusDynamicV2(t *testing.T) {
 }
 
 func TestRepository_ListDynamicV2(t *testing.T) {
-	app, cleanup, err := di.InitializeContainerTest()
+	app, cleanup, err := ittest.InitializeContainerTest(t)
 	if err != nil {
 		t.Fatalf("Failed to initialize test container: %v", err)
 	}

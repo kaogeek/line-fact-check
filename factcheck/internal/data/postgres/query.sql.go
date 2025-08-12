@@ -573,19 +573,35 @@ WHERE 1=1
         WHEN $1::text != '' THEN mg.text::text LIKE $1::text
         ELSE true
     END
+    AND CASE
+        WHEN array_length($2::text[], 1) > 0 THEN mg.id = ANY(($2::text[])::uuid[])
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($3::text[], 1) > 0 THEN NOT (mg.id = ANY(($3::text[])::uuid[]))
+        ELSE true
+    END
 ORDER BY mg.created_at DESC
-LIMIT CASE WHEN $3::integer = 0 THEN NULL ELSE $3::integer END
-OFFSET CASE WHEN $2::integer = 0 THEN 0 ELSE $2::integer END
+LIMIT CASE WHEN $5::integer = 0 THEN NULL ELSE $5::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $4::integer END
 `
 
 type ListMessageGroupDynamicParams struct {
-	Text   string `json:"text"`
-	Offset int32  `json:"offset"`
-	Limit  int32  `json:"limit"`
+	Text    string   `json:"text"`
+	IDIn    []string `json:"id_in"`
+	IDNotIn []string `json:"id_not_in"`
+	Offset  int32    `json:"offset"`
+	Limit   int32    `json:"limit"`
 }
 
 func (q *Queries) ListMessageGroupDynamic(ctx context.Context, arg ListMessageGroupDynamicParams) ([]MessageGroup, error) {
-	rows, err := q.db.Query(ctx, listMessageGroupDynamic, arg.Text, arg.Offset, arg.Limit)
+	rows, err := q.db.Query(ctx, listMessageGroupDynamic,
+		arg.Text,
+		arg.IDIn,
+		arg.IDNotIn,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

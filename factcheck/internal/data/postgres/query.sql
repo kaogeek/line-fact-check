@@ -205,6 +205,14 @@ WHERE 1=1
         WHEN sqlc.arg('text')::text != '' THEN mg.text::text LIKE sqlc.arg('text')::text
         ELSE true
     END
+    AND CASE
+        WHEN array_length(sqlc.arg('id_in')::text[], 1) > 0 THEN mg.id = ANY((sqlc.arg('id_in')::text[])::uuid[])
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length(sqlc.arg('id_not_in')::text[], 1) > 0 THEN NOT (mg.id = ANY((sqlc.arg('id_not_in')::text[])::uuid[]))
+        ELSE true
+    END
 ORDER BY mg.created_at DESC
 LIMIT CASE WHEN sqlc.arg('limit')::integer = 0 THEN NULL ELSE sqlc.arg('limit')::integer END
 OFFSET CASE WHEN sqlc.arg('offset')::integer = 0 THEN 0 ELSE sqlc.arg('offset')::integer END;

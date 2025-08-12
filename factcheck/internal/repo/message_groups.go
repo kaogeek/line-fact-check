@@ -63,9 +63,11 @@ func (m *messageGroups) ListDynamic(ctx context.Context, limit int, offset int, 
 	options := options(opts...)
 	queries := queries(m.queries, options.Options)
 	result, err := queries.ListMessageGroupDynamic(ctx, postgres.ListMessageGroupDynamicParams{
-		Text:   options.LikeMessageText,
-		Offset: int32(offset), //nolint:gosec
-		Limit:  int32(limit),  //nolint:gosec
+		Text:    options.LikeMessageText,
+		IDIn:    options.IDIn,
+		IDNotIn: options.IDNotIn,
+		Offset:  int32(offset), //nolint:gosec
+		Limit:   int32(limit),  //nolint:gosec
 	})
 	if err != nil {
 		return nil, err

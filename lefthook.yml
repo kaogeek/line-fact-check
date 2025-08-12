@@ -6,3 +6,8 @@ pre-commit:
       glob: "*.{js,ts,tsx}"
       root: backoffice-webapp/
       stage_fixed: true
+    lint-fackcheck:
+      run: golangci-lint run ./...
+      glob: "*.{go}"
+      root: factcheck/
+      stage_fixed: true

@@ -10,6 +10,11 @@ get {
   auth: inherit
 }
 
+params:query {
+  ~limit: 1
+  ~offset: 1
+}
+
 body:json {
   {
     "topic_id": "b409dcd3-1822-4b06-8805-c656a7956b45"

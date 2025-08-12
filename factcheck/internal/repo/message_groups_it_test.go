@@ -105,7 +105,9 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 	// Helper function to create dynamic options
 	createDynamicOpts := func(likeMessageText string, idIn []string, idNotIn []string) []repo.OptionMessageGroup {
 		return []repo.OptionMessageGroup{
-			repo.MessageGroupLikeMessageText(likeMessageText, idIn, idNotIn),
+			repo.MessageGroupLikeMessageText(likeMessageText),
+			repo.MessageGroupIDIn(idIn),
+			repo.MessageGroupIDNotIn(idNotIn),
 		}
 	}
 

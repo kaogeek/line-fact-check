@@ -39,7 +39,7 @@ func toMessageGroupOptions(r *http.Request) []repo.OptionMessageGroup {
 	}
 
 	if idNotIn != "" {
-		parts := strings.Split(idIn, ",")
+		parts := strings.Split(idNotIn, ",")
 		opts = append(opts, repo.MessageGroupIDNotIn(parts))
 	}
 

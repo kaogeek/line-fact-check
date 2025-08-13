@@ -39,6 +39,7 @@ func New(conf config.Config, h handler.Handler) (*http.Server, func()) {
 	messages.Delete("/", h.DeleteMessageByID)
 
 	messageGroups := chi.NewMux()
+	messageGroups.Get("/", h.ListMessageGroupDynamic)
 	messageGroups.Put("/{id}/assign-topic", h.AssignGroupTopic)
 	messageGroups.Delete("/{id}", h.DeleteGroupByID)
 

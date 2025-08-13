@@ -39,8 +39,8 @@ func NewTopics(queries *postgres.Queries) Topics {
 func (t *topics) List(ctx context.Context, limit, offset int, opts ...Option) ([]factcheck.Topic, error) {
 	queries := queries(t.queries, options(opts...))
 	rows, err := queries.ListTopics(ctx, postgres.ListTopicsParams{
-		Column1: int32(limit),
-		Column2: int32(offset),
+		Column1: int32(limit),  //nolint:gosec
+		Column2: int32(offset), //nolint:gosec
 	})
 	if err != nil {
 		return nil, err
@@ -151,8 +151,8 @@ func (t *topics) ListByStatus(ctx context.Context, status factcheck.StatusTopic,
 	queries := queries(t.queries, options(opts...))
 	rows, err := queries.ListTopicsByStatus(ctx, postgres.ListTopicsByStatusParams{
 		Status:  string(status),
-		Column2: int32(limit),
-		Column3: int32(offset),
+		Column2: int32(limit),  //nolint:gosec
+		Column3: int32(offset), //nolint:gosec
 	})
 	if err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ type MessageGroups interface {
 	Create(context.Context, factcheck.MessageGroup, ...Option) (factcheck.MessageGroup, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error)
+	ListDynamic(ctx context.Context, limit int, offset int, opts ...OptionMessageGroup) ([]factcheck.MessageGroup, error)
 	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error)
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusMGroup, opts ...Option) (factcheck.MessageGroup, error)
 	AssignTopic(ctx context.Context, id string, topicID string, opts ...Option) (factcheck.MessageGroup, error)
@@ -73,6 +74,22 @@ func (m *messageGroups) UpdateStatus(ctx context.Context, id string, status fact
 		return factcheck.MessageGroup{}, handleNotFound(err, map[string]string{"id": id})
 	}
 	return postgres.ToMessageGroup(result)
+}
+
+func (m *messageGroups) ListDynamic(ctx context.Context, limit int, offset int, opts ...OptionMessageGroup) ([]factcheck.MessageGroup, error) {
+	options := options(opts...)
+	queries := queries(m.queries, options.Options)
+	result, err := queries.ListMessageGroupDynamic(ctx, postgres.ListMessageGroupDynamicParams{
+		Text:    options.LikeMessageText,
+		IDIn:    options.IDIn,
+		IDNotIn: options.IDNotIn,
+		Offset:  int32(offset), //nolint:gosec
+		Limit:   int32(limit),  //nolint:gosec
+	})
+	if err != nil {
+		return nil, err
+	}
+	return postgres.ToMessageGroups(result)
 }
 
 func (m *messageGroups) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error) {

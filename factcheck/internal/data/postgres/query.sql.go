@@ -571,6 +571,70 @@ func (q *Queries) ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID)
 	return items, nil
 }
 
+const listMessageGroupDynamic = `-- name: ListMessageGroupDynamic :many
+SELECT  mg.id, mg.topic_id, mg.name, mg.text, mg.text_sha1, mg.language, mg.created_at, mg.updated_at
+FROM message_groups mg
+WHERE 1=1
+    AND CASE
+        WHEN $1::text != '' THEN mg.text::text LIKE $1::text
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($2::text[], 1) > 0 THEN mg.id = ANY(($2::text[])::uuid[])
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($3::text[], 1) > 0 THEN NOT (mg.id = ANY(($3::text[])::uuid[]))
+        ELSE true
+    END
+ORDER BY mg.created_at DESC
+LIMIT CASE WHEN $5::integer = 0 THEN NULL ELSE $5::integer END
+OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $4::integer END
+`
+
+type ListMessageGroupDynamicParams struct {
+	Text    string   `json:"text"`
+	IDIn    []string `json:"id_in"`
+	IDNotIn []string `json:"id_not_in"`
+	Offset  int32    `json:"offset"`
+	Limit   int32    `json:"limit"`
+}
+
+func (q *Queries) ListMessageGroupDynamic(ctx context.Context, arg ListMessageGroupDynamicParams) ([]MessageGroup, error) {
+	rows, err := q.db.Query(ctx, listMessageGroupDynamic,
+		arg.Text,
+		arg.IDIn,
+		arg.IDNotIn,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MessageGroup
+	for rows.Next() {
+		var i MessageGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.TopicID,
+			&i.Name,
+			&i.Text,
+			&i.TextSha1,
+			&i.Language,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMessageGroupsByTopic = `-- name: ListMessageGroupsByTopic :many
 SELECT id, topic_id, status, name, text, text_sha1, language, created_at, updated_at FROM message_groups WHERE topic_id = $1 ORDER BY created_at ASC
 `

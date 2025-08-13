@@ -33,13 +33,12 @@ type Handler interface {
 	ListTopicMessageGroups(http.ResponseWriter, *http.Request)
 
 	// API /messages
-
 	SubmitMessage(http.ResponseWriter, *http.Request)
 	AssignMessageGroup(http.ResponseWriter, *http.Request)
 	DeleteMessageByID(http.ResponseWriter, *http.Request)
 
 	// API /groups
-
+	ListMessageGroupDynamic(http.ResponseWriter, *http.Request)
 	AssignGroupTopic(http.ResponseWriter, *http.Request)
 	DeleteGroupByID(http.ResponseWriter, *http.Request)
 

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
@@ -13,6 +14,7 @@ type MessageGroups interface {
 	Create(context.Context, factcheck.MessageGroup, ...Option) (factcheck.MessageGroup, error)
 	GetByID(ctx context.Context, id string, opts ...Option) (factcheck.MessageGroup, error)
 	GetBySHA1(ctx context.Context, sha1 string, opts ...Option) (factcheck.MessageGroup, error)
+	CountDynamic(ctx context.Context, opts ...OptionMessageGroup) (map[factcheck.StatusMGroup]int64, error)
 	ListDynamic(ctx context.Context, limit int, offset int, opts ...OptionMessageGroup) ([]factcheck.MessageGroup, error)
 	ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error)
 	UpdateStatus(ctx context.Context, id string, status factcheck.StatusMGroup, opts ...Option) (factcheck.MessageGroup, error)
@@ -92,6 +94,29 @@ func (m *messageGroups) ListDynamic(ctx context.Context, limit int, offset int, 
 		return nil, err
 	}
 	return postgres.ToMessageGroups(result)
+}
+
+func (m *messageGroups) CountDynamic(ctx context.Context, opts ...OptionMessageGroup) (map[factcheck.StatusMGroup]int64, error) {
+	options := options(opts...)
+	queries := queries(m.queries, options.Options)
+	rows, err := queries.CountMessageGroupDynamic(ctx, postgres.CountMessageGroupDynamicParams{
+		Text:    options.LikeMessageText,
+		IDIn:    options.IDIn,
+		IDNotIn: options.IDNotIn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[factcheck.StatusMGroup]int64)
+	for i := range rows {
+		r := &rows[i]
+		s := factcheck.StatusMGroup(r.Status)
+		if !s.IsValid() {
+			return nil, fmt.Errorf("unexpected invalid status '%s' with %d count", s, r.Count)
+		}
+		result[s] = r.Count
+	}
+	return result, nil
 }
 
 func (m *messageGroups) ListByTopic(ctx context.Context, topicID string, opts ...Option) ([]factcheck.MessageGroup, error) {

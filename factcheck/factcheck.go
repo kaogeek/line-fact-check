@@ -92,9 +92,21 @@ type Answer struct {
 
 func (s StatusTopic) IsValid() bool {
 	switch s {
+	// TODO missing StatusTopicRejected?
 	case
 		StatusTopicPending,
 		StatusTopicResolved:
+		return true
+	}
+	return false
+}
+
+func (s StatusMGroup) IsValid() bool {
+	switch s {
+	case
+		StatusMGroupPending,
+		StatusMGroupApproved,
+		StatusMGroupRejected:
 		return true
 	}
 	return false

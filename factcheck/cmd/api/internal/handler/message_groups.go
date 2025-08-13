@@ -25,6 +25,21 @@ func (h *handler) ListMessageGroupDynamic(w http.ResponseWriter, r *http.Request
 	sendJSON(r.Context(), w, http.StatusOK, topics)
 }
 
+func (h *handler) CountMessageGroupsDynamic(w http.ResponseWriter, r *http.Request) {
+	opts := toMessageGroupOptions(r)
+	counts, err := h.groups.CountDynamic(r.Context(), opts...)
+	if err != nil {
+		errInternalError(w, err.Error())
+		return
+	}
+	result := make(map[string]int64)
+	for k, v := range counts {
+		result[string(k)] = v
+		result["total"] += v
+	}
+	sendJSON(r.Context(), w, http.StatusOK, result)
+}
+
 func toMessageGroupOptions(r *http.Request) []repo.OptionMessageGroup {
 	query := r.URL.Query().Get
 	text, idIn, idNotIn, statusesIn := query("like_message_text"), query("in_id"), query("not_in_id"), query("statuses_in")

@@ -102,6 +102,56 @@ func (q *Queries) AssignMessageV2ToTopic(ctx context.Context, arg AssignMessageV
 	return i, err
 }
 
+const countMessageGroupDynamic = `-- name: CountMessageGroupDynamic :many
+SELECT mg.status, COUNT(DISTINCT mg.id) as count
+FROM message_groups mg
+WHERE 1=1
+    AND CASE
+        WHEN $1::text != '' THEN mg.text::text LIKE $1::text
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($2::text[], 1) > 0 THEN mg.id = ANY(($2::text[])::uuid[])
+        ELSE true
+    END
+    AND CASE
+        WHEN array_length($3::text[], 1) > 0 THEN NOT (mg.id = ANY(($3::text[])::uuid[]))
+        ELSE true
+    END
+GROUP BY mg.status
+`
+
+type CountMessageGroupDynamicParams struct {
+	Text    string   `json:"text"`
+	IDIn    []string `json:"id_in"`
+	IDNotIn []string `json:"id_not_in"`
+}
+
+type CountMessageGroupDynamicRow struct {
+	Status string `json:"status"`
+	Count  int64  `json:"count"`
+}
+
+func (q *Queries) CountMessageGroupDynamic(ctx context.Context, arg CountMessageGroupDynamicParams) ([]CountMessageGroupDynamicRow, error) {
+	rows, err := q.db.Query(ctx, countMessageGroupDynamic, arg.Text, arg.IDIn, arg.IDNotIn)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountMessageGroupDynamicRow
+	for rows.Next() {
+		var i CountMessageGroupDynamicRow
+		if err := rows.Scan(&i.Status, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const countTopicsByStatus = `-- name: CountTopicsByStatus :one
 SELECT COUNT(*) FROM topics WHERE status = $1
 `

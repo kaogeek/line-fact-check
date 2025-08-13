@@ -262,3 +262,148 @@ func TestHandlerMessageGroup_ListMessageGroupDynamic(t *testing.T) {
 		assertEq(t, len(messageGroups), 0)
 	})
 }
+
+func TestHandlerMessageGroup_CountMessageGroupsDynamic(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+
+	// Create test server
+	testServer := httptest.NewServer(app.Server.(*http.Server).Handler)
+	defer testServer.Close()
+
+	// Create test data
+	now := utils.TimeNow().Round(0)
+	utils.TimeFreeze(now)
+	defer utils.TimeUnfreeze()
+
+	// Create message groups with different statuses and languages
+	messageGroups := []factcheck.MessageGroup{
+		{
+			ID:        "880e8400-e29b-41d4-a716-446655440101",
+			Status:    factcheck.StatusMGroupPending,
+			Name:      "Pending Group 1",
+			Text:      "Pending message group 1",
+			TextSHA1:  "sha1_hash_pending_1",
+			Language:  factcheck.LanguageEnglish,
+			CreatedAt: now,
+		},
+		{
+			ID:        "880e8400-e29b-41d4-a716-446655440102",
+			Status:    factcheck.StatusMGroupPending,
+			Name:      "Pending Group 2",
+			Text:      "Pending message group 2",
+			TextSHA1:  "sha1_hash_pending_2",
+			Language:  factcheck.LanguageEnglish,
+			CreatedAt: now,
+		},
+		{
+			ID:        "880e8400-e29b-41d4-a716-446655440103",
+			Status:    factcheck.StatusMGroupApproved,
+			Name:      "Approved Group 1",
+			Text:      "Approved message group 1",
+			TextSHA1:  "sha1_hash_approved_1",
+			Language:  factcheck.LanguageEnglish,
+			CreatedAt: now,
+		},
+		{
+			ID:        "880e8400-e29b-41d4-a716-446655440104",
+			Status:    factcheck.StatusMGroupRejected,
+			Name:      "Rejected Group 1",
+			Text:      "Rejected message group 1",
+			TextSHA1:  "sha1_hash_rejected_1",
+			Language:  factcheck.LanguageEnglish,
+			CreatedAt: now,
+		},
+		{
+			ID:        "880e8400-e29b-41d4-a716-446655440105",
+			Status:    factcheck.StatusMGroupPending,
+			Name:      "Pending Thai Group",
+			Text:      "Pending Thai Group",
+			TextSHA1:  "sha1_hash_thai_1",
+			Language:  factcheck.LanguageThai,
+			CreatedAt: now,
+		},
+	}
+
+	// Create message groups in database
+	for _, mg := range messageGroups {
+		_, err := app.Repository.MessageGroups.Create(t.Context(), mg)
+		if err != nil {
+			t.Fatalf("Failed to create message group %s: %v", mg.ID, err)
+		}
+	}
+
+	t.Run("Count all message groups", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/message-groups/count", nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+		assertEq(t, result["total"], int64(5)) // 5 total message groups
+	})
+
+	t.Run("Count with status filter", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(
+			t.Context(),
+			http.MethodGet,
+			testServer.URL+"/message-groups/count?statuses_in="+string(factcheck.StatusMGroupPending),
+			nil,
+		)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+		assertEq(t, result[string(factcheck.StatusMGroupPending)], int64(3)) // 3 pending message groups
+	})
+
+	t.Run("Count with text search", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(
+			t.Context(),
+			http.MethodGet,
+			testServer.URL+"/message-groups/count?like_message_text=Thai",
+			nil,
+		)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+		assertEq(t, result["total"], int64(1)) // 1 group with "Thai" in text
+	})
+
+	t.Run("Count with no matches", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(
+			t.Context(),
+			http.MethodGet,
+			testServer.URL+"/message-groups/count?like_message_text=nonexistent",
+			nil,
+		)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var result map[string]int64
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		assertEq(t, err, nil)
+		assertEq(t, result["total"], int64(0))
+	})
+}

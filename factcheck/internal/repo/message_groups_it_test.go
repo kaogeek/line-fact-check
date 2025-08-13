@@ -270,3 +270,190 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		}
 	})
 }
+
+func TestMessageGroupRepository_CountDynamic(t *testing.T) {
+	app, cleanup, err := di.InitializeContainerTest()
+	if err != nil {
+		t.Fatalf("Failed to initialize test container: %v", err)
+	}
+	defer cleanup()
+	ctx := t.Context()
+
+	// Create test data
+	baseTime := time.Now()
+
+	// Create message groups
+	messageGroup1 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440001",
+		Status:    factcheck.StatusMGroupPending,
+		TopicID:   "",
+		Name:      "COVID Vaccine Group",
+		Text:      "COVID-19 vaccine is effective against new variants",
+		TextSHA1:  "sha1_hash_1",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: baseTime,
+		UpdatedAt: nil,
+	}
+
+	messageGroup2 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440002",
+		Status:    factcheck.StatusMGroupApproved,
+		TopicID:   "",
+		Name:      "Election Results Group",
+		Text:      "Election results show clear victory",
+		TextSHA1:  "sha1_hash_2",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: baseTime.Add(1 * time.Millisecond),
+		UpdatedAt: nil,
+	}
+
+	messageGroup3 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440003",
+		Status:    factcheck.StatusMGroupRejected,
+		TopicID:   "",
+		Name:      "AI Technology Group",
+		Text:      "New AI technology breakthrough",
+		TextSHA1:  "sha1_hash_3",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: baseTime.Add(2 * time.Millisecond),
+		UpdatedAt: nil,
+	}
+
+	messageGroup4 := factcheck.MessageGroup{
+		ID:        "880e8400-e29b-41d4-a716-446655440004",
+		Status:    factcheck.StatusMGroupPending,
+		TopicID:   "",
+		Name:      "Sports Results Group",
+		Text:      "World Cup final results announced",
+		TextSHA1:  "sha1_hash_4",
+		Language:  factcheck.LanguageEnglish,
+		CreatedAt: baseTime.Add(3 * time.Millisecond),
+		UpdatedAt: nil,
+	}
+
+	// Create topics in database
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup1)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup1: %v", err)
+	}
+
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup2)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup2: %v", err)
+	}
+
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup3)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup3: %v", err)
+	}
+
+	_, err = app.Repository.MessageGroups.Create(ctx, messageGroup4)
+	if err != nil {
+		t.Fatalf("Failed to create messageGroup4: %v", err)
+	}
+
+	// Helper function to create dynamic options
+	createDynamicOpts := func(likeMessageText string, idIn []string, idNotIn []string) []repo.OptionMessageGroup {
+		return []repo.OptionMessageGroup{
+			repo.MessageGroupLikeMessageText(likeMessageText),
+			repo.MessageGroupIDIn(idIn),
+			repo.MessageGroupIDNotIn(idNotIn),
+		}
+	}
+
+	t.Run("MessageGroupCountDynamic - no options (all message groups)", func(t *testing.T) {
+		ctx := t.Context()
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx)
+		if err != nil {
+			t.Fatalf("Failed to count all message groups: %v", err)
+		}
+
+		t.Logf("Total message groups in database: %v", count)
+
+		if count[factcheck.StatusMGroupPending] != 2 {
+			t.Fatalf("Expected 1 message group with 'pending' status, got %d", count[factcheck.StatusMGroupPending])
+		}
+		if count[factcheck.StatusMGroupApproved] != 1 {
+			t.Fatalf("Expected 1 message group with 'approved' status, got %d", count[factcheck.StatusMGroupPending])
+		}
+		if count[factcheck.StatusMGroupRejected] != 1 {
+			t.Fatalf("Expected 1 message group with 'rejected' status, got %d", count[factcheck.StatusMGroupPending])
+		}
+	})
+
+	t.Run("MessageGroupCountDynamic - message group text filter", func(t *testing.T) {
+		ctx := t.Context()
+		opts := createDynamicOpts("New AI technology break", []string{}, []string{})
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountDynamic with text filter failed: %v", err)
+		}
+		total := count[factcheck.StatusMGroupPending] + count[factcheck.StatusMGroupApproved] + count[factcheck.StatusMGroupRejected]
+		if total != 1 {
+			t.Fatalf("Expected 1 message group with 'New AI technology break' in text, got %d", total)
+		}
+	})
+
+	t.Run("MessageGroupCountDynamic - message group text filter (not found)", func(t *testing.T) {
+		ctx := t.Context()
+		opts := createDynamicOpts("Nonexistent text that won't be found", []string{}, []string{})
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountDynamic with text filter failed: %v", err)
+		}
+		total := count[factcheck.StatusMGroupPending] + count[factcheck.StatusMGroupApproved] + count[factcheck.StatusMGroupRejected]
+		if total != 0 {
+			t.Fatalf("Expected 0 message groups with 'Nonexistent text' in text, got %d", total)
+		}
+	})
+
+	t.Run("MessageGroupCountDynamic - filter by ID (inclusion)", func(t *testing.T) {
+		ctx := t.Context()
+		// Get all message groups to get their IDs
+		_, err := app.Repository.MessageGroups.CountDynamic(ctx)
+		if err != nil {
+			t.Fatalf("Failed to get all message groups: %v", err)
+		}
+
+		// Get two message groups to test inclusion
+		opts := createDynamicOpts("", []string{messageGroup1.ID, messageGroup2.ID}, []string{})
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountDynamic with ID inclusion filter failed: %v", err)
+		}
+		total := count[factcheck.StatusMGroupPending] + count[factcheck.StatusMGroupApproved] + count[factcheck.StatusMGroupRejected]
+		if total != 2 {
+			t.Fatalf("Expected 2 message groups with specified IDs, got %d", total)
+		}
+	})
+
+	t.Run("MessageGroupCountDynamic - filter by ID (exclusion)", func(t *testing.T) {
+		ctx := t.Context()
+		// Exclude two message groups
+		opts := createDynamicOpts("", []string{}, []string{messageGroup1.ID, messageGroup2.ID})
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountDynamic with ID exclusion filter failed: %v", err)
+		}
+
+		total := count[factcheck.StatusMGroupPending] + count[factcheck.StatusMGroupApproved] + count[factcheck.StatusMGroupRejected]
+		if total != 2 {
+			t.Fatalf("Expected 2 message groups after exclusion, got %d", total)
+		}
+	})
+
+	t.Run("MessageGroupCountDynamic - combine text search with ID exclusion", func(t *testing.T) {
+		ctx := t.Context()
+		// First test with text search that should match one message group
+		opts := createDynamicOpts("COVID Vaccine", []string{}, []string{messageGroup1.ID})
+		count, err := app.Repository.MessageGroups.CountDynamic(ctx, opts...)
+		if err != nil {
+			t.Fatalf("CountDynamic with text search and ID exclusion failed: %v", err)
+		}
+
+		total := count[factcheck.StatusMGroupPending] + count[factcheck.StatusMGroupApproved] + count[factcheck.StatusMGroupRejected]
+		if total != 0 {
+			t.Fatalf("Expected 0 message groups with 'COVID Vaccine' after exclusion, got %d", total)
+		}
+	})
+}

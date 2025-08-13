@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 // ListMessageGroupDynamic implements Handler.
@@ -25,7 +27,7 @@ func (h *handler) ListMessageGroupDynamic(w http.ResponseWriter, r *http.Request
 
 func toMessageGroupOptions(r *http.Request) []repo.OptionMessageGroup {
 	query := r.URL.Query().Get
-	text, idIn, idNotIn := query("like_message_text"), query("in_id"), query("not_in_id")
+	text, idIn, idNotIn, statusesIn := query("like_message_text"), query("in_id"), query("not_in_id"), query("statuses_in")
 
 	var opts []repo.OptionMessageGroup
 
@@ -41,6 +43,16 @@ func toMessageGroupOptions(r *http.Request) []repo.OptionMessageGroup {
 	if idNotIn != "" {
 		parts := strings.Split(idNotIn, ",")
 		opts = append(opts, repo.MessageGroupIDNotIn(parts))
+	}
+
+	if statusesIn != "" {
+		parts := strings.Split(statusesIn, ",")
+		if len(parts) != 0 {
+			statuses := utils.MapNoError(parts, func(s string) factcheck.StatusMGroup {
+				return factcheck.StatusMGroup(s)
+			})
+			opts = append(opts, repo.MessageGroupStatusesIn(statuses))
+		}
 	}
 
 	return opts

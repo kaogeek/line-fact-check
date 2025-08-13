@@ -572,7 +572,7 @@ func (q *Queries) ListAnswersByTopicID(ctx context.Context, topicID pgtype.UUID)
 }
 
 const listMessageGroupDynamic = `-- name: ListMessageGroupDynamic :many
-SELECT  mg.id, mg.topic_id, mg.name, mg.text, mg.text_sha1, mg.language, mg.created_at, mg.updated_at
+SELECT  mg.id, mg.topic_id, mg.status, mg.name, mg.text, mg.text_sha1, mg.language, mg.created_at, mg.updated_at
 FROM message_groups mg
 WHERE 1=1
     AND CASE
@@ -587,15 +587,20 @@ WHERE 1=1
         WHEN array_length($3::text[], 1) > 0 THEN NOT (mg.id = ANY(($3::text[])::uuid[]))
         ELSE true
     END
+    AND CASE
+        WHEN array_length($4::text[], 1) > 0 THEN mg.status = ANY($4::text[])
+        ELSE true
+    END
 ORDER BY mg.created_at DESC
-LIMIT CASE WHEN $5::integer = 0 THEN NULL ELSE $5::integer END
-OFFSET CASE WHEN $4::integer = 0 THEN 0 ELSE $4::integer END
+LIMIT CASE WHEN $6::integer = 0 THEN NULL ELSE $6::integer END
+OFFSET CASE WHEN $5::integer = 0 THEN 0 ELSE $5::integer END
 `
 
 type ListMessageGroupDynamicParams struct {
 	Text    string   `json:"text"`
 	IDIn    []string `json:"id_in"`
 	IDNotIn []string `json:"id_not_in"`
+	Status  []string `json:"status"`
 	Offset  int32    `json:"offset"`
 	Limit   int32    `json:"limit"`
 }
@@ -605,6 +610,7 @@ func (q *Queries) ListMessageGroupDynamic(ctx context.Context, arg ListMessageGr
 		arg.Text,
 		arg.IDIn,
 		arg.IDNotIn,
+		arg.Status,
 		arg.Offset,
 		arg.Limit,
 	)
@@ -618,6 +624,7 @@ func (q *Queries) ListMessageGroupDynamic(ctx context.Context, arg ListMessageGr
 		if err := rows.Scan(
 			&i.ID,
 			&i.TopicID,
+			&i.Status,
 			&i.Name,
 			&i.Text,
 			&i.TextSha1,

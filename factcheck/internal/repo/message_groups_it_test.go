@@ -5,11 +5,12 @@ package repo_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/di"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/repo"
-	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
+	// "github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 func TestMessageGroupRepository_ListDynamic(t *testing.T) {
@@ -21,9 +22,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 	ctx := t.Context()
 
 	// Create test data
-	now := utils.TimeNow().Round(0)
-	utils.TimeFreeze(now)
-	defer utils.TimeUnfreeze()
+	baseTime := time.Now()
 
 	// Create message groups
 	messageGroup1 := factcheck.MessageGroup{
@@ -34,7 +33,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		Text:      "COVID-19 vaccine is effective against new variants",
 		TextSHA1:  "sha1_hash_1",
 		Language:  factcheck.LanguageEnglish,
-		CreatedAt: now,
+		CreatedAt: baseTime,
 		UpdatedAt: nil,
 	}
 
@@ -46,7 +45,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		Text:      "Election results show clear victory",
 		TextSHA1:  "sha1_hash_2",
 		Language:  factcheck.LanguageEnglish,
-		CreatedAt: now,
+		CreatedAt: baseTime.Add(1 * time.Millisecond),
 		UpdatedAt: nil,
 	}
 
@@ -58,7 +57,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		Text:      "New AI technology breakthrough",
 		TextSHA1:  "sha1_hash_3",
 		Language:  factcheck.LanguageEnglish,
-		CreatedAt: now,
+		CreatedAt: baseTime.Add(2 * time.Millisecond),
 		UpdatedAt: nil,
 	}
 
@@ -70,7 +69,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		Text:      "World Cup final results announced",
 		TextSHA1:  "sha1_hash_4",
 		Language:  factcheck.LanguageEnglish,
-		CreatedAt: now,
+		CreatedAt: baseTime.Add(3 * time.Millisecond),
 		UpdatedAt: nil,
 	}
 
@@ -103,11 +102,12 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 	}
 
 	// Helper function to create dynamic options
-	createDynamicOpts := func(likeMessageText string, idIn []string, idNotIn []string) []repo.OptionMessageGroup {
+	createDynamicOpts := func(likeMessageText string, idIn []string, idNotIn []string, statuses []factcheck.StatusMGroup) []repo.OptionMessageGroup {
 		return []repo.OptionMessageGroup{
 			repo.MessageGroupLikeMessageText(likeMessageText),
 			repo.MessageGroupIDIn(idIn),
 			repo.MessageGroupIDNotIn(idNotIn),
+			repo.MessageGroupStatusesIn(statuses),
 		}
 	}
 
@@ -132,7 +132,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 
 	t.Run("MessageGroupListDynamic - message group text filter", func(t *testing.T) {
 		ctx := t.Context()
-		opts := createDynamicOpts("New AI technology break", []string{}, []string{})
+		opts := createDynamicOpts("New AI technology break", []string{}, []string{}, []factcheck.StatusMGroup{})
 		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with English text filter failed: %v", err)
@@ -147,7 +147,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 
 	t.Run("MessageGroupListDynamic - message group text filter (not found)", func(t *testing.T) {
 		ctx := t.Context()
-		opts := createDynamicOpts("Unknown key word", []string{}, []string{})
+		opts := createDynamicOpts("Unknown key word", []string{}, []string{}, []factcheck.StatusMGroup{})
 		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with English text filter failed: %v", err)
@@ -160,7 +160,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 	t.Run("MessageGroupListDynamic - filter by ID (inclusion)", func(t *testing.T) {
 		ctx := t.Context()
 		// Filter for specific message group IDs
-		opts := createDynamicOpts("", []string{createdMessageGroup1.ID, createdMessageGroup2.ID}, []string{})
+		opts := createDynamicOpts("", []string{createdMessageGroup1.ID, createdMessageGroup2.ID}, []string{}, []factcheck.StatusMGroup{})
 		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with ID filter failed: %v", err)
@@ -183,7 +183,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 	t.Run("MessageGroupListDynamic - filter by ID (exclusion)", func(t *testing.T) {
 		ctx := t.Context()
 		// Exclude two message groups
-		opts := createDynamicOpts("", []string{}, []string{createdMessageGroup1.ID, createdMessageGroup2.ID})
+		opts := createDynamicOpts("", []string{}, []string{createdMessageGroup1.ID, createdMessageGroup2.ID}, []factcheck.StatusMGroup{})
 		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with ID not in filter failed: %v", err)
@@ -204,7 +204,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 
 	t.Run("MessageGroupListDynamic - combine text search with ID exclusion", func(t *testing.T) {
 		ctx := t.Context()
-		opts := createDynamicOpts("COVID Vaccine", []string{}, []string{createdMessageGroup1.ID})
+		opts := createDynamicOpts("COVID Vaccine", []string{}, []string{createdMessageGroup1.ID}, []factcheck.StatusMGroup{})
 		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with text search and ID exclusion failed: %v", err)
@@ -214,7 +214,7 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 			t.Fatalf("Expected 0 message groups with 'vaccine' after exclusion, got %d", len(mgs))
 		}
 
-		opts = createDynamicOpts("show clear victory", []string{}, []string{createdMessageGroup3.ID})
+		opts = createDynamicOpts("show clear victory", []string{}, []string{createdMessageGroup3.ID}, []factcheck.StatusMGroup{})
 		mgs, err = app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
 		if err != nil {
 			t.Fatalf("ListDynamic with text search and combined ID filters failed: %v", err)
@@ -229,12 +229,29 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 		}
 	})
 
-	// TODO: resolve this later it seem like it be flaky test cause order?
+	t.Run("MessageGroupListDynamic - filter by Status (inclusion)", func(t *testing.T) {
+		ctx := t.Context()
+		opts := createDynamicOpts("", []string{}, []string{}, []factcheck.StatusMGroup{factcheck.StatusMGroupPending, factcheck.StatusMGroupRejected})
+		mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, 0, 0, opts...)
+		if err != nil {
+			t.Fatalf("ListDynamic with status filter failed: %v", err)
+		}
+		if len(mgs) != 3 {
+			t.Fatalf("Expected 3 message group with 'pending' status, got %d", len(mgs))
+		}
+
+		for _, mg := range mgs {
+			if mg.Status != factcheck.StatusMGroupPending && mg.Status != factcheck.StatusMGroupRejected {
+				t.Errorf("Expected message group with 'pending' or 'rejected' status, got %s", mg.Status)
+			}
+		}
+	})
+
 	t.Run("MessageGroupListDynamic - pagination", func(t *testing.T) {
 		ctx := t.Context()
 		limit := 1
 
-		for i := 0; i < 4; i++ {
+		for i := 0; i < len(createdMessageGroups); i++ {
 			offset := i * limit
 
 			mgs, err := app.Repository.MessageGroups.ListDynamic(ctx, limit, offset)
@@ -245,7 +262,9 @@ func TestMessageGroupRepository_ListDynamic(t *testing.T) {
 				t.Fatalf("Expected 1 message group with page %d in message group, got %d", i+1, len(mgs))
 			}
 
-			if mgs[0].ID != createdMessageGroups[i].ID {
+			// use reverseIndex for message createMg cause by query is order createAt desc
+			reverseIndex := len(createdMessageGroups) - 1 - i
+			if mgs[0].ID != createdMessageGroups[reverseIndex].ID {
 				t.Fatalf("Expected message group %d to be returned, got %s", i+1, mgs[0].ID)
 			}
 		}

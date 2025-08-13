@@ -6,6 +6,7 @@ import (
 
 	"github.com/kaogeek/line-fact-check/factcheck"
 	"github.com/kaogeek/line-fact-check/factcheck/internal/data/postgres"
+	"github.com/kaogeek/line-fact-check/factcheck/internal/utils"
 )
 
 type MessageGroups interface {
@@ -85,6 +86,7 @@ func (m *messageGroups) ListDynamic(ctx context.Context, limit int, offset int, 
 		IDNotIn: options.IDNotIn,
 		Offset:  int32(offset), //nolint:gosec
 		Limit:   int32(limit),  //nolint:gosec
+		Status:  utils.MapNoError(options.Statuses, utils.String[factcheck.StatusMGroup, string]),
 	})
 	if err != nil {
 		return nil, err

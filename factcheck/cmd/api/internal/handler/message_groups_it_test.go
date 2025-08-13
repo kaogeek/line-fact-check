@@ -188,6 +188,31 @@ func TestHandlerMessageGroup_ListMessageGroupDynamic(t *testing.T) {
 		}
 	})
 
+	t.Run("ListMessageGroupDynamic - statuses_in filter", func(t *testing.T) {
+		statuses := string(factcheck.StatusMGroupPending) + "," + string(factcheck.StatusMGroupApproved)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, testServer.URL+"/message-groups?statuses_in="+statuses, nil)
+		assertEq(t, err, nil)
+		resp, err := http.DefaultClient.Do(req)
+		assertEq(t, err, nil)
+		defer resp.Body.Close()
+		assertEq(t, resp.StatusCode, http.StatusOK)
+
+		var messageGroups []factcheck.MessageGroup
+		err = json.NewDecoder(resp.Body).Decode(&messageGroups)
+		assertEq(t, err, nil)
+		assertEq(t, len(messageGroups), 3)
+
+		// Verify we got the expected message groups
+		foundIDs := make(map[string]bool)
+		for _, mg := range messageGroups {
+			foundIDs[mg.ID] = true
+		}
+
+		assertEq(t, foundIDs[createdMessageGroup1.ID], true)
+		assertEq(t, foundIDs[createdMessageGroup2.ID], true)
+		assertEq(t, foundIDs[createdMessageGroup4.ID], true)
+	})
+
 	t.Run("ListMessageGroupDynamic - combined filters", func(t *testing.T) {
 		// Search for English messages but exclude messageGroup1
 		req, err := http.NewRequestWithContext(

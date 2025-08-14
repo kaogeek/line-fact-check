@@ -15,6 +15,10 @@ export default function RootLayout() {
         brand={APP_NAME}
         menuList={[
           {
+            label: t('menu.messageGroup'),
+            link: '/message-group',
+          },
+          {
             label: t('menu.topic'),
             link: '/topic',
           },

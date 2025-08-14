@@ -1,6 +1,36 @@
 {
   "welcome": "ยินดีต้อนรับ",
   "greeting": "สวัสดี, {{name}}!",
+  "messageGroup": {
+    "title": "กลุ่มข้อความ",
+    "create": "สร้างกลุ่มข้อความ",
+    "noMessages": "ไม่พบกลุ่มข้อความ",
+    "searchLabel": {
+      "code": "รหัส",
+      "message": "ข้อความ"
+    },
+    "searchPlaceholder": {
+      "code": "กรอกรหัส...",
+      "message": "กรอกข้อความ..."
+    },
+    "status": {
+      "all": "ทั้งหมด",
+      "pending": "รอดำเนินการ",
+      "approved": "อนุมัติแล้ว",
+      "assigned": "มอบหมายแล้ว",
+      "rejected": "ปฏิเสธแล้ว"
+    },
+    "table": {
+      "id": "รหัส",
+      "text": "ข้อความ",
+      "status": "สถานะ",
+      "createdAt": "วันที่สร้าง"
+    },
+    "actions": {
+      "approve": "อนุมัติ",
+      "reject": "ปฏิเสธ"
+    }
+  },
   "notification": {
     "messageCreated": "สร้างข้อความเรียบร้อยแล้ว",
     "answerUpdated": "อัปเดตคำตอบสำเร็จ",
@@ -29,6 +59,7 @@
     "fakeNews": "ข่าวปลอม"
   },
   "common": {
+    "total": "ทั้งหมด",
     "searchButton": "ค้นหา",
     "error": {
       "defaultTitle": "เกิดข้อผิดพลาด",
@@ -50,7 +81,6 @@
     "noTopics": "ไม่มีหัวข้อ",
     "name": "ชื่อหัวข้อ",
     "description": "คำอธิบาย",
-    "total": "ทั้งหมด",
     "status": {
       "label": "สถานะ",
       "pending": "รอดำเนินการ",
@@ -89,6 +119,7 @@
     "goHome": "กลับหน้าหลัก"
   },
   "menu": {
+    "messageGroup": "กลุ่มข้อความ",
     "topic": "หัวข้อ",
     "dashboard": "แดชบอร์ด",
     "logout": "ออกจากระบบ"

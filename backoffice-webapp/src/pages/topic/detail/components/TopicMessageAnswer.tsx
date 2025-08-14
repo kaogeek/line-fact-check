@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 interface TopicMessageAnswerProps {
   onClickHistory: () => void;
   topicId: string;
-  onUpdateAnswer: (answerId: string, content: string) => Promise<void>;
+  onUpdateAnswer: (content: string) => Promise<void>;
 }
 
 const formSchema = z.object({
@@ -35,14 +35,14 @@ export default function TopicMessageAnswer({ onClickHistory, topicId, onUpdateAn
     if (answer) {
       form.reset({
         type: answer.type,
-        answer: answer.answer,
+        answer: answer.text,
       });
     }
   }, [answer, form]);
 
   async function handleSubmit(data: z.infer<typeof formSchema>) {
     if (answer) {
-      await onUpdateAnswer(answer.topicId, data.answer);
+      await onUpdateAnswer(data.answer);
     }
   }
 

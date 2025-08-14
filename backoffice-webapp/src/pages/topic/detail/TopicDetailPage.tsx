@@ -61,7 +61,7 @@ export default function TopicDetailPage() {
     },
   });
   const { mutate: updateAnswerMutation } = useMutation({
-    mutationFn: ({ answerId, content }: { answerId: string; content: string }) => updateAnswer(id!, answerId, content),
+    mutationFn: ({ content }: { content: string }) => updateAnswer(id!, content),
     onSettled: () => {
       stopLoading();
     },
@@ -117,9 +117,9 @@ export default function TopicDetailPage() {
     createMessageMutation(message);
   }
 
-  async function handleUpdateAnswer(answerId: string, content: string) {
+  async function handleUpdateAnswer(content: string) {
     startLoading();
-    updateAnswerMutation({ answerId, content });
+    updateAnswerMutation({ content });
   }
 
   function handleChooseDestination(topicId: string) {
@@ -224,7 +224,7 @@ export default function TopicDetailPage() {
                 </DropdownMenu>
               </div>
               <TYMuted>
-                {t('topic.createdAt')}: {formatDate(topic.createDate)}
+                {t('topic.createdAt')}: {formatDate(topic.created_at)}
               </TYMuted>
             </div>
             <TopicMessageDetail

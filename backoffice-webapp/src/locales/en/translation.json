@@ -1,6 +1,36 @@
 {
   "welcome": "Welcome",
   "greeting": "Hello, {{name}}!",
+  "messageGroup": {
+    "title": "Message Groups",
+    "create": "Create Message Group",
+    "noMessages": "No message groups found",
+    "searchLabel": {
+      "code": "Code",
+      "message": "Message"
+    },
+    "searchPlaceholder": {
+      "code": "Enter code...",
+      "message": "Enter message..."
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "approved": "Approved",
+      "assigned": "Assigned",
+      "rejected": "Rejected"
+    },
+    "table": {
+      "id": "ID",
+      "text": "Message",
+      "status": "Status",
+      "createdAt": "Created At"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject"
+    }
+  },
   "notification": {
     "messageCreated": "Message has been created",
     "answerUpdated": "Answer updated successfully",
@@ -29,6 +59,7 @@
     "fakeNews": "Fake news"
   },
   "common": {
+    "total": "Total",
     "searchButton": "Search",
     "error": {
       "defaultTitle": "Error occurred",
@@ -60,7 +91,6 @@
     "rejectDescription": "Are you sure you want to reject this topic?",
     "reject": "Reject",
     "rejectConfirm": "Reject",
-    "total": "Total",
     "status": {
       "label": "Status",
       "pending": "Pending",
@@ -89,6 +119,7 @@
     "goHome": "Go back home"
   },
   "menu": {
+    "messageGroup": "Message Group",
     "topic": "Topic",
     "dashboard": "Dashboard",
     "logout": "Logout"

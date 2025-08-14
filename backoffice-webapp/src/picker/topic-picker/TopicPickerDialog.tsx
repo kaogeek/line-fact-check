@@ -1,11 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useGetTopics } from '@/hooks/api/topic';
+import { useCountTopics, useGetTopics } from '@/hooks/api/topic';
 import TopicPickerData from './components/TopicPickerData';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { GetTopicCriteria } from '@/lib/api/type/topic';
-import type { PaginationReq } from '@/lib/api/type/base';
+import type { Pagination } from '@/lib/api/type/base';
 import PaginationControl from '@/components/PaginationControl';
 import TopicSearchBar from '@/pages/topic/components/TopicSearchBar';
+import { usePaginationReqState } from '@/hooks/usePagination';
+import { calPagination } from '@/lib/utils/page-utils';
 
 interface TopicPickerDialogProps {
   title?: string;
@@ -25,13 +27,36 @@ export default function TopicPickerDialog({
   const [criteria, setCriteria] = useState<GetTopicCriteria>({
     idNotIn: currentId ? [currentId] : undefined,
   });
-  const [paginationReq, setPaginationReq] = useState<PaginationReq>({
+
+  const [, setCount] = useState<number>(0);
+
+  const [pagination, setPagination] = useState<Pagination>({
+    totalItems: 0,
+    totalPages: 1,
+  });
+
+  const { paginationReq, setPage } = usePaginationReqState({
+    /* TODO: make this to default value */
     page: 1,
+    pageSize: 10,
   });
 
   const { isLoading, data, error } = useGetTopics(criteria, paginationReq, {
     enabled: open,
   });
+
+  const { data: countTopics } = useCountTopics(criteria);
+
+  useEffect(() => {
+    if (!countTopics) {
+      return;
+    }
+
+    const { total } = countTopics;
+
+    setCount(total);
+    setPagination(calPagination(total, paginationReq));
+  }, [countTopics, paginationReq]);
 
   function handleChoose(topicId: string) {
     if (onOpenChange) {
@@ -41,8 +66,8 @@ export default function TopicPickerDialog({
     onChoose(topicId);
   }
 
-  function handlePageChange(paginationReq: PaginationReq) {
-    setPaginationReq(paginationReq);
+  function handlePageChange(page: number) {
+    setPage(page);
   }
 
   function handleSearch(criteria: { codeLike?: string; messageLike?: string }) {
@@ -68,13 +93,13 @@ export default function TopicPickerDialog({
             <TopicPickerData
               className="flex-1 overflow-auto"
               isLoading={isLoading}
-              dataList={data?.items}
+              dataList={data}
               error={error}
               onChoose={handleChoose}
             />
           </div>
 
-          <PaginationControl paginationRes={data} onPageChange={handlePageChange} />
+          <PaginationControl paginationReq={paginationReq} pagination={pagination} onPageChange={handlePageChange} />
         </div>
       </DialogContent>
     </Dialog>

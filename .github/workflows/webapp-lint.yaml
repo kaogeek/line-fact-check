@@ -32,6 +32,9 @@ jobs:
             
             echo 'Running lint...'
             npm run lint
+
+            echo 'Running test...'
+            npm run test
             
             echo 'Running build...'
             npm run build
